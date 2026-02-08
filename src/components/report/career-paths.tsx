@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -10,7 +11,7 @@ interface CareerPathsProps {
   paths: CareerPath[];
 }
 
-export function CareerPaths({ paths }: CareerPathsProps) {
+export const CareerPaths = memo(function CareerPaths({ paths }: CareerPathsProps) {
   return (
     <div className="space-y-4">
       {paths.map((path, i) => (
@@ -40,4 +41,4 @@ export function CareerPaths({ paths }: CareerPathsProps) {
       ))}
     </div>
   );
-}
+});

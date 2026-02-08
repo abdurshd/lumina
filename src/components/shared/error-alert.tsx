@@ -1,0 +1,30 @@
+'use client';
+
+import { AlertCircle, RefreshCw } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+
+interface ErrorAlertProps {
+  title?: string;
+  message: string;
+  onRetry?: () => void;
+  className?: string;
+}
+
+export function ErrorAlert({ title = 'Something went wrong', message, onRetry, className }: ErrorAlertProps) {
+  return (
+    <Alert variant="destructive" className={className}>
+      <AlertCircle className="h-4 w-4" />
+      <AlertTitle>{title}</AlertTitle>
+      <AlertDescription className="flex items-center justify-between gap-4">
+        <span>{message}</span>
+        {onRetry && (
+          <Button variant="outline" size="sm" onClick={onRetry} className="shrink-0">
+            <RefreshCw className="mr-1.5 h-3 w-3" />
+            Retry
+          </Button>
+        )}
+      </AlertDescription>
+    </Alert>
+  );
+}

@@ -1,31 +1,43 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
+import { toast } from 'sonner';
 import { useAuth } from '@/contexts/auth-context';
 import { useAssessment } from '@/contexts/assessment-context';
 import { saveTalentReport, getTalentReport, getDataInsights, getQuizAnswers, getSessionInsights } from '@/lib/firebase/firestore';
+import { apiFetch, FetchError } from '@/lib/fetch-client';
 import { TalentRadarChart } from '@/components/report/talent-radar-chart';
 import { CareerPaths } from '@/components/report/career-paths';
 import { StrengthsGrid } from '@/components/report/strengths-grid';
+import { EmptyState, LoadingButton, ErrorAlert, ReportSkeleton } from '@/components/shared';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Sparkles, Target, Lightbulb, Rocket, Loader2, Eye } from 'lucide-react';
+import { Sparkles, Target, Lightbulb, Rocket, Eye } from 'lucide-react';
 import type { TalentReport } from '@/types';
 
 export default function ReportPage() {
   const { user } = useAuth();
   const { dataInsights, quizAnswers, sessionInsights, report, setReport, advanceStage } = useAssessment();
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isLoadingExisting, setIsLoadingExisting] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Try loading existing report
   useEffect(() => {
     async function loadReport() {
-      if (!user || report) return;
-      const existing = await getTalentReport(user.uid);
-      if (existing) setReport(existing);
+      if (!user || report) {
+        setIsLoadingExisting(false);
+        return;
+      }
+      try {
+        const existing = await getTalentReport(user.uid);
+        if (existing) setReport(existing);
+      } catch (err) {
+        console.error('Failed to load existing report:', err);
+      } finally {
+        setIsLoadingExisting(false);
+      }
     }
     loadReport();
   }, [user, report, setReport]);
@@ -41,9 +53,8 @@ export default function ReportPage() {
       const quiz = quizAnswers.length > 0 ? quizAnswers : await getQuizAnswers(user.uid);
       const session = sessionInsights.length > 0 ? sessionInsights : await getSessionInsights(user.uid);
 
-      const res = await fetch('/api/gemini/report', {
+      const reportData = await apiFetch<TalentReport>('/api/gemini/report', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           dataInsights: insights,
           quizAnswers: quiz,
@@ -51,46 +62,47 @@ export default function ReportPage() {
         }),
       });
 
-      if (!res.ok) throw new Error('Report generation failed');
-
-      const reportData: TalentReport = await res.json();
       await saveTalentReport(user.uid, reportData);
       setReport(reportData);
       await advanceStage('report');
+      toast.success('Your talent report is ready!');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
+      const message = err instanceof FetchError ? err.message : 'Report generation failed. Please try again.';
+      setError(message);
+      toast.error(message);
+    } finally {
+      setIsGenerating(false);
     }
-    setIsGenerating(false);
   }, [user, dataInsights, quizAnswers, sessionInsights, setReport, advanceStage]);
+
+  if (isLoadingExisting) {
+    return (
+      <div className="mx-auto max-w-4xl px-6 py-10">
+        <ReportSkeleton />
+      </div>
+    );
+  }
 
   if (!report) {
     return (
-      <div className="mx-auto max-w-2xl px-6 py-20 text-center">
-        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
-          <Sparkles className="h-10 w-10 text-primary" />
-        </div>
-        <h1 className="text-2xl font-bold mb-2">Generate Your Talent Report</h1>
-        <p className="text-muted-foreground mb-8">
-          Lumina will analyze all your assessment data to create a comprehensive talent discovery report.
-        </p>
-        {error && (
-          <div className="mb-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
-            {error}
-          </div>
-        )}
-        <Button onClick={generateReport} disabled={isGenerating} size="lg">
-          {isGenerating ? (
-            <>
-              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-              Generating your report...
-            </>
-          ) : (
-            <>
-              <Sparkles className="mr-2 h-5 w-5" />
+      <div className="mx-auto max-w-2xl px-6 py-10">
+        {error && <ErrorAlert message={error} onRetry={generateReport} className="mb-6" />}
+        <EmptyState
+          icon={Sparkles}
+          title="Generate Your Talent Report"
+          description="Lumina will analyze all your assessment data to create a comprehensive talent discovery report."
+          action={
+            <LoadingButton
+              onClick={generateReport}
+              loading={isGenerating}
+              loadingText="Generating your report (this may take a minute)..."
+              icon={Sparkles}
+              size="lg"
+            >
               Generate Report
-            </>
-          )}
-        </Button>
+            </LoadingButton>
+          }
+        />
       </div>
     );
   }
@@ -192,13 +204,13 @@ export default function ReportPage() {
           <div className="space-y-4">
             {report.actionPlan.map((item, i) => (
               <div key={i} className="flex items-start gap-3 rounded-lg border p-4">
-                <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white ${
+                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ${
                   item.priority === 'high' ? 'bg-red-500' : item.priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
                 }`}>
                   {i + 1}
                 </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <h4 className="font-medium">{item.title}</h4>
                     <Badge variant="outline" className="text-xs">{item.timeframe}</Badge>
                   </div>

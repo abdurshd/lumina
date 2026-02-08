@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import type { Strength } from '@/types';
@@ -8,7 +9,7 @@ interface StrengthsGridProps {
   strengths: Strength[];
 }
 
-export function StrengthsGrid({ strengths }: StrengthsGridProps) {
+export const StrengthsGrid = memo(function StrengthsGrid({ strengths }: StrengthsGridProps) {
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {strengths.map((strength, i) => (
@@ -25,4 +26,4 @@ export function StrengthsGrid({ strengths }: StrengthsGridProps) {
       ))}
     </div>
   );
-}
+});

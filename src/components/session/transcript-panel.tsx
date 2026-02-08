@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { memo, useEffect, useRef } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { TranscriptEntry } from '@/hooks/use-live-session';
 
@@ -8,12 +8,12 @@ interface TranscriptPanelProps {
   entries: TranscriptEntry[];
 }
 
-export function TranscriptPanel({ entries }: TranscriptPanelProps) {
+export const TranscriptPanel = memo(function TranscriptPanel({ entries }: TranscriptPanelProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [entries]);
+  }, [entries.length]);
 
   return (
     <ScrollArea className="h-full">
@@ -46,4 +46,4 @@ export function TranscriptPanel({ entries }: TranscriptPanelProps) {
       </div>
     </ScrollArea>
   );
-}
+});

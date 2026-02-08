@@ -1,5 +1,6 @@
 'use client';
 
+import { memo, useMemo } from 'react';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
 import type { RadarDimension } from '@/types';
 
@@ -7,12 +8,12 @@ interface TalentRadarChartProps {
   dimensions: RadarDimension[];
 }
 
-export function TalentRadarChart({ dimensions }: TalentRadarChartProps) {
-  const data = dimensions.map((d) => ({
+export const TalentRadarChart = memo(function TalentRadarChart({ dimensions }: TalentRadarChartProps) {
+  const data = useMemo(() => dimensions.map((d) => ({
     subject: d.label,
     value: d.value,
     fullMark: 100,
-  }));
+  })), [dimensions]);
 
   return (
     <div className="h-[350px] w-full">
@@ -36,4 +37,4 @@ export function TalentRadarChart({ dimensions }: TalentRadarChartProps) {
       </ResponsiveContainer>
     </div>
   );
-}
+});

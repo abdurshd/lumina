@@ -34,7 +34,9 @@ export function useLiveSession() {
 
   const microphone = useMicrophone(onSendAudio);
 
-  const callbacks: LiveSessionCallbacks = {
+  // Use a ref for callbacks so they always reference the latest state setters
+  // without causing re-creation of the connect function
+  const callbacksRef = useRef<LiveSessionCallbacks>({
     onAudioData: (base64Audio: string) => {
       if (!playbackRef.current) {
         playbackRef.current = new AudioPlaybackManager();
@@ -59,17 +61,23 @@ export function useLiveSession() {
     onInterrupted: () => {
       playbackRef.current?.stop();
     },
-  };
+  });
+
+  // Store webcam/microphone refs to avoid dependency issues
+  const webcamRef = useRef(webcam);
+  webcamRef.current = webcam;
+  const microphoneRef = useRef(microphone);
+  microphoneRef.current = microphone;
 
   const connect = useCallback(async (apiKey: string, dataContext: string) => {
     setIsConnecting(true);
     setError(null);
 
-    const manager = new LiveSessionManager(callbacks);
+    const manager = new LiveSessionManager(callbacksRef.current);
     managerRef.current = manager;
 
-    await webcam.start();
-    await microphone.start();
+    await webcamRef.current.start();
+    await microphoneRef.current.start();
 
     playbackRef.current = new AudioPlaybackManager();
     await playbackRef.current.resume();
@@ -77,9 +85,9 @@ export function useLiveSession() {
     await manager.connect(apiKey, dataContext);
 
     // Start video frame capture
-    if (webcam.videoRef.current) {
+    if (webcamRef.current.videoRef.current) {
       const capturer = new FrameCapturer(
-        webcam.videoRef.current,
+        webcamRef.current.videoRef.current,
         (base64) => manager.sendVideo(base64),
         1 // 1 FPS
       );
@@ -91,13 +99,13 @@ export function useLiveSession() {
     timerRef.current = setInterval(() => {
       setSessionDuration((prev) => prev + 1);
     }, 1000);
-  }, [webcam, microphone]);
+  }, []);
 
-  const disconnect = useCallback(async () => {
+  const disconnect = useCallback(() => {
     capturerRef.current?.stop();
     capturerRef.current = null;
-    microphone.stop();
-    webcam.stop();
+    microphoneRef.current.stop();
+    webcamRef.current.stop();
     playbackRef.current?.close();
     playbackRef.current = null;
     managerRef.current?.disconnect();
@@ -106,7 +114,7 @@ export function useLiveSession() {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
-  }, [microphone, webcam]);
+  }, []);
 
   const sendText = useCallback((text: string) => {
     managerRef.current?.sendText(text);
