@@ -5,7 +5,7 @@ import { apiFetch } from '@/lib/fetch-client';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { BarChart3, Users, Star, TrendingUp } from 'lucide-react';
+import { BarChart3, Users, Star, TrendingUp, AlertTriangle } from 'lucide-react';
 
 interface FunnelCounts {
   stage_started: number;
@@ -74,6 +74,20 @@ export default function AdminAnalyticsPage() {
           View aggregated analytics for your account.
         </p>
       </div>
+
+      <Card className="mb-8 border-yellow-500/30 bg-yellow-500/5">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base font-sans text-yellow-500">
+            <AlertTriangle className="h-4 w-4" />
+            Compliance Gate
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <p className="text-xs text-yellow-500/80">
+            16+ product positioning requires legal validation against Gemini API deployment terms before public release.
+          </p>
+        </CardContent>
+      </Card>
 
       <div className="mb-8">
         <Button onClick={handleLoadAnalytics} disabled={loading}>

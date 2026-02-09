@@ -50,6 +50,17 @@ export async function POST(req: NextRequest) {
     updates.dataRetentionMode = parsed.data.dataRetentionMode;
   }
 
+  const consentChanged =
+    parsed.data.consentSources !== undefined ||
+    parsed.data.ageGateConfirmed !== undefined ||
+    parsed.data.videoBehaviorConsent !== undefined ||
+    parsed.data.dataRetentionMode !== undefined;
+
+  if (consentChanged) {
+    updates.consentTimestamp = Date.now();
+    updates.consentVersion = 2;
+  }
+
   if (Object.keys(updates).length === 0) {
     return errorResponse("No updates provided", ErrorCode.VALIDATION_ERROR, 400);
   }

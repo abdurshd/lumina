@@ -79,11 +79,12 @@ Name: ${name}
   "headline": "string - specific surprising headline talent",
   "tagline": "string - short inspiring tagline",
   "radarDimensions": [{"label": "string", "value": 0-100, "description": "string"}],
-  "topStrengths": [{"name": "string", "score": 0-100, "evidence": "string"}],
+  "topStrengths": [{"name": "string", "score": 0-100, "evidence": "string", "evidenceSources": [{"source": "string", "excerpt": "string"}], "confidenceLevel": "high|medium|low"}],
   "hiddenTalents": ["string"],
-  "careerPaths": [{"title": "string", "match": 0-100, "description": "string", "nextSteps": ["string"]}],
+  "careerPaths": [{"title": "string", "match": 0-100, "description": "string", "nextSteps": ["string"], "riasecCodes": "string", "onetCluster": "string", "evidenceSources": ["string"], "confidence": 0-100, "whyYou": "string"}],
   "actionPlan": [{"title": "string", "description": "string", "timeframe": "string", "priority": "high|medium|low"}],
-  "personalityInsights": ["string"]
+  "personalityInsights": ["string"],
+  "confidenceNotes": ["string"]
 }
 
 Include exactly 6 radar dimensions (Creativity, Analysis, Leadership, Empathy, Resilience, Vision), 5 top strengths, 3 hidden talents, 4 career paths, 5 action items, and 4 personality insights.`,

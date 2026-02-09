@@ -1,17 +1,19 @@
 import { z } from 'zod';
 import { Type } from '@google/genai';
 import type { FunctionDeclaration } from '@google/genai';
+import { BEHAVIORAL_SIGNAL_FACTORS, SESSION_INSIGHT_CATEGORIES } from '@/lib/psychometrics/dimension-model';
 
 export const SessionInsightSchema = z.object({
   timestamp: z.number(),
   observation: z.string(),
-  category: z.enum(['body_language', 'voice_tone', 'enthusiasm', 'analytical', 'creative', 'interpersonal']),
+  category: z.enum(SESSION_INSIGHT_CATEGORIES),
   confidence: z.number().min(0).max(1),
+  evidence: z.string().optional(),
 });
 
 export const SaveInsightFunctionDeclaration: FunctionDeclaration = {
   name: 'saveInsight',
-  description: 'Save a behavioral observation about the user during the conversation. Call this whenever you notice something noteworthy about the user\'s behavior, tone, enthusiasm, or engagement.',
+  description: 'Save a behavioral observation using the behavioral taxonomy. Include concise evidence from what the user said or did.',
   parameters: {
     type: Type.OBJECT,
     properties: {
@@ -21,15 +23,19 @@ export const SaveInsightFunctionDeclaration: FunctionDeclaration = {
       },
       category: {
         type: Type.STRING,
-        enum: ['body_language', 'voice_tone', 'enthusiasm', 'analytical', 'creative', 'interpersonal'],
-        description: 'The category of the observation',
+        enum: [...BEHAVIORAL_SIGNAL_FACTORS],
+        description: 'Behavioral taxonomy category',
       },
       confidence: {
         type: Type.NUMBER,
         description: 'How confident you are in this observation (0-1)',
       },
+      evidence: {
+        type: Type.STRING,
+        description: 'Short evidence snippet describing what triggered this observation',
+      },
     },
-    required: ['observation', 'category', 'confidence'],
+    required: ['observation', 'category', 'confidence', 'evidence'],
   },
 };
 

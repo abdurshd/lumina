@@ -43,14 +43,23 @@ interface QuizScoreRequest {
 interface ReportRequest {
   dataInsights: DataInsight[];
   quizAnswers: QuizAnswer[];
-  sessionInsights: { timestamp: number; observation: string; category: string; confidence: number }[];
+  sessionInsights: { timestamp: number; observation: string; category: string; confidence: number; evidence?: string }[];
   quizScores?: QuizDimensionSummary;
+  quizConfidence?: QuizDimensionSummary;
   computedProfile?: ComputedProfile;
   constraints?: UserConstraints;
 }
 
 interface RegenerateReportRequest {
   feedback: string;
+  context?: {
+    dataInsights?: DataInsight[];
+    quizAnswers?: QuizAnswer[];
+    sessionInsights?: { timestamp: number; observation: string; category: string; confidence: number; evidence?: string }[];
+    quizScores?: QuizDimensionSummary;
+    existingReport?: TalentReport;
+    feedbackItems?: { itemType: 'career' | 'strength'; itemId: string; feedback: 'agree' | 'disagree'; reason?: string }[];
+  };
 }
 
 interface UpdateProfileRequest {
@@ -85,6 +94,7 @@ interface QuizResponse {
 interface QuizScoreResponse {
   scores: QuizScore[];
   dimensionSummary: QuizDimensionSummary;
+  dimensionConfidence?: QuizDimensionSummary;
 }
 
 interface EphemeralTokenResponse {

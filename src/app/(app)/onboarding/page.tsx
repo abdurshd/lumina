@@ -329,7 +329,7 @@ export default function OnboardingPage() {
                                 ? { scale: [1, 1.15, 1] }
                                 : undefined
                             }
-                            transition={snappySpring}
+                            transition={selectedSources.includes(source.id) ? { type: 'tween', duration: 0.3, ease: 'easeInOut' } : snappySpring}
                           >
                             <Checkbox
                               checked={selectedSources.includes(source.id)}

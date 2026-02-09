@@ -1,10 +1,104 @@
 import { doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs } from 'firebase/firestore';
 import { db } from './config';
 import type { UserProfile, DataInsight, QuizAnswer, SessionInsight, TalentReport, StageStatus, AssessmentStage, QuizScore, QuizDimensionSummary, UserSignal, UserFeedback, QuizModuleProgress, UserConstraints, ComputedProfile, CareerRecommendation, MicroChallenge, Reflection, ProfileSnapshot, IterationState, ActionPlanProgress, CorpusDocument, AnalyticsEvent } from '@/types';
+import {
+  canUseSessionStorage,
+  clearAssessmentSessionCache,
+  getAdapter,
+  getCachedRetentionMode,
+  resolveRetentionMode,
+  setCachedRetentionMode,
+  type AssessmentDocKey,
+  type RetentionMode,
+} from '@/lib/storage/assessment-storage';
+
+const REPORT_HISTORY_SESSION_PREFIX = 'lumina:assessment:reportHistory:';
+const LEGACY_ASSESSMENT_DOCS: AssessmentDocKey[] = [
+  'dataInsights',
+  'quizAnswers',
+  'quizScores',
+  'sessionInsights',
+  'talentReport',
+  'signals',
+  'feedback',
+  'moduleProgress',
+  'constraints',
+  'computedProfile',
+  'careerRecommendations',
+  'actionPlanProgress',
+];
+
+function reportHistorySessionKey(uid: string): string {
+  return `${REPORT_HISTORY_SESSION_PREFIX}${uid}`;
+}
+
+function readReportHistorySession(uid: string): { report: TalentReport; timestamp: number; quizScores?: QuizDimensionSummary }[] {
+  if (!canUseSessionStorage()) return [];
+  const raw = window.sessionStorage.getItem(reportHistorySessionKey(uid));
+  if (!raw) return [];
+  try {
+    return JSON.parse(raw) as { report: TalentReport; timestamp: number; quizScores?: QuizDimensionSummary }[];
+  } catch {
+    return [];
+  }
+}
+
+function writeReportHistorySession(uid: string, value: { report: TalentReport; timestamp: number; quizScores?: QuizDimensionSummary }[]): void {
+  if (!canUseSessionStorage()) return;
+  window.sessionStorage.setItem(reportHistorySessionKey(uid), JSON.stringify(value));
+}
+
+function clearReportHistorySession(uid: string): void {
+  if (!canUseSessionStorage()) return;
+  window.sessionStorage.removeItem(reportHistorySessionKey(uid));
+}
+
+async function getRetentionMode(uid: string): Promise<RetentionMode> {
+  const cached = getCachedRetentionMode(uid);
+  if (cached) return cached;
+
+  const snap = await getDoc(doc(db, 'users', uid));
+  const mode = resolveRetentionMode(snap.exists() ? snap.data().dataRetentionMode : undefined);
+  setCachedRetentionMode(uid, mode);
+  return mode;
+}
+
+async function shouldUseSessionStorage(uid: string): Promise<boolean> {
+  if (!canUseSessionStorage()) return false;
+  return (await getRetentionMode(uid)) === 'session_only';
+}
+
+async function getAssessmentDoc<T>(uid: string, key: AssessmentDocKey): Promise<T | null> {
+  if (await shouldUseSessionStorage(uid)) {
+    const sessionDoc = await getAdapter('session_only').get<T>(uid, key);
+    if (sessionDoc !== null) return sessionDoc;
+
+    // Migration fallback: read legacy persisted data if it exists.
+    const fallbackDoc = await getAdapter('persistent').get<T>(uid, key);
+    if (fallbackDoc !== null) {
+      await getAdapter('session_only').set(uid, key, fallbackDoc);
+    }
+    return fallbackDoc;
+  }
+
+  return getAdapter('persistent').get<T>(uid, key);
+}
+
+async function setAssessmentDoc<T>(uid: string, key: AssessmentDocKey, value: T): Promise<void> {
+  if (await shouldUseSessionStorage(uid)) {
+    await getAdapter('session_only').set(uid, key, value);
+    return;
+  }
+  await getAdapter('persistent').set(uid, key, value);
+}
 
 export async function getUserProfile(uid: string): Promise<UserProfile | null> {
   const snap = await getDoc(doc(db, 'users', uid));
-  return snap.exists() ? (snap.data() as UserProfile) : null;
+  const profile = snap.exists() ? (snap.data() as UserProfile) : null;
+  if (profile) {
+    setCachedRetentionMode(uid, resolveRetentionMode(profile.dataRetentionMode));
+  }
+  return profile;
 }
 
 export async function createUserProfile(profile: UserProfile): Promise<void> {
@@ -18,114 +112,164 @@ export async function updateStage(uid: string, stage: AssessmentStage, status: S
 }
 
 export async function saveDataInsights(uid: string, insights: DataInsight[]): Promise<void> {
-  await setDoc(doc(db, 'users', uid, 'assessment', 'dataInsights'), { insights, updatedAt: Date.now() });
+  await setAssessmentDoc(uid, 'dataInsights', { insights, updatedAt: Date.now() });
 }
 
 export async function getDataInsights(uid: string): Promise<DataInsight[]> {
-  const snap = await getDoc(doc(db, 'users', uid, 'assessment', 'dataInsights'));
-  return snap.exists() ? snap.data().insights : [];
+  const data = await getAssessmentDoc<{ insights: DataInsight[] }>(uid, 'dataInsights');
+  return data?.insights ?? [];
 }
 
 export async function saveQuizAnswers(uid: string, answers: QuizAnswer[]): Promise<void> {
-  await setDoc(doc(db, 'users', uid, 'assessment', 'quizAnswers'), { answers, updatedAt: Date.now() });
+  await setAssessmentDoc(uid, 'quizAnswers', { answers, updatedAt: Date.now() });
 }
 
 export async function getQuizAnswers(uid: string): Promise<QuizAnswer[]> {
-  const snap = await getDoc(doc(db, 'users', uid, 'assessment', 'quizAnswers'));
-  return snap.exists() ? snap.data().answers : [];
+  const data = await getAssessmentDoc<{ answers: QuizAnswer[] }>(uid, 'quizAnswers');
+  return data?.answers ?? [];
 }
 
 export async function saveSessionInsights(uid: string, insights: SessionInsight[]): Promise<void> {
-  await setDoc(doc(db, 'users', uid, 'assessment', 'sessionInsights'), { insights, updatedAt: Date.now() });
+  await setAssessmentDoc(uid, 'sessionInsights', { insights, updatedAt: Date.now() });
 }
 
 export async function getSessionInsights(uid: string): Promise<SessionInsight[]> {
-  const snap = await getDoc(doc(db, 'users', uid, 'assessment', 'sessionInsights'));
-  return snap.exists() ? snap.data().insights : [];
+  const data = await getAssessmentDoc<{ insights: SessionInsight[] }>(uid, 'sessionInsights');
+  return data?.insights ?? [];
 }
 
 export async function saveTalentReport(uid: string, report: TalentReport): Promise<void> {
-  await setDoc(doc(db, 'users', uid, 'assessment', 'talentReport'), { report, updatedAt: Date.now() });
+  await setAssessmentDoc(uid, 'talentReport', { report, updatedAt: Date.now() });
 }
 
 export async function getTalentReport(uid: string): Promise<TalentReport | null> {
-  const snap = await getDoc(doc(db, 'users', uid, 'assessment', 'talentReport'));
-  return snap.exists() ? snap.data().report : null;
+  const data = await getAssessmentDoc<{ report: TalentReport }>(uid, 'talentReport');
+  return data?.report ?? null;
 }
 
-export async function saveQuizScores(uid: string, scores: QuizScore[], dimensionSummary: QuizDimensionSummary): Promise<void> {
-  await setDoc(doc(db, 'users', uid, 'assessment', 'quizScores'), { scores, dimensionSummary, updatedAt: Date.now() });
+export async function saveQuizScores(
+  uid: string,
+  scores: QuizScore[],
+  dimensionSummary: QuizDimensionSummary,
+  dimensionConfidence?: QuizDimensionSummary,
+): Promise<void> {
+  const existing = await getQuizScores(uid);
+
+  const scoreByQuestion = new Map<string, QuizScore>();
+  for (const score of existing?.scores ?? []) {
+    scoreByQuestion.set(score.questionId, score);
+  }
+  for (const score of scores) {
+    scoreByQuestion.set(score.questionId, score);
+  }
+
+  const mergedScores = Array.from(scoreByQuestion.values());
+  const totals: Record<string, { sum: number; count: number }> = {};
+  for (const score of mergedScores) {
+    for (const dimScore of score.dimensionScores) {
+      if (!totals[dimScore.dimension]) {
+        totals[dimScore.dimension] = { sum: 0, count: 0 };
+      }
+      totals[dimScore.dimension].sum += Math.max(0, Math.min(100, dimScore.score));
+      totals[dimScore.dimension].count += 1;
+    }
+  }
+
+  const mergedDimensionSummary: QuizDimensionSummary = { ...dimensionSummary };
+  for (const [dimension, total] of Object.entries(totals)) {
+    mergedDimensionSummary[dimension] = Math.round(total.sum / total.count);
+  }
+
+  const mergedDimensionConfidence: QuizDimensionSummary = {
+    ...(existing?.dimensionConfidence ?? {}),
+    ...(dimensionConfidence ?? {}),
+  };
+
+  await setAssessmentDoc(uid, 'quizScores', {
+    scores: mergedScores,
+    dimensionSummary: mergedDimensionSummary,
+    dimensionConfidence: Object.keys(mergedDimensionConfidence).length > 0 ? mergedDimensionConfidence : undefined,
+    updatedAt: Date.now(),
+  });
 }
 
-export async function getQuizScores(uid: string): Promise<{ scores: QuizScore[]; dimensionSummary: QuizDimensionSummary } | null> {
-  const snap = await getDoc(doc(db, 'users', uid, 'assessment', 'quizScores'));
-  return snap.exists() ? { scores: snap.data().scores, dimensionSummary: snap.data().dimensionSummary } : null;
+export async function getQuizScores(
+  uid: string,
+): Promise<{ scores: QuizScore[]; dimensionSummary: QuizDimensionSummary; dimensionConfidence?: QuizDimensionSummary } | null> {
+  const data = await getAssessmentDoc<{
+    scores: QuizScore[];
+    dimensionSummary: QuizDimensionSummary;
+    dimensionConfidence?: QuizDimensionSummary;
+  }>(uid, 'quizScores');
+  return data
+    ? {
+        scores: data.scores,
+        dimensionSummary: data.dimensionSummary,
+        dimensionConfidence: data.dimensionConfidence,
+      }
+    : null;
 }
 
 export async function saveUserSignals(uid: string, signals: UserSignal[]): Promise<void> {
-  await setDoc(doc(db, 'users', uid, 'assessment', 'signals'), { signals, updatedAt: Date.now() });
+  await setAssessmentDoc(uid, 'signals', { signals, updatedAt: Date.now() });
 }
 
 export async function getUserSignals(uid: string): Promise<UserSignal[]> {
-  const snap = await getDoc(doc(db, 'users', uid, 'assessment', 'signals'));
-  return snap.exists() ? snap.data().signals : [];
+  const data = await getAssessmentDoc<{ signals: UserSignal[] }>(uid, 'signals');
+  return data?.signals ?? [];
 }
 
 export async function saveFeedback(uid: string, feedback: UserFeedback): Promise<void> {
-  const ref = doc(db, 'users', uid, 'assessment', 'feedback');
-  const snap = await getDoc(ref);
-  const existing: UserFeedback[] = snap.exists() ? snap.data().items : [];
+  const existing = await getFeedback(uid);
   existing.push(feedback);
-  await setDoc(ref, { items: existing, updatedAt: Date.now() });
+  await setAssessmentDoc(uid, 'feedback', { items: existing, updatedAt: Date.now() });
 }
 
 export async function getFeedback(uid: string): Promise<UserFeedback[]> {
-  const snap = await getDoc(doc(db, 'users', uid, 'assessment', 'feedback'));
-  return snap.exists() ? snap.data().items : [];
+  const data = await getAssessmentDoc<{ items: UserFeedback[] }>(uid, 'feedback');
+  return data?.items ?? [];
 }
 
 // --- Module Progress ---
 
 export async function saveModuleProgress(uid: string, progress: QuizModuleProgress): Promise<void> {
-  const ref = doc(db, 'users', uid, 'assessment', 'moduleProgress');
-  const snap = await getDoc(ref);
-  const existing: Record<string, QuizModuleProgress> = snap.exists() ? snap.data().modules : {};
+  const existing = await getModuleProgress(uid);
   existing[progress.moduleId] = progress;
-  await setDoc(ref, { modules: existing, updatedAt: Date.now() });
+  await setAssessmentDoc(uid, 'moduleProgress', { modules: existing, updatedAt: Date.now() });
 }
 
 export async function getModuleProgress(uid: string): Promise<Record<string, QuizModuleProgress>> {
-  const snap = await getDoc(doc(db, 'users', uid, 'assessment', 'moduleProgress'));
-  return snap.exists() ? snap.data().modules : {};
+  const data = await getAssessmentDoc<{ modules: Record<string, QuizModuleProgress> }>(uid, 'moduleProgress');
+  return data?.modules ?? {};
 }
 
 export async function saveConstraints(uid: string, constraints: UserConstraints): Promise<void> {
-  await setDoc(doc(db, 'users', uid, 'assessment', 'constraints'), { constraints, updatedAt: Date.now() });
+  await setAssessmentDoc(uid, 'constraints', { constraints, updatedAt: Date.now() });
 }
 
 export async function getConstraints(uid: string): Promise<UserConstraints | null> {
-  const snap = await getDoc(doc(db, 'users', uid, 'assessment', 'constraints'));
-  return snap.exists() ? snap.data().constraints : null;
+  const data = await getAssessmentDoc<{ constraints: UserConstraints }>(uid, 'constraints');
+  return data?.constraints ?? null;
 }
 
 // --- Computed Profile & Career Recommendations ---
 
 export async function saveComputedProfile(uid: string, profile: ComputedProfile): Promise<void> {
-  await setDoc(doc(db, 'users', uid, 'assessment', 'computedProfile'), { profile, updatedAt: Date.now() });
+  await setAssessmentDoc(uid, 'computedProfile', { profile, updatedAt: Date.now() });
 }
 
 export async function getComputedProfile(uid: string): Promise<ComputedProfile | null> {
-  const snap = await getDoc(doc(db, 'users', uid, 'assessment', 'computedProfile'));
-  return snap.exists() ? snap.data().profile : null;
+  const data = await getAssessmentDoc<{ profile: ComputedProfile }>(uid, 'computedProfile');
+  return data?.profile ?? null;
 }
 
 export async function saveCareerRecommendations(uid: string, recommendations: CareerRecommendation[]): Promise<void> {
-  await setDoc(doc(db, 'users', uid, 'assessment', 'careerRecommendations'), { recommendations, updatedAt: Date.now() });
+  await setAssessmentDoc(uid, 'careerRecommendations', { recommendations, updatedAt: Date.now() });
 }
 
 export async function getCareerRecommendations(uid: string): Promise<CareerRecommendation[]> {
-  const snap = await getDoc(doc(db, 'users', uid, 'assessment', 'careerRecommendations'));
-  return snap.exists() ? snap.data().recommendations : [];
+  const data = await getAssessmentDoc<{ recommendations: CareerRecommendation[] }>(uid, 'careerRecommendations');
+  return data?.recommendations ?? [];
 }
 
 // --- User Profile Updates ---
@@ -138,6 +282,7 @@ export async function updateUserProfile(
       | 'displayName'
       | 'consentSources'
       | 'consentVersion'
+      | 'consentTimestamp'
       | 'ageGateConfirmed'
       | 'videoBehaviorConsent'
       | 'dataRetentionMode'
@@ -145,6 +290,9 @@ export async function updateUserProfile(
   >
 ): Promise<void> {
   await updateDoc(doc(db, 'users', uid), updates);
+  if (updates.dataRetentionMode) {
+    setCachedRetentionMode(uid, resolveRetentionMode(updates.dataRetentionMode));
+  }
 }
 
 export async function disconnectNotion(uid: string): Promise<void> {
@@ -152,26 +300,30 @@ export async function disconnectNotion(uid: string): Promise<void> {
 }
 
 export async function deleteAssessmentData(uid: string, sources?: string[]): Promise<void> {
+  await clearAssessmentSessionCache(uid);
+  clearReportHistorySession(uid);
+
+  const mode = await getRetentionMode(uid);
+  if (mode === 'session_only') return;
+
   if (!sources || sources.length === 0) {
-    // Delete all assessment data
-    const assessmentDocs = ['dataInsights', 'quizAnswers', 'quizScores', 'sessionInsights', 'talentReport', 'signals', 'feedback'];
-    for (const docName of assessmentDocs) {
+    for (const docName of LEGACY_ASSESSMENT_DOCS) {
       try {
         await deleteDoc(doc(db, 'users', uid, 'assessment', docName));
       } catch { /* ignore if doesn't exist */ }
     }
-    // Delete report history
     const historyRef = collection(db, 'users', uid, 'assessment', 'reportHistory', 'versions');
     const historySnap = await getDocs(historyRef);
     for (const d of historySnap.docs) {
       await deleteDoc(d.ref);
     }
-  } else {
-    for (const source of sources) {
-      try {
-        await deleteDoc(doc(db, 'users', uid, 'assessment', source));
-      } catch { /* ignore */ }
-    }
+    return;
+  }
+
+  for (const source of sources) {
+    try {
+      await deleteDoc(doc(db, 'users', uid, 'assessment', source));
+    } catch { /* ignore */ }
   }
 }
 
@@ -185,12 +337,16 @@ export async function resetStages(uid: string): Promise<void> {
 }
 
 export async function resetForRetake(uid: string): Promise<void> {
-  // Delete quiz, session, and report but keep data insights
-  const toDelete = ['quizAnswers', 'quizScores', 'sessionInsights', 'talentReport', 'signals'];
-  for (const docName of toDelete) {
-    try {
-      await deleteDoc(doc(db, 'users', uid, 'assessment', docName));
-    } catch { /* ignore */ }
+  if (await shouldUseSessionStorage(uid)) {
+    await getAdapter('session_only').clear(uid, ['quizAnswers', 'quizScores', 'sessionInsights', 'talentReport', 'signals']);
+    clearReportHistorySession(uid);
+  } else {
+    const toDelete: AssessmentDocKey[] = ['quizAnswers', 'quizScores', 'sessionInsights', 'talentReport', 'signals'];
+    for (const docName of toDelete) {
+      try {
+        await deleteDoc(doc(db, 'users', uid, 'assessment', docName));
+      } catch { /* ignore */ }
+    }
   }
   await updateDoc(doc(db, 'users', uid), {
     'stages.quiz': 'active',
@@ -201,6 +357,12 @@ export async function resetForRetake(uid: string): Promise<void> {
 
 export async function saveReportVersion(uid: string, report: TalentReport, quizScores?: QuizDimensionSummary): Promise<void> {
   const timestamp = Date.now();
+  if (await shouldUseSessionStorage(uid)) {
+    const versions = readReportHistorySession(uid);
+    versions.push({ report, quizScores, timestamp });
+    writeReportHistorySession(uid, versions);
+    return;
+  }
   await setDoc(doc(db, 'users', uid, 'assessment', 'reportHistory', 'versions', String(timestamp)), {
     report,
     quizScores,
@@ -209,11 +371,25 @@ export async function saveReportVersion(uid: string, report: TalentReport, quizS
 }
 
 export async function getReportHistory(uid: string): Promise<{ report: TalentReport; timestamp: number; quizScores?: QuizDimensionSummary }[]> {
+  if (await shouldUseSessionStorage(uid)) {
+    const sessionHistory = readReportHistorySession(uid);
+    if (sessionHistory.length > 0) {
+      return [...sessionHistory].sort((a, b) => b.timestamp - a.timestamp);
+    }
+    // Migration fallback
+  }
+
   const ref = collection(db, 'users', uid, 'assessment', 'reportHistory', 'versions');
   const snap = await getDocs(ref);
-  return snap.docs
+  const history = snap.docs
     .map((d) => d.data() as { report: TalentReport; timestamp: number; quizScores?: QuizDimensionSummary })
     .sort((a, b) => b.timestamp - a.timestamp);
+
+  if (await shouldUseSessionStorage(uid) && history.length > 0) {
+    writeReportHistorySession(uid, history);
+  }
+
+  return history;
 }
 
 // --- Challenges ---
@@ -267,12 +443,11 @@ export async function saveProfileSnapshot(uid: string, snapshot: ProfileSnapshot
 // --- Action Plan Progress ---
 
 export async function getActionPlanProgress(uid: string): Promise<ActionPlanProgress | null> {
-  const snap = await getDoc(doc(db, 'users', uid, 'assessment', 'actionPlanProgress'));
-  return snap.exists() ? (snap.data() as ActionPlanProgress) : null;
+  return getAssessmentDoc<ActionPlanProgress>(uid, 'actionPlanProgress');
 }
 
 export async function saveActionPlanProgress(uid: string, progress: ActionPlanProgress): Promise<void> {
-  await setDoc(doc(db, 'users', uid, 'assessment', 'actionPlanProgress'), progress);
+  await setAssessmentDoc(uid, 'actionPlanProgress', progress);
 }
 
 // --- Corpus Documents ---

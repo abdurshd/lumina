@@ -61,6 +61,25 @@ export function useMicrophone(onAudioData: (base64: string) => void) {
     setIsActive(false);
   }, []);
 
+  const setEnabled = useCallback((enabled: boolean) => {
+    const tracks = streamRef.current?.getAudioTracks() ?? [];
+    for (const track of tracks) {
+      track.enabled = enabled;
+    }
+    setIsActive(enabled && tracks.length > 0);
+  }, []);
+
+  const toggle = useCallback((): boolean => {
+    const tracks = streamRef.current?.getAudioTracks() ?? [];
+    if (tracks.length === 0) return false;
+    const nextEnabled = !tracks[0].enabled;
+    for (const track of tracks) {
+      track.enabled = nextEnabled;
+    }
+    setIsActive(nextEnabled);
+    return nextEnabled;
+  }, []);
+
   useEffect(() => {
     return () => {
       workletRef.current?.disconnect();
@@ -69,5 +88,5 @@ export function useMicrophone(onAudioData: (base64: string) => void) {
     };
   }, []);
 
-  return { isActive, error, start, stop };
+  return { isActive, error, start, stop, setEnabled, toggle };
 }

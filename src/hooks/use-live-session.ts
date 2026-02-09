@@ -27,9 +27,11 @@ export function useLiveSession() {
   const [signals, setSignals] = useState<UserSignal[]>([]);
   const [suggestedModule, setSuggestedModule] = useState<{ moduleId: QuizModuleId; reason: string } | null>(null);
   const [nextSteps, setNextSteps] = useState<NextStepSuggestion[]>([]);
+  const [behaviorCaptureEnabled, setBehaviorCaptureEnabled] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sessionDuration, setSessionDuration] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const behaviorCaptureEnabledRef = useRef(behaviorCaptureEnabled);
 
   const webcam = useWebcam();
 
@@ -38,6 +40,10 @@ export function useLiveSession() {
   }, []);
 
   const microphone = useMicrophone(onSendAudio);
+
+  useEffect(() => {
+    behaviorCaptureEnabledRef.current = behaviorCaptureEnabled;
+  }, [behaviorCaptureEnabled]);
 
   // Use a ref for callbacks so they always reference the latest state setters
   // without causing re-creation of the connect function
@@ -53,6 +59,7 @@ export function useLiveSession() {
       setTranscript((prev) => [...prev, { text, isUser, timestamp: Date.now() }]);
     },
     onInsight: (insight: SessionInsight) => {
+      if (!behaviorCaptureEnabledRef.current) return;
       setInsights((prev) => [...prev, insight]);
     },
     onError: (err: Error) => {
@@ -65,11 +72,6 @@ export function useLiveSession() {
       if (connected) {
         setIsReconnecting(false);
         setReconnectAttempt(0);
-      } else {
-        // Stop sending audio/video when connection drops
-        capturerRef.current?.stop();
-        capturerRef.current = null;
-        microphoneRef.current.stop();
       }
     },
     onInterrupted: () => {
@@ -80,6 +82,7 @@ export function useLiveSession() {
       setReconnectAttempt(attempt);
     },
     onSignal: (signal: UserSignal) => {
+      if (!behaviorCaptureEnabledRef.current) return;
       setSignals((prev) => [...prev, signal]);
     },
     onQuizModuleSuggested: (moduleId: QuizModuleId, reason: string) => {
@@ -98,6 +101,27 @@ export function useLiveSession() {
     webcamRef.current = webcam;
     microphoneRef.current = microphone;
   });
+
+  const stopFrameCapture = useCallback(() => {
+    capturerRef.current?.stop();
+    capturerRef.current = null;
+  }, []);
+
+  const maybeStartFrameCapture = useCallback(() => {
+    if (!isConnected) return;
+    if (!webcamRef.current.isActive) return;
+    if (capturerRef.current) return;
+    const videoEl = webcamRef.current.videoRef.current;
+    if (!videoEl) return;
+
+    const capturer = new FrameCapturer(
+      videoEl,
+      (base64) => managerRef.current?.sendVideo(base64),
+      1,
+    );
+    capturerRef.current = capturer;
+    capturer.start();
+  }, [isConnected]);
 
   const connect = useCallback(
     async (
@@ -118,29 +142,18 @@ export function useLiveSession() {
     await playbackRef.current.resume();
 
     await manager.connect(authToken, dataContext, apiVersion);
-
-    // Start video frame capture
-    if (webcamRef.current.videoRef.current) {
-      const capturer = new FrameCapturer(
-        webcamRef.current.videoRef.current,
-        (base64) => manager.sendVideo(base64),
-        1 // 1 FPS
-      );
-      capturerRef.current = capturer;
-      capturer.start();
-    }
+    maybeStartFrameCapture();
 
     // Start session timer
     timerRef.current = setInterval(() => {
       setSessionDuration((prev) => prev + 1);
     }, 1000);
     },
-    []
+    [maybeStartFrameCapture]
   );
 
   const disconnect = useCallback(() => {
-    capturerRef.current?.stop();
-    capturerRef.current = null;
+    stopFrameCapture();
     microphoneRef.current.stop();
     webcamRef.current.stop();
     playbackRef.current?.close();
@@ -151,11 +164,37 @@ export function useLiveSession() {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
-  }, []);
+  }, [stopFrameCapture]);
 
   const sendText = useCallback((text: string) => {
     managerRef.current?.sendText(text);
   }, []);
+
+  const toggleBehaviorCapture = useCallback(() => {
+    setBehaviorCaptureEnabled((prev) => !prev);
+  }, []);
+
+  const toggleCamera = useCallback(() => {
+    const enabled = webcamRef.current.toggle();
+    if (!enabled) {
+      stopFrameCapture();
+      return;
+    }
+    maybeStartFrameCapture();
+  }, [maybeStartFrameCapture, stopFrameCapture]);
+
+  const toggleMicrophone = useCallback(() => {
+    microphoneRef.current.toggle();
+  }, []);
+
+  useEffect(() => {
+    if (!isConnected) return;
+    if (webcam.isActive) {
+      maybeStartFrameCapture();
+    } else {
+      stopFrameCapture();
+    }
+  }, [isConnected, webcam.isActive, maybeStartFrameCapture, stopFrameCapture]);
 
   useEffect(() => {
     return () => {
@@ -174,6 +213,7 @@ export function useLiveSession() {
     transcript,
     insights,
     signals,
+    behaviorCaptureEnabled,
     suggestedModule,
     nextSteps,
     dismissSuggestedModule: () => setSuggestedModule(null),
@@ -184,5 +224,8 @@ export function useLiveSession() {
     connect,
     disconnect,
     sendText,
+    toggleBehaviorCapture,
+    toggleCamera,
+    toggleMicrophone,
   };
 }

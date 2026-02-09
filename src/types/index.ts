@@ -67,7 +67,7 @@ export interface QuizAnswer {
 
 export interface QuizScore {
   questionId: string;
-  dimensionScores: { dimension: string; score: number; rationale: string }[];
+  dimensionScores: { dimension: string; score: number; rationale: string; confidence?: number }[];
 }
 
 export type QuizDimensionSummary = Record<string, number>;
@@ -75,8 +75,20 @@ export type QuizDimensionSummary = Record<string, number>;
 export interface SessionInsight {
   timestamp: number;
   observation: string;
-  category: 'body_language' | 'voice_tone' | 'enthusiasm' | 'analytical' | 'creative' | 'interpersonal';
+  category:
+    | 'engagement'
+    | 'hesitation'
+    | 'emotional_intensity'
+    | 'clarity_structure'
+    | 'collaboration_orientation'
+    | 'body_language'
+    | 'voice_tone'
+    | 'enthusiasm'
+    | 'analytical'
+    | 'creative'
+    | 'interpersonal';
   confidence: number;
+  evidence?: string;
 }
 
 export interface TalentReport {
@@ -88,6 +100,7 @@ export interface TalentReport {
   careerPaths: CareerPath[];
   actionPlan: ActionItem[];
   personalityInsights: string[];
+  confidenceNotes: string[];
   careerRecommendations?: CareerRecommendation[];
 }
 
@@ -106,8 +119,8 @@ export interface Strength {
   name: string;
   score: number;
   evidence: string;
-  evidenceSources?: EvidenceSource[];
-  confidenceLevel?: 'high' | 'medium' | 'low';
+  evidenceSources: EvidenceSource[];
+  confidenceLevel: 'high' | 'medium' | 'low';
 }
 
 export interface CareerPath {
@@ -115,11 +128,11 @@ export interface CareerPath {
   match: number;
   description: string;
   nextSteps: string[];
-  riasecCodes?: string;
-  onetCluster?: string;
-  evidenceSources?: string[];
-  confidence?: number;
-  whyYou?: string;
+  riasecCodes: string;
+  onetCluster: string;
+  evidenceSources: string[];
+  confidence: number;
+  whyYou: string;
 }
 
 export interface ActionItem {

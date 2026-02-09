@@ -8,6 +8,7 @@ import {
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
 import { getUserProfile, createUserProfile } from '@/lib/firebase/firestore';
+import { clearAssessmentSessionCache, clearCachedRetentionMode, resolveRetentionMode, setCachedRetentionMode } from '@/lib/storage/assessment-storage';
 import type { UserProfile } from '@/types';
 import { useAssessmentStore } from './assessment-store';
 
@@ -42,6 +43,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (u) {
         const existing = await getUserProfile(u.uid);
         if (existing) {
+          setCachedRetentionMode(u.uid, resolveRetentionMode(existing.dataRetentionMode));
           set({ profile: existing });
         }
       } else {
@@ -77,14 +79,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           report: 'locked',
         },
         googleAccessToken: accessToken ?? undefined,
+        dataRetentionMode: 'session_only',
       };
       await createUserProfile(newProfile);
+      setCachedRetentionMode(u.uid, resolveRetentionMode(newProfile.dataRetentionMode));
       existing = newProfile;
+    } else {
+      setCachedRetentionMode(u.uid, resolveRetentionMode(existing.dataRetentionMode));
     }
     set({ profile: existing });
   },
 
   signOut: async () => {
+    const uid = get().user?.uid;
+    if (uid) {
+      await clearAssessmentSessionCache(uid);
+      clearCachedRetentionMode(uid);
+    }
     await firebaseSignOut(auth);
     set({ user: null, profile: null, googleAccessToken: null });
     useAssessmentStore.getState().reset();
@@ -94,6 +105,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const { user } = get();
     if (!user) return;
     const p = await getUserProfile(user.uid);
+    if (p) {
+      setCachedRetentionMode(user.uid, resolveRetentionMode(p.dataRetentionMode));
+    }
     set({ profile: p });
   },
 

@@ -2,6 +2,91 @@
 
 Last updated: 2026-02-09
 
+## Execution Tracker
+
+### Workstream Status
+- [x] Workstream A: Security, Consent, and Compliance
+- [x] Workstream B: Session-Only Data Architecture
+- [x] Workstream C: Psychometric Core v2
+- [x] Workstream D: Live Session Intelligence v2
+- [ ] Workstream E: Connector and Ingestion Robustness
+- [ ] Workstream F: BYOK and Cost Governance
+- [ ] Workstream G: Report, Roadmap, and Portfolio Task Engine
+- [ ] Workstream H: Iteration and Evolution Loop
+- [ ] Workstream I: Testing and QA
+- [ ] Workstream J: Observability and Operations
+
+### Task Checklist
+
+#### Workstream A Tasks
+- [x] A1. Keep ephemeral token flow only for Live API.
+- [x] A2. Enforce token constraints (`liveConnectConstraints`).
+- [x] A3. Require all live consent flags before token issuance and session start.
+- [x] A4. Add compliance banner in admin/settings indicating unresolved 16+ legal gate.
+- [x] A5. Add audit fields for consent versioning and consent timestamp updates.
+
+#### Workstream B Tasks
+- [x] B1. Implement storage adapter interface (`AssessmentStorageAdapter`).
+- [x] B2. Add runtime selector (default `session_only`).
+- [x] B3. Refactor assessment save/get helpers to adapter.
+- [x] B4. Update affected screens and mutations to avoid direct Firestore assumptions.
+- [x] B5. Add migration fallback for users with legacy persisted docs.
+- [x] B6. Add purge-on-signout/session-expire behaviors.
+
+#### Workstream C Tasks
+- [x] C1. Define and lock dimension model (RIASEC/work values/constraints/signals).
+- [x] C2. Build scoring normalization and confidence calibration.
+- [x] C3. Create synthetic profile benchmark corpus and consistency checks.
+- [x] C4. Harden rubric/scoring prompts with strict structured schemas.
+- [x] C5. Add confidence/evidence-chain requirements in final report schema.
+
+#### Workstream D Tasks
+- [x] D1. Define behavioral signal taxonomy.
+- [x] D2. Update live prompt/tool grounding rules.
+- [x] D3. Add post-session summarization and deduplication pass.
+- [x] D4. Improve reconnect/resumption/compression resilience.
+- [x] D5. Add in-session user controls for behavioral capture.
+
+#### Workstream E Tasks
+- [ ] E1. Standardize ingestion response shape.
+- [ ] E2. Add per-source token/size/quality metadata.
+- [ ] E3. Add extraction limits and truncation summaries.
+- [ ] E4. Add corpus lifecycle management UX.
+- [ ] E5. Add source deletion and consent revocation handling.
+
+#### Workstream F Tasks
+- [ ] F1. Add BYOK settings UI.
+- [ ] F2. Add secure BYOK storage/reference strategy.
+- [ ] F3. Add request routing policy (BYOK vs platform key).
+- [ ] F4. Add usage accounting per feature/stage.
+- [ ] F5. Add soft/hard budget caps and fallback policy.
+
+#### Workstream G Tasks
+- [ ] G1. Expand report schema for rationale/evidence/risk.
+- [ ] G2. Build 30/60/90-day learning roadmap generator.
+- [ ] G3. Build role-specific portfolio task ladders.
+- [ ] G4. Close regeneration loop with structured feedback deltas.
+
+#### Workstream H Tasks
+- [ ] H1. Complete challenge generation/completion flow.
+- [ ] H2. Complete reflection timeline flow.
+- [ ] H3. Implement profile snapshot diff engine.
+- [ ] H4. Render dimension trend views.
+- [ ] H5. Add progression nudges and iteration cadence.
+
+#### Workstream I Tasks
+- [ ] I1. Add unit tests for auth/schema guardrails.
+- [ ] I2. Add integration tests for critical API routes.
+- [ ] I3. Add Playwright E2E for mobile and desktop critical flow.
+- [ ] I4. Add psychometric consistency/bias evaluation scripts.
+- [ ] I5. Add release smoke-test checklist and CI gate.
+
+#### Workstream J Tasks
+- [ ] J1. Add structured logging with request IDs.
+- [ ] J2. Add error taxonomy dashboard.
+- [ ] J3. Add performance monitoring and latency/error metrics.
+- [ ] J4. Add alerting for model and route degradation.
+
 ## 0. Objective
 Build Lumina into a production-grade multimodal talent discovery platform that helps users identify strengths, career fit, and concrete next actions by combining:
 - connected personal data sources,

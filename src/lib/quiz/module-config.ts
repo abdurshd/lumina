@@ -1,4 +1,11 @@
 import type { QuizModuleId } from '@/types';
+import {
+  RIASEC_DIMENSIONS,
+  WORK_VALUE_DIMENSIONS,
+  SKILL_CONFIDENCE_DIMENSIONS,
+  LEARNING_ENVIRONMENT_DIMENSIONS,
+  CONSTRAINT_SIGNAL_DIMENSIONS,
+} from '@/lib/psychometrics/dimension-model';
 
 export interface QuizModuleConfig {
   id: QuizModuleId;
@@ -15,7 +22,7 @@ export const QUIZ_MODULES: QuizModuleConfig[] = [
     label: 'Interests',
     description: 'Explore what naturally draws your attention and energy using RIASEC dimensions.',
     questionCount: 5,
-    dimensions: ['Realistic', 'Investigative', 'Artistic', 'Social', 'Enterprising', 'Conventional'],
+    dimensions: [...RIASEC_DIMENSIONS],
     icon: 'Compass',
   },
   {
@@ -23,7 +30,7 @@ export const QUIZ_MODULES: QuizModuleConfig[] = [
     label: 'Work Values',
     description: 'Understand what matters most to you in a work environment.',
     questionCount: 4,
-    dimensions: ['Autonomy', 'Stability', 'Helping_Others', 'Achievement', 'Variety', 'Recognition'],
+    dimensions: [...WORK_VALUE_DIMENSIONS],
     icon: 'Heart',
   },
   {
@@ -31,7 +38,7 @@ export const QUIZ_MODULES: QuizModuleConfig[] = [
     label: 'Strengths & Skills',
     description: 'Identify your natural abilities across creative, analytical, and interpersonal domains.',
     questionCount: 4,
-    dimensions: ['Creative_Thinking', 'Analytical_Ability', 'Interpersonal_Skills'],
+    dimensions: [...SKILL_CONFIDENCE_DIMENSIONS],
     icon: 'Zap',
   },
   {
@@ -39,7 +46,7 @@ export const QUIZ_MODULES: QuizModuleConfig[] = [
     label: 'Learning & Environment',
     description: 'Discover how you learn best and what work environment suits you.',
     questionCount: 3,
-    dimensions: ['Learning_Style', 'Environment_Preference', 'Risk_Tolerance'],
+    dimensions: [...LEARNING_ENVIRONMENT_DIMENSIONS],
     icon: 'BookOpen',
   },
   {
@@ -47,7 +54,7 @@ export const QUIZ_MODULES: QuizModuleConfig[] = [
     label: 'Life Constraints',
     description: 'Help us understand your practical considerations for career recommendations.',
     questionCount: 4,
-    dimensions: ['Location', 'Salary', 'Time', 'Education'],
+    dimensions: [...CONSTRAINT_SIGNAL_DIMENSIONS],
     icon: 'Settings',
   },
 ];

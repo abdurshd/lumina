@@ -1,6 +1,12 @@
-import type { ComputedProfile, UserSignal, UserConstraints, QuizDimensionSummary } from '@/types';
+import type { ComputedProfile, UserSignal, UserConstraints, QuizDimensionSummary, SessionInsight } from '@/types';
+import {
+  BEHAVIORAL_SIGNAL_FACTORS,
+  normalizeDimensionName,
+  RIASEC_DIMENSIONS,
+  SESSION_CATEGORY_DIMENSION_WEIGHTS,
+  type PsychometricDimension,
+} from '@/lib/psychometrics/dimension-model';
 
-const RIASEC_DIMENSIONS = ['Realistic', 'Investigative', 'Artistic', 'Social', 'Enterprising', 'Conventional'];
 const RIASEC_LETTER_MAP: Record<string, string> = {
   Realistic: 'R',
   Investigative: 'I',
@@ -13,7 +19,9 @@ const RIASEC_LETTER_MAP: Record<string, string> = {
 interface ProfileBuilderInput {
   quizDimensionScores: QuizDimensionSummary;
   signals?: UserSignal[];
+  sessionInsights?: SessionInsight[];
   constraints?: UserConstraints;
+  dimensionConfidence?: QuizDimensionSummary;
 }
 
 /**
@@ -21,29 +29,63 @@ interface ProfileBuilderInput {
  * and returns a ComputedProfile with RIASEC code + confidence scores.
  */
 export function buildComputedProfile(input: ProfileBuilderInput): ComputedProfile {
-  const { quizDimensionScores, signals, constraints } = input;
+  const {
+    quizDimensionScores,
+    signals,
+    sessionInsights,
+    constraints,
+    dimensionConfidence,
+  } = input;
+  const normalizedQuizScores = normalizeDimensionScores(quizDimensionScores);
 
-  // Extract RIASEC scores from dimension scores
-  const riasecScores: Record<string, number> = {};
+  // Start from quiz-derived dimension values.
+  const dimensionScores: Record<string, number> = { ...normalizedQuizScores };
   for (const dim of RIASEC_DIMENSIONS) {
-    riasecScores[dim] = quizDimensionScores[dim] ?? 0;
+    dimensionScores[dim] = normalizedQuizScores[dim] ?? 0;
   }
-
-  // Boost RIASEC scores based on signal evidence
-  if (signals && signals.length > 0) {
-    for (const signal of signals) {
-      const dims = signal.dimensions ?? [];
-      for (const dim of dims) {
-        if (dim in riasecScores) {
-          riasecScores[dim] = Math.min(100, riasecScores[dim] + signal.confidence * 5);
-        }
-      }
+  for (const factor of BEHAVIORAL_SIGNAL_FACTORS) {
+    if (!(factor in dimensionScores)) {
+      dimensionScores[factor] = 0;
     }
   }
 
+  const signalSupport: Record<string, number> = {};
+  const sessionSupport: Record<string, number> = {};
+
+  // Calibrated boost from explicit talent signals.
+  for (const signal of signals ?? []) {
+    const conf = normalizeConfidence(signal.confidence);
+    for (const rawDimension of signal.dimensions ?? []) {
+      const dim = normalizeDimensionName(rawDimension);
+      if (!dim) continue;
+      dimensionScores[dim] = clampScore((dimensionScores[dim] ?? 0) + conf * 10);
+      signalSupport[dim] = (signalSupport[dim] ?? 0) + 1;
+    }
+  }
+
+  // Convert live-session observations into bounded support signals.
+  for (const insight of sessionInsights ?? []) {
+    const conf = normalizeConfidence(insight.confidence);
+    const mapped = SESSION_CATEGORY_DIMENSION_WEIGHTS[insight.category];
+    if (!mapped) continue;
+
+    for (const [rawDimension, weight] of Object.entries(mapped)) {
+      if (typeof weight !== 'number') continue;
+      const dim = normalizeDimensionName(rawDimension);
+      if (!dim) continue;
+
+      const isBehaviorFactor = BEHAVIORAL_SIGNAL_FACTORS.includes(dim as (typeof BEHAVIORAL_SIGNAL_FACTORS)[number]);
+      const delta = isBehaviorFactor ? conf * weight * 100 : conf * weight * 12;
+      dimensionScores[dim] = clampScore((dimensionScores[dim] ?? 0) + delta);
+      sessionSupport[dim] = (sessionSupport[dim] ?? 0) + 1;
+    }
+  }
+
+  calibrateRiasecDistribution(dimensionScores);
+
   // Sort RIASEC dimensions by score descending, take top 3 for code
   const sortedRiasec = RIASEC_DIMENSIONS
-    .map((dim) => ({ dim, score: riasecScores[dim] }))
+    .map((dim) => ({ dim, score: dimensionScores[dim] }))
     .sort((a, b) => b.score - a.score);
 
   const riasecCode = sortedRiasec
@@ -51,26 +93,26 @@ export function buildComputedProfile(input: ProfileBuilderInput): ComputedProfil
     .map((r) => RIASEC_LETTER_MAP[r.dim])
     .join('');
 
-  // Build complete dimension scores (RIASEC + other quiz dimensions)
-  const dimensionScores: Record<string, number> = { ...quizDimensionScores };
-  for (const dim of RIASEC_DIMENSIONS) {
-    dimensionScores[dim] = riasecScores[dim];
-  }
-
-  // Compute confidence scores based on data coverage
+  // Compute confidence scores based on multi-source coverage + calibrated quiz confidence.
   const confidenceScores: Record<string, number> = {};
-  const quizDimCount = Object.keys(quizDimensionScores).length;
+  const quizDimCount = Object.keys(normalizedQuizScores).length;
 
   for (const dim of Object.keys(dimensionScores)) {
-    const hasQuizData = dim in quizDimensionScores && quizDimensionScores[dim] > 0;
-    const signalSupport = signals?.filter((s) => s.dimensions?.includes(dim)).length ?? 0;
+    const quizValue = normalizedQuizScores[dim];
+    const hasQuizData = typeof quizValue === 'number';
+    const signalEvidence = signalSupport[dim] ?? 0;
+    const sessionEvidence = sessionSupport[dim] ?? 0;
+    const baseline = 15
+      + (hasQuizData ? 45 : 0)
+      + Math.min(15, signalEvidence * 5)
+      + Math.min(15, sessionEvidence * 5)
+      + (quizDimCount >= 8 ? 10 : 0);
+    const providedConfidence = dimensionConfidence?.[dim];
+    const calibrated = typeof providedConfidence === 'number'
+      ? Math.round((baseline * 0.6) + (clampScore(providedConfidence) * 0.4))
+      : baseline;
 
-    let confidence = 20; // baseline
-    if (hasQuizData) confidence += 40;
-    if (signalSupport > 0) confidence += Math.min(30, signalSupport * 10);
-    if (quizDimCount >= 6) confidence += 10;
-
-    confidenceScores[dim] = Math.min(100, confidence);
+    confidenceScores[dim] = clampScore(calibrated);
   }
 
   return {
@@ -79,4 +121,58 @@ export function buildComputedProfile(input: ProfileBuilderInput): ComputedProfil
     confidenceScores,
     constraints,
   };
+}
+
+function normalizeDimensionScores(scores: QuizDimensionSummary): Record<string, number> {
+  const byDimension = new Map<PsychometricDimension, number[]>();
+
+  for (const [rawDimension, rawScore] of Object.entries(scores)) {
+    const dimension = normalizeDimensionName(rawDimension);
+    if (!dimension) continue;
+    const clamped = clampScore(rawScore);
+    const existing = byDimension.get(dimension) ?? [];
+    existing.push(clamped);
+    byDimension.set(dimension, existing);
+  }
+
+  const normalized: Partial<Record<PsychometricDimension, number>> = {};
+  for (const [dimension, values] of byDimension.entries()) {
+    const winsorized = winsorize(values);
+    const avg = winsorized.reduce((sum, value) => sum + value, 0) / winsorized.length;
+    normalized[dimension] = Math.round(avg);
+  }
+
+  return normalized as Record<string, number>;
+}
+
+function winsorize(values: number[]): number[] {
+  if (values.length < 4) return values.map((value) => clampScore(value));
+  const sorted = [...values].sort((a, b) => a - b);
+  const lower = sorted[1];
+  const upper = sorted[sorted.length - 2];
+  return sorted.map((value) => Math.max(lower, Math.min(upper, value)));
+}
+
+function calibrateRiasecDistribution(dimensionScores: Record<string, number>): void {
+  const values = RIASEC_DIMENSIONS.map((dim) => dimensionScores[dim] ?? 0);
+  const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
+  const variance = values.reduce((sum, value) => sum + (value - mean) ** 2, 0) / values.length;
+  const std = Math.sqrt(variance) || 1;
+
+  for (const dim of RIASEC_DIMENSIONS) {
+    const raw = dimensionScores[dim] ?? 0;
+    const zScore = (raw - mean) / std;
+    const normalized = clampScore(50 + zScore * 15);
+    dimensionScores[dim] = Math.round((raw * 0.7) + (normalized * 0.3));
+  }
+}
+
+function normalizeConfidence(raw: number): number {
+  if (raw > 1) return clampScore(raw) / 100;
+  return Math.max(0, Math.min(1, raw));
+}
+
+function clampScore(value: number): number {
+  if (!Number.isFinite(value)) return 0;
+  return Math.max(0, Math.min(100, Math.round(value)));
 }

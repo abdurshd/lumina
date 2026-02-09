@@ -5,7 +5,18 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/auth-store';
 import { useAssessmentStore } from '@/stores/assessment-store';
-import { saveTalentReport, saveReportVersion, getDataInsights, getQuizAnswers, getSessionInsights, getQuizScores } from '@/lib/firebase/firestore';
+import {
+  saveTalentReport,
+  saveReportVersion,
+  getDataInsights,
+  getQuizAnswers,
+  getSessionInsights,
+  getQuizScores,
+  getConstraints,
+  saveComputedProfile,
+  saveCareerRecommendations,
+} from '@/lib/firebase/firestore';
+import { buildComputedProfile } from '@/lib/career/profile-builder';
 import { FetchError } from '@/lib/fetch-client';
 import { useReportMutation, useFeedbackMutation, useRegenerateReportMutation } from '@/hooks/use-api-mutations';
 import { useTalentReportQuery } from '@/hooks/use-api-queries';
@@ -25,7 +36,7 @@ import { LuminaIcon } from '@/components/icons/lumina-icon';
 
 export default function ReportPage() {
   const { user } = useAuthStore();
-  const { dataInsights, quizAnswers, sessionInsights, report, setReport, advanceStage } = useAssessmentStore();
+  const { dataInsights, quizAnswers, sessionInsights, constraints, report, setReport, advanceStage } = useAssessmentStore();
 
   const reportMutation = useReportMutation();
   const feedbackMutation = useFeedbackMutation();
@@ -51,16 +62,34 @@ export default function ReportPage() {
       const quiz = quizAnswers.length > 0 ? quizAnswers : await getQuizAnswers(user.uid);
       const session = sessionInsights.length > 0 ? sessionInsights : await getSessionInsights(user.uid);
       const quizScoresData = await getQuizScores(user.uid);
+      const resolvedConstraints = constraints ?? await getConstraints(user.uid) ?? undefined;
+      const computedProfile = quizScoresData
+        ? buildComputedProfile({
+            quizDimensionScores: quizScoresData.dimensionSummary,
+            sessionInsights: session,
+            constraints: resolvedConstraints,
+            dimensionConfidence: quizScoresData.dimensionConfidence,
+          })
+        : undefined;
 
       reportMutation.mutate({
         dataInsights: insights,
         quizAnswers: quiz,
         sessionInsights: session,
         quizScores: quizScoresData?.dimensionSummary,
+        quizConfidence: quizScoresData?.dimensionConfidence,
+        computedProfile,
+        constraints: resolvedConstraints,
       }, {
         onSuccess: async (reportData) => {
           await saveTalentReport(user.uid, reportData);
           await saveReportVersion(user.uid, reportData, quizScoresData?.dimensionSummary);
+          if (computedProfile) {
+            await saveComputedProfile(user.uid, computedProfile);
+          }
+          if (reportData.careerRecommendations && reportData.careerRecommendations.length > 0) {
+            await saveCareerRecommendations(user.uid, reportData.careerRecommendations);
+          }
           setReport(reportData);
           await advanceStage('report');
           toast.success('Your talent report is ready!');
@@ -73,7 +102,7 @@ export default function ReportPage() {
     } catch {
       toast.error('Failed to load assessment data.');
     }
-  }, [user, dataInsights, quizAnswers, sessionInsights, setReport, advanceStage, reportMutation]);
+  }, [user, dataInsights, quizAnswers, sessionInsights, constraints, setReport, advanceStage, reportMutation]);
 
   const handleCareerFeedback = useCallback((pathTitle: string, feedback: 'agree' | 'disagree', reason?: string) => {
     feedbackMutation.mutate({ itemType: 'career', itemId: pathTitle, feedback, reason });
@@ -87,7 +116,15 @@ export default function ReportPage() {
 
   const handleRegenerate = useCallback(async () => {
     if (!user || !regenerateFeedback.trim()) return;
-    regenerateMutation.mutate({ feedback: regenerateFeedback }, {
+    regenerateMutation.mutate({
+      feedback: regenerateFeedback,
+      context: {
+        dataInsights,
+        quizAnswers,
+        sessionInsights,
+        existingReport: report ?? undefined,
+      },
+    }, {
       onSuccess: async (reportData) => {
         await saveTalentReport(user.uid, reportData);
         await saveReportVersion(user.uid, reportData);
@@ -102,7 +139,7 @@ export default function ReportPage() {
         toast.error(message);
       },
     });
-  }, [user, regenerateFeedback, regenerateMutation, setReport]);
+  }, [user, regenerateFeedback, regenerateMutation, setReport, dataInsights, quizAnswers, sessionInsights, report]);
 
   if (reportQuery.isLoading) {
     return (
@@ -262,6 +299,24 @@ export default function ReportPage() {
           </CardContent>
         </Card>
       </ScrollReveal>
+
+      {/* Confidence Notes */}
+      {(report.confidenceNotes ?? []).length > 0 && (
+        <ScrollReveal>
+          <Card className="mb-8 border-yellow-500/25">
+            <CardHeader>
+              <CardTitle className="font-sans">Confidence Notes</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {(report.confidenceNotes ?? []).map((note, i) => (
+                <p key={i} className="text-sm text-muted-foreground">
+                  {note}
+                </p>
+              ))}
+            </CardContent>
+          </Card>
+        </ScrollReveal>
+      )}
 
       <div className="h-[2px] bg-overlay-light my-12" />
 

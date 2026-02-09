@@ -152,7 +152,7 @@ export default function QuizPage() {
           quizScoreMutation.mutate({ answers: updatedAnswers, questions }, {
             onSuccess: async (result) => {
               try {
-                await saveQuizScores(user.uid, result.scores, result.dimensionSummary);
+                await saveQuizScores(user.uid, result.scores, result.dimensionSummary, result.dimensionConfidence);
                 setDimensionSummary(result.dimensionSummary);
                 await advanceStage('quiz');
                 setIsComplete(true);

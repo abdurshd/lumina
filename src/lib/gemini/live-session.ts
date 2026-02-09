@@ -13,6 +13,7 @@ import { GEMINI_MODELS } from "./models";
 import { LIVE_SESSION_SYSTEM_PROMPT } from "./prompts";
 import { SaveInsightFunctionDeclaration, FetchUserProfileDeclaration, SaveSignalDeclaration, StartQuizModuleDeclaration, ScheduleNextStepDeclaration } from "@/lib/schemas/session";
 import type { SessionInsight, UserSignal, QuizModuleId } from "@/types";
+import { normalizeSessionInsightCategory } from "@/lib/psychometrics/dimension-model";
 
 export interface NextStepSuggestion {
   title: string;
@@ -34,9 +35,9 @@ export interface LiveSessionCallbacks {
   onNextStepScheduled?: (step: NextStepSuggestion) => void;
 }
 
-const MAX_RECONNECT_RETRIES = 3;
+const MAX_RECONNECT_RETRIES = 5;
 const RECONNECT_BASE_DELAY_MS = 1000;
-const CONTEXT_TOKEN_THRESHOLD = 80_000;
+const CONTEXT_TOKEN_THRESHOLD = 65_000;
 const CHARS_PER_TOKEN = 4;
 
 export class LiveSessionManager {
@@ -45,9 +46,12 @@ export class LiveSessionManager {
   private insights: SessionInsight[] = [];
   private sessionHandle: string | null = null;
   private apiKey: string | null = null;
+  private apiVersion: 'v1alpha' | 'v1' = 'v1alpha';
   private dataContext: string | null = null;
   private transcriptCharCount = 0;
   private isReconnecting = false;
+  private manualDisconnect = false;
+  private pendingUserTurns: string[] = [];
   private _connected = false;
 
   constructor(callbacks: LiveSessionCallbacks) {
@@ -61,6 +65,8 @@ export class LiveSessionManager {
   ): Promise<void> {
     this.apiKey = authToken;
     this.dataContext = dataContext;
+    this.apiVersion = apiVersion;
+    this.manualDisconnect = false;
 
     try {
       const client = new GoogleGenAI({
@@ -85,6 +91,9 @@ export class LiveSessionManager {
             this._connected = false;
             if (!this.isReconnecting) {
               this.callbacks.onConnectionChange(false);
+              if (!this.manualDisconnect && this.apiKey && this.dataContext) {
+                this.reconnect();
+              }
             }
           },
         },
@@ -110,6 +119,7 @@ export class LiveSessionManager {
           },
         },
       });
+      this.flushPendingUserTurns();
     } catch (error) {
       this.callbacks.onError(
         error instanceof Error ? error : new Error(String(error)),
@@ -135,11 +145,16 @@ export class LiveSessionManager {
         const args = fc.args as Record<string, unknown>;
 
         if (fc.name === "saveInsight") {
+          const normalizedCategory = normalizeSessionInsightCategory(String(args.category ?? ""));
+          const parsedConfidence = Number(args.confidence ?? 0.5);
           const insight: SessionInsight = {
             timestamp: Date.now(),
             observation: String(args.observation ?? ""),
-            category: args.category as SessionInsight["category"],
-            confidence: Number(args.confidence ?? 0.5),
+            category: normalizedCategory ?? 'engagement',
+            confidence: Number.isFinite(parsedConfidence)
+              ? Math.max(0, Math.min(1, parsedConfidence))
+              : 0.5,
+            evidence: String(args.evidence ?? ""),
           };
           this.insights.push(insight);
           this.callbacks.onInsight(insight);
@@ -228,11 +243,12 @@ export class LiveSessionManager {
 
     for (let attempt = 1; attempt <= MAX_RECONNECT_RETRIES; attempt++) {
       this.callbacks.onReconnecting?.(attempt);
-      const delay = RECONNECT_BASE_DELAY_MS * Math.pow(2, attempt - 1);
+      const jitter = 0.8 + (Math.random() * 0.4);
+      const delay = Math.round(RECONNECT_BASE_DELAY_MS * Math.pow(2, attempt - 1) * jitter);
       await new Promise((resolve) => setTimeout(resolve, delay));
 
       try {
-        await this.connect(this.apiKey, this.dataContext);
+        await this.connect(this.apiKey, this.dataContext, this.apiVersion);
         this.isReconnecting = false;
         return;
       } catch {
@@ -294,7 +310,10 @@ export class LiveSessionManager {
   }
 
   sendText(text: string): void {
-    if (!this.session || !this._connected) return;
+    if (!this.session || !this._connected) {
+      this.pendingUserTurns.push(text);
+      return;
+    }
     this.session.sendClientContent({
       turns: [{ role: "user", parts: [{ text }] }],
       turnComplete: true,
@@ -308,6 +327,7 @@ export class LiveSessionManager {
   }
 
   disconnect(): void {
+    this.manualDisconnect = true;
     this._connected = false;
     if (this.session) {
       try {
@@ -317,6 +337,22 @@ export class LiveSessionManager {
       }
       this.session = null;
       this.callbacks.onConnectionChange(false);
+    }
+  }
+
+  private flushPendingUserTurns(): void {
+    if (!this.session || !this._connected) return;
+    if (this.pendingUserTurns.length === 0) return;
+
+    const queued = [...this.pendingUserTurns];
+    this.pendingUserTurns = [];
+    for (const text of queued) {
+      this.session.sendClientContent({
+        turns: [{ role: "user", parts: [{ text }] }],
+        turnComplete: true,
+      });
+      this.callbacks.onTranscript(text, true);
+      this.transcriptCharCount += text.length;
     }
   }
 }

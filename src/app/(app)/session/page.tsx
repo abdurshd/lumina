@@ -7,7 +7,8 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useLiveSession } from '@/hooks/use-live-session';
 import { useAuthStore } from '@/stores/auth-store';
 import { useAssessmentStore } from '@/stores/assessment-store';
-import { saveSessionInsights } from '@/lib/firebase/firestore';
+import { saveSessionInsights, saveUserSignals } from '@/lib/firebase/firestore';
+import { summarizeLiveSessionArtifacts } from '@/lib/session/post-session-summary';
 import { FetchError } from '@/lib/fetch-client';
 import { useEphemeralTokenMutation } from '@/hooks/use-api-mutations';
 import { WebcamPreview } from '@/components/session/webcam-preview';
@@ -39,6 +40,8 @@ export default function SessionPage() {
     reconnectAttempt,
     transcript,
     insights,
+    signals,
+    behaviorCaptureEnabled,
     suggestedModule,
     nextSteps,
     dismissSuggestedModule,
@@ -49,6 +52,9 @@ export default function SessionPage() {
     connect,
     disconnect,
     sendText,
+    toggleBehaviorCapture,
+    toggleCamera,
+    toggleMicrophone,
   } = useLiveSession();
 
   const { user, profile } = useAuthStore();
@@ -104,18 +110,20 @@ export default function SessionPage() {
     setIsSaving(true);
     try {
       disconnect();
-      if (user && insights.length > 0) {
-        await saveSessionInsights(user.uid, insights);
-        setSessionInsights(insights);
+      if (user && (insights.length > 0 || signals.length > 0)) {
+        const summarized = summarizeLiveSessionArtifacts({ insights, signals });
+        await saveSessionInsights(user.uid, summarized.insights);
+        await saveUserSignals(user.uid, summarized.signals);
+        setSessionInsights(summarized.insights);
         await advanceStage('session');
-        toast.success(`Session complete! ${insights.length} insights captured.`);
+        toast.success(`Session complete! ${summarized.insights.length} insights captured.`);
       }
     } catch {
       toast.error('Failed to save session data');
     } finally {
       setIsSaving(false);
     }
-  }, [disconnect, user, insights, setSessionInsights, advanceStage]);
+  }, [disconnect, user, insights, signals, setSessionInsights, advanceStage]);
 
   const handleSendText = useCallback(() => {
     if (!textInput.trim()) return;
@@ -145,6 +153,7 @@ export default function SessionPage() {
     : {
         scale: [1, 1.02, 1],
         transition: {
+          type: 'tween' as const,
           duration: 2,
           repeat: Infinity,
           ease: 'easeInOut' as const,
@@ -176,6 +185,12 @@ export default function SessionPage() {
           onRetry={() => setError(null)}
           className="mb-6"
         />
+      )}
+
+      {isConnected && !behaviorCaptureEnabled && (
+        <div className="mb-6 rounded-xl border-2 border-yellow-500/30 bg-yellow-500/10 px-4 py-3 text-sm text-yellow-600">
+          Behavioral capture is paused. Conversation continues, but no new behavioral insights/signals are stored.
+        </div>
       )}
 
       {/* Reconnecting Banner */}
@@ -248,6 +263,23 @@ export default function SessionPage() {
               onDisconnect={handleDisconnect}
             />
           </div>
+          {isConnected && (
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <Button size="sm" variant="outline" onClick={toggleMicrophone}>
+                {microphone.isActive ? 'Mute Mic' : 'Unmute Mic'}
+              </Button>
+              <Button size="sm" variant="outline" onClick={toggleCamera}>
+                {webcam.isActive ? 'Disable Camera' : 'Enable Camera'}
+              </Button>
+              <Button
+                size="sm"
+                variant={behaviorCaptureEnabled ? 'default' : 'secondary'}
+                onClick={toggleBehaviorCapture}
+              >
+                {behaviorCaptureEnabled ? 'Pause Behavioral Capture' : 'Resume Behavioral Capture'}
+              </Button>
+            </div>
+          )}
           {isConnected && (
             <div className="text-center">
               <AudioVisualizer isActive={isConnected} />

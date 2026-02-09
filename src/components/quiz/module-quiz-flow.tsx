@@ -118,7 +118,7 @@ export function ModuleQuizFlow({ moduleId, onBack, onComplete }: ModuleQuizFlowP
         quizScoreMutation.mutate({ answers: updatedAnswers, questions }, {
           onSuccess: async (result) => {
             try {
-              await saveQuizScores(user.uid, result.scores, result.dimensionSummary);
+              await saveQuizScores(user.uid, result.scores, result.dimensionSummary, result.dimensionConfidence);
               setIsComplete(true);
               toast.success(`${moduleConfig.label} module complete!`);
             } catch {

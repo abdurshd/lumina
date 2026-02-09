@@ -26,7 +26,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Settings, Trash2, Database, Shield, ChevronRight, User, Link2Off, Download, FileSearch, Bell, Sun, Moon } from 'lucide-react';
+import { Settings, Trash2, Database, Shield, ChevronRight, User, Link2Off, Download, FileSearch, Bell, Sun, Moon, AlertTriangle } from 'lucide-react';
 import { StaggerList, StaggerItem } from '@/components/motion/stagger-list';
 import { staggerContainer, staggerItem, reducedMotionVariants, collapseExpand, snappySpring, smoothTransition } from '@/lib/motion';
 
@@ -192,6 +192,26 @@ export default function SettingsPage() {
       />
 
       <StaggerList className="space-y-6">
+        {/* Compliance Notice */}
+        <StaggerItem>
+          <Card className="border-yellow-500/30 bg-yellow-500/5">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 font-sans text-yellow-500">
+                <AlertTriangle className="h-5 w-5" />
+                Compliance Notice
+              </CardTitle>
+              <CardDescription className="text-yellow-500/80">
+                Lumina currently targets 16+ users, but Gemini API terms may require an 18+ legal path depending on deployment mode.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <p className="text-xs text-yellow-500/80">
+                Treat this as a release gate: resolve legal/commercial eligibility before public launch.
+              </p>
+            </CardContent>
+          </Card>
+        </StaggerItem>
+
         {/* Profile */}
         <StaggerItem>
           <Card>

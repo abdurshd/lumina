@@ -54,7 +54,7 @@ export const StrengthsGrid = memo(function StrengthsGrid({ strengths, onFeedback
                         ? { scale: [1, 1.1, 1] }
                         : undefined
                     }
-                    transition={{ duration: 0.4, delay: 0.8 }}
+                    transition={{ type: 'tween', duration: 0.4, delay: 0.8, ease: 'easeInOut' }}
                   >
                     <AnimatedCounter value={strength.score} />/100
                   </motion.span>

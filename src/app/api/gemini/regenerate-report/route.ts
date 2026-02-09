@@ -12,6 +12,7 @@ import { getGeminiClient } from "@/lib/gemini/client";
 import { GEMINI_MODELS } from "@/lib/gemini/models";
 import { REPORT_GENERATION_PROMPT, REPORT_REGENERATION_PROMPT } from "@/lib/gemini/prompts";
 import { TalentReportSchema } from "@/lib/schemas/report";
+import { SESSION_INSIGHT_CATEGORIES } from "@/lib/psychometrics/dimension-model";
 import { z } from "zod";
 import {
   getDataInsights,
@@ -24,6 +25,40 @@ import {
 
 const RequestSchema = z.object({
   feedback: z.string().min(1, "Feedback is required"),
+  context: z.object({
+    dataInsights: z.array(
+      z.object({
+        source: z.string(),
+        summary: z.string(),
+        skills: z.array(z.string()).default([]),
+        interests: z.array(z.string()).default([]),
+      })
+    ).optional(),
+    quizAnswers: z.array(
+      z.object({
+        questionId: z.string(),
+        answer: z.union([z.string(), z.number()]),
+      })
+    ).optional(),
+    sessionInsights: z.array(
+      z.object({
+        category: z.enum(SESSION_INSIGHT_CATEGORIES),
+        observation: z.string(),
+        confidence: z.number().min(0).max(1),
+        evidence: z.string().optional(),
+      })
+    ).optional(),
+    quizScores: z.record(z.string(), z.number()).optional(),
+    existingReport: z.unknown().optional(),
+    feedbackItems: z.array(
+      z.object({
+        itemType: z.string(),
+        itemId: z.string(),
+        feedback: z.string(),
+        reason: z.string().optional(),
+      })
+    ).optional(),
+  }).optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -52,19 +87,29 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { feedback } = parsed.data;
+  const { feedback, context: clientContext } = parsed.data;
   const uid = authResult.uid;
 
   try {
-    // Fetch all existing assessment data
-    const [dataInsights, quizAnswers, sessionInsights, quizScoresData, existingReport, feedbackItems] = await Promise.all([
-      getDataInsights(uid),
-      getQuizAnswers(uid),
-      getSessionInsights(uid),
-      getQuizScores(uid),
-      getTalentReport(uid),
-      getFeedback(uid),
-    ]);
+    let dataInsights = clientContext?.dataInsights ?? [];
+    let quizAnswers = clientContext?.quizAnswers ?? [];
+    let sessionInsights = clientContext?.sessionInsights ?? [];
+    let quizScoresData: { dimensionSummary: Record<string, number> } | null =
+      clientContext?.quizScores ? { dimensionSummary: clientContext.quizScores } : null;
+    let existingReport = clientContext?.existingReport ?? null;
+    let feedbackItems = clientContext?.feedbackItems ?? [];
+
+    // Fallback to persisted artifacts when client context is absent.
+    if (!clientContext) {
+      [dataInsights, quizAnswers, sessionInsights, quizScoresData, existingReport, feedbackItems] = await Promise.all([
+        getDataInsights(uid),
+        getQuizAnswers(uid),
+        getSessionInsights(uid),
+        getQuizScores(uid),
+        getTalentReport(uid),
+        getFeedback(uid),
+      ]);
+    }
 
     if (!existingReport) {
       return errorResponse(
@@ -92,7 +137,7 @@ ${dataInsights.map((d) => `Source: ${d.source}\nSummary: ${d.summary}\nSkills: $
 ${quizAnswers.map((a) => `Question ${a.questionId}: ${a.answer}`).join("\n") || "No quiz answers available."}
 
 === SESSION INSIGHTS ===
-${sessionInsights.map((i) => `[${i.category}] (confidence: ${i.confidence}): ${i.observation}`).join("\n") || "No session insights available."}
+${sessionInsights.map((i) => `[${i.category}] (confidence: ${i.confidence}): ${i.observation}${i.evidence ? ` | evidence: ${i.evidence}` : ''}`).join("\n") || "No session insights available."}
 
 === QUIZ DIMENSION SCORES ===
 ${quizScoresData ? Object.entries(quizScoresData.dimensionSummary).map(([dim, score]) => `${dim}: ${score}/100`).join("\n") : "No dimension scores available."}

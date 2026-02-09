@@ -38,7 +38,7 @@ export function StatusBadge({ status }: StatusBadgeProps) {
           }
           transition={
             status === 'completed'
-              ? { duration: 0.4, delay: 0.2 }
+              ? { type: 'tween', duration: 0.4, delay: 0.2, ease: 'easeInOut' }
               : status === 'active'
               ? { duration: 2, repeat: Infinity, ease: 'easeInOut' }
               : undefined

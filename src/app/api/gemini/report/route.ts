@@ -12,6 +12,9 @@ import { getGeminiClient } from "@/lib/gemini/client";
 import { GEMINI_MODELS } from "@/lib/gemini/models";
 import { REPORT_GENERATION_PROMPT } from "@/lib/gemini/prompts";
 import { TalentReportSchema } from "@/lib/schemas/report";
+import { UserConstraintsSchema } from "@/lib/schemas/quiz";
+import { buildComputedProfile } from "@/lib/career/profile-builder";
+import { SESSION_INSIGHT_CATEGORIES } from "@/lib/psychometrics/dimension-model";
 import { z } from "zod";
 // types used implicitly via Zod schemas
 
@@ -37,32 +40,22 @@ const RequestSchema = z.object({
   sessionInsights: z
     .array(
       z.object({
-        category: z.string(),
+        category: z.enum(SESSION_INSIGHT_CATEGORIES),
         observation: z.string(),
-        confidence: z.number(),
+        confidence: z.number().min(0).max(1),
+        evidence: z.string().optional(),
       }),
     )
     .default([]),
   quizScores: z.record(z.string(), z.number()).optional(),
+  quizConfidence: z.record(z.string(), z.number()).optional(),
   computedProfile: z.object({
     riasecCode: z.string(),
     dimensionScores: z.record(z.string(), z.number()),
     confidenceScores: z.record(z.string(), z.number()),
-    constraints: z.object({
-      locationFlexibility: z.string(),
-      salaryPriority: z.string(),
-      timeAvailability: z.string(),
-      educationWillingness: z.string(),
-      relocationWillingness: z.string(),
-    }).optional(),
+    constraints: UserConstraintsSchema.optional(),
   }).optional(),
-  constraints: z.object({
-    locationFlexibility: z.string(),
-    salaryPriority: z.string(),
-    timeAvailability: z.string(),
-    educationWillingness: z.string(),
-    relocationWillingness: z.string(),
-  }).optional(),
+  constraints: UserConstraintsSchema.optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -91,7 +84,15 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { dataInsights, quizAnswers, sessionInsights, quizScores, computedProfile, constraints } = parsed.data;
+  const {
+    dataInsights,
+    quizAnswers,
+    sessionInsights,
+    quizScores,
+    quizConfidence,
+    computedProfile,
+    constraints,
+  } = parsed.data;
 
   // Ensure there's at least some data to generate a report from
   if (
@@ -108,6 +109,20 @@ export async function POST(req: NextRequest) {
 
   try {
     const client = getGeminiClient();
+    const resolvedComputedProfile = computedProfile
+      ?? (quizScores
+        ? buildComputedProfile({
+            quizDimensionScores: quizScores,
+            sessionInsights: sessionInsights.map((insight) => ({
+              timestamp: Date.now(),
+              category: insight.category,
+              observation: insight.observation,
+              confidence: insight.confidence,
+            })),
+            constraints,
+            dimensionConfidence: quizConfidence,
+          })
+        : undefined);
 
     const context = `
 === DATA ANALYSIS ===
@@ -127,7 +142,7 @@ ${quizAnswers.map((a) => `Question ${a.questionId}: ${a.answer}`).join("\n") || 
 ${
   sessionInsights
     .map(
-      (i) => `[${i.category}] (confidence: ${i.confidence}): ${i.observation}`,
+      (i) => `[${i.category}] (confidence: ${i.confidence}): ${i.observation}${i.evidence ? ` | evidence: ${i.evidence}` : ""}`,
     )
     .join("\n") || "No session insights available."
 }
@@ -135,10 +150,13 @@ ${
 === QUIZ DIMENSION SCORES ===
 ${quizScores ? Object.entries(quizScores).map(([dim, score]) => `${dim}: ${score}/100`).join("\n") : "No dimension scores available."}
 
-${computedProfile ? `=== COMPUTED PROFILE ===
-RIASEC Code: ${computedProfile.riasecCode}
-Dimension Scores: ${Object.entries(computedProfile.dimensionScores).map(([dim, score]) => `${dim}: ${score}/100`).join(", ")}
-Confidence Scores: ${Object.entries(computedProfile.confidenceScores).map(([dim, conf]) => `${dim}: ${conf}%`).join(", ")}` : ""}
+${quizConfidence ? `=== QUIZ DIMENSION CONFIDENCE ===
+${Object.entries(quizConfidence).map(([dim, conf]) => `${dim}: ${conf}%`).join("\n")}` : ""}
+
+${resolvedComputedProfile ? `=== COMPUTED PROFILE ===
+RIASEC Code: ${resolvedComputedProfile.riasecCode}
+Dimension Scores: ${Object.entries(resolvedComputedProfile.dimensionScores).map(([dim, score]) => `${dim}: ${score}/100`).join(", ")}
+Confidence Scores: ${Object.entries(resolvedComputedProfile.confidenceScores).map(([dim, conf]) => `${dim}: ${conf}%`).join(", ")}` : ""}
 
 ${constraints ? `=== USER CONSTRAINTS ===
 Location: ${constraints.locationFlexibility}
@@ -164,10 +182,11 @@ Relocation: ${constraints.relocationWillingness}` : ""}
   "hiddenTalents": ["string"],
   "careerPaths": [{"title": "string", "match": 0-100, "description": "string", "nextSteps": ["string"], "riasecCodes": "string", "onetCluster": "string", "evidenceSources": ["string"], "confidence": 0-100, "whyYou": "string"}],
   "actionPlan": [{"title": "string", "description": "string", "timeframe": "string", "priority": "high|medium|low"}],
-  "personalityInsights": ["string"]
+  "personalityInsights": ["string"],
+  "confidenceNotes": ["string"]
 }
 
-Include exactly 6 radar dimensions (Creativity, Analysis, Leadership, Empathy, Resilience, Vision), 5 top strengths, 3-5 hidden talents, 4 career paths, 5 action items, and 4 personality insights.${computedProfile ? `
+Include exactly 6 radar dimensions (Creativity, Analysis, Leadership, Empathy, Resilience, Vision), 5 top strengths, 3-5 hidden talents, 4 career paths, 5 action items, and 4 personality insights.${resolvedComputedProfile ? `
 
 Also include "careerRecommendations" array with 4 entries, each having: clusterId, matchScore (0-100), confidence (0-100), whyYou, whatYouDo, howToTest, skillsToBuild (array of 3-5 strings), evidenceChain (array of {type: "quiz"|"session"|"data_source"|"signal", excerpt: string}).` : ''}`,
             },

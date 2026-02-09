@@ -35,11 +35,30 @@ export function useWebcam() {
     setIsActive(false);
   }, []);
 
+  const setEnabled = useCallback((enabled: boolean) => {
+    const tracks = streamRef.current?.getVideoTracks() ?? [];
+    for (const track of tracks) {
+      track.enabled = enabled;
+    }
+    setIsActive(enabled && tracks.length > 0);
+  }, []);
+
+  const toggle = useCallback((): boolean => {
+    const tracks = streamRef.current?.getVideoTracks() ?? [];
+    if (tracks.length === 0) return false;
+    const nextEnabled = !tracks[0].enabled;
+    for (const track of tracks) {
+      track.enabled = nextEnabled;
+    }
+    setIsActive(nextEnabled);
+    return nextEnabled;
+  }, []);
+
   useEffect(() => {
     return () => {
       streamRef.current?.getTracks().forEach((t) => t.stop());
     };
   }, []);
 
-  return { videoRef, isActive, error, start, stop };
+  return { videoRef, isActive, error, start, stop, setEnabled, toggle };
 }

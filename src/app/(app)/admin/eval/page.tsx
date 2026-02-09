@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FlaskConical, Scale, Loader2 } from 'lucide-react';
+import { FlaskConical, Scale, Loader2, AlertTriangle } from 'lucide-react';
 import type { BenchmarkResult } from '@/lib/eval/benchmark-runner';
 import type { BiasAuditResult } from '@/lib/eval/bias-runner';
 
@@ -19,6 +19,18 @@ export default function EvalDashboardPage() {
           Run benchmarks and bias audits to verify system quality and fairness.
         </p>
       </div>
+
+      <Card className="mb-8 border-yellow-500/30 bg-yellow-500/5">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 font-sans text-base text-yellow-500">
+            <AlertTriangle className="h-4 w-4" />
+            Compliance Gate
+          </CardTitle>
+          <CardDescription className="text-yellow-500/80">
+            Keep 16+ deployment behind legal approval for Gemini API usage terms before public launch.
+          </CardDescription>
+        </CardHeader>
+      </Card>
 
       <Tabs defaultValue="benchmarks">
         <TabsList>

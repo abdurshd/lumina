@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { normalizeDimensionName } from '@/lib/psychometrics/dimension-model';
 
 export const QuizModuleIdSchema = z.enum(['interests', 'work_values', 'strengths_skills', 'learning_environment', 'constraints']);
 
@@ -11,7 +12,9 @@ export const QuizQuestionSchema = z.object({
   sliderMax: z.number().optional(),
   sliderLabels: z.object({ min: z.string(), max: z.string() }).optional(),
   category: z.string(),
-  dimension: z.string().optional(),
+  dimension: z.string().refine((value) => normalizeDimensionName(value) !== null, {
+    message: 'Question dimension must be one of the locked psychometric dimensions',
+  }),
   scoringRubric: z.record(z.string(), z.number()).optional(),
   moduleId: QuizModuleIdSchema.optional(),
 });
@@ -21,7 +24,9 @@ export const QuizQuestionsResponseSchema = z.object({
 });
 
 export const QuizDimensionScoreSchema = z.object({
-  dimension: z.string(),
+  dimension: z.string().refine((value) => normalizeDimensionName(value) !== null, {
+    message: 'Score dimension must be one of the locked psychometric dimensions',
+  }),
   score: z.number().min(0).max(100),
   rationale: z.string(),
 });
@@ -34,6 +39,7 @@ export const QuizScoreSchema = z.object({
 export const QuizScoringResponseSchema = z.object({
   scores: z.array(QuizScoreSchema),
   dimensionSummary: z.record(z.string(), z.number()),
+  dimensionConfidence: z.record(z.string(), z.number().min(0).max(100)).optional(),
 });
 
 export const QuizModuleProgressSchema = z.object({
