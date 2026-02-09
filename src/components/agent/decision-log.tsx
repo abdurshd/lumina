@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import type { AgentDecision, AgentActionType } from '@/types';
 import { useAgentStore } from '@/stores/agent-store';
+import { ConfidenceDashboard } from './confidence-dashboard';
 
 const ACTION_ICONS: Record<AgentActionType, typeof Brain> = {
   analyze_source: Database,
@@ -158,6 +159,11 @@ export function DecisionLog({ filter }: DecisionLogProps) {
           <PanelRightClose className="w-3.5 h-3.5" />
         </Button>
       </div>
+      {/* Confidence Dashboard */}
+      <div className="px-2 py-2 border-b border-neutral-800">
+        <ConfidenceDashboard profile={null} compact />
+      </div>
+
       <ScrollArea className="flex-1 px-2 py-2">
         <div className="space-y-2">
           <AnimatePresence mode="popLayout">
