@@ -1,65 +1,97 @@
 'use client';
 
 import { Video, Sparkles, Eye, MessageCircle } from 'lucide-react';
-import { DarkSectionHero } from './section-hero';
-import { LightSectionContent } from './section-content';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import { useRef } from 'react';
 import { SessionScene } from '@/components/landing/svg/session-scene';
 import { SessionMockup } from '@/components/landing/mockups/session-mockup';
 import { ScrollReveal } from '@/components/motion/scroll-reveal';
-import { StaggerList, StaggerItem } from '@/components/motion/stagger-list';
 import { slideInLeft } from '@/lib/motion';
 
 const FEATURES = [
-    { icon: Video, title: "Voice & Video Analysis", text: "We analyze tone, pitch, and non-verbal cues to understand not just what you say, but how you feel." },
-    { icon: Sparkles, title: "Real-time Adaptation", text: "The AI dynamically adjusts its questioning strategy based on your engagement and enthusiasm levels." },
-    { icon: Eye, title: "Expression Reading", text: "Micro-expressions reveal hidden passions and hesitations that standard text forms miss completely." },
-    { icon: MessageCircle, title: "Natural Conversation", text: "Speak naturally. It feels less like a test and more like a chat with a career counselor who truly listens." },
+    { icon: Video, title: "Linguistic Calibration", text: "Analyzing vocal harmonics and semantic cadence to decode underlying cognitive states." },
+    { icon: Sparkles, title: "Neural Synchronization", text: "The AI agent optimizes its interaction topology based on real-time neural engagement metrics." },
+    { icon: Eye, title: "Expression Synthesis", text: "Capturing micro-kinetic facial data to identify hidden passion vectors standard assessments miss." },
+    { icon: MessageCircle, title: "Fluid Dialogues", text: "Advanced conversational architecture that feels less like a protocol and more like an intellectual resonance." },
 ];
 
 export function SessionSection() {
+    const sectionRef = useRef<HTMLDivElement>(null);
+
     return (
-        <>
-            <DarkSectionHero
-                id="session"
-                title="Live AI Session"
-                subtitle="A real-time video conversation with an AI career counselor that understands your expressions, tone, and enthusiasm."
-                visual={<SessionScene />}
-            />
+        <section id="session" ref={sectionRef} className="bg-[#050505] py-32 relative overflow-hidden">
+            <div className="container mx-auto px-6 relative z-10">
+                <div className="flex flex-col lg:flex-row items-center gap-24">
 
-            <LightSectionContent className="bg-background">
-                <div className="grid lg:grid-cols-2 gap-12 lg:gap-24 items-center">
-
-                    {/* Left: Mockup */}
-                    <div className="order-1">
-                        <ScrollReveal variants={slideInLeft}>
-                            <div className="relative">
-                                <div className="absolute -inset-4 bg-gradient-to-r from-primary/20 to-purple-500/20 rounded-[2rem] blur-xl opacity-50" />
+                    {/* Left: Interactive Mockup */}
+                    <div className="lg:w-1/2 relative order-2 lg:order-1">
+                        <motion.div
+                            initial={{ opacity: 0, x: -50, scale: 0.95 }}
+                            whileInView={{ opacity: 1, x: 0, scale: 1 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 1.2, ease: "easeOut" }}
+                            className="relative"
+                        >
+                            <div className="absolute -inset-10 bg-primary/10 rounded-full blur-[100px] opacity-50 -z-10 animate-pulse-glow" />
+                            <div className="glass-premium rounded-[40px] overflow-hidden border-primary/20 p-2 shadow-2xl shadow-primary/20">
                                 <SessionMockup />
                             </div>
-                        </ScrollReveal>
+
+                            {/* Decorative Floating Icon */}
+                            <div className="absolute -bottom-10 -right-10 w-48 h-48 opacity-40">
+                                <SessionScene />
+                            </div>
+                        </motion.div>
                     </div>
 
-                    {/* Right: Features */}
-                    <div className="order-2">
-                        <StaggerList className="grid gap-8">
+                    {/* Right: Text and Features */}
+                    <div className="lg:w-1/2 order-1 lg:order-2">
+                        <motion.div
+                            initial={{ opacity: 0, y: 30 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 1, ease: "easeOut" }}
+                            className="mb-12"
+                        >
+                            <span className="text-primary font-bold uppercase tracking-[0.3em] text-[10px] mb-4 block">Biometric Synthesis</span>
+                            <h2 className="text-5xl sm:text-7xl font-black tracking-tighter text-white mb-8 leading-[0.9]">
+                                Live AI <br /> <span className="text-primary">Synergy</span>
+                            </h2>
+                            <p className="text-xl text-muted-foreground font-light leading-relaxed max-w-xl">
+                                Engage in a high-fidelity vocal exchange with our neural counselor.
+                                It doesn't just hear your words; it perceives the architecture of your ambition.
+                            </p>
+                        </motion.div>
+
+                        <div className="grid gap-6">
                             {FEATURES.map((feature, i) => (
-                                <StaggerItem key={i}>
-                                    <div className="flex gap-4">
-                                        <div className="h-12 w-12 shrink-0 rounded-2xl bg-secondary flex items-center justify-center border border-border">
-                                            <feature.icon className="h-6 w-6 text-primary" />
-                                        </div>
-                                        <div>
-                                            <h3 className="font-bold text-lg mb-1">{feature.title}</h3>
-                                            <p className="text-muted-foreground leading-relaxed">{feature.text}</p>
+                                <motion.div
+                                    key={i}
+                                    initial={{ opacity: 0, x: 30 }}
+                                    whileInView={{ opacity: 1, x: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.6, delay: i * 0.1 }}
+                                >
+                                    <div className="glass-premium p-6 group hover:border-primary/40 transition-all duration-500">
+                                        <div className="flex gap-6 items-start">
+                                            <div className="h-14 w-14 shrink-0 rounded-2xl bg-primary/5 flex items-center justify-center border border-primary/20 text-primary group-hover:bg-primary/20 group-hover:scale-110 transition-all duration-500">
+                                                <feature.icon className="h-7 w-7" />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-white font-black text-lg tracking-tight uppercase mb-2 group-hover:text-primary transition-colors">{feature.title}</h3>
+                                                <p className="text-sm text-muted-foreground font-light leading-relaxed">{feature.text}</p>
+                                            </div>
                                         </div>
                                     </div>
-                                </StaggerItem>
+                                </motion.div>
                             ))}
-                        </StaggerList>
+                        </div>
                     </div>
-
                 </div>
-            </LightSectionContent>
-        </>
+            </div>
+
+            {/* Background Gradient Accents */}
+            <div className="absolute bottom-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-[150px]" />
+        </section>
     );
 }

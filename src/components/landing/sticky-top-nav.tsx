@@ -11,12 +11,11 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { ThemeToggle } from '@/components/layout/theme-toggle';
 
 const NAV_LINKS = [
-    { name: 'Discovery', href: '#discovery' },
-    { name: 'Analysis', href: '#analysis' },
-    { name: 'Quiz', href: '#quiz' },
-    { name: 'Live Session', href: '#session' },
-    { name: 'Report', href: '#report' },
-    { name: 'How It Works', href: '#how-it-works' },
+    { name: 'DISCOVERY', href: '#data' },
+    { name: 'ANALYSIS', href: '#quiz' },
+    { name: 'SYNERGY', href: '#session' },
+    { name: 'MANIFESTO', href: '#report' },
+    { name: 'PROTOCOL', href: '#how-it-works' },
 ];
 
 export function StickyTopNav() {
@@ -30,64 +29,74 @@ export function StickyTopNav() {
     return (
         <motion.header
             className={cn(
-                "fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b border-transparent",
-                isScrolled ? "bg-background/80 backdrop-blur-md border-b-2 border-overlay-subtle shadow-sm py-3" : "bg-transparent py-5"
+                "fixed top-0 left-0 right-0 z-50 transition-all duration-500",
+                isScrolled ? "glass-premium py-3 border-b border-primary/20 shadow-[0_0_30px_rgba(0,0,0,0.5)]" : "bg-transparent py-6"
             )}
         >
             <div className="container mx-auto px-6 flex items-center justify-between">
-                <Link href="/" className="flex items-center gap-2 group">
-                    <LuminaIcon className="h-8 w-8 text-primary transition-transform group-hover:rotate-12" />
-                    <span className="font-bold text-xl tracking-tight">Lumina</span>
+                <Link href="/" className="flex items-center gap-3 group">
+                    <div className="relative">
+                        <LuminaIcon className="h-9 w-9 text-primary transition-transform duration-500 group-hover:rotate-[360deg]" />
+                        <div className="absolute inset-0 bg-primary/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-full" />
+                    </div>
+                    <span className="font-black text-2xl tracking-tighter text-white uppercase">Lumina</span>
                 </Link>
 
                 {/* Desktop Nav */}
-                <nav className="hidden md:flex items-center gap-8">
+                <nav className="hidden md:flex items-center gap-10">
                     {NAV_LINKS.map((link) => (
                         <Link
                             key={link.name}
                             href={link.href}
-                            className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+                            className="text-[11px] font-black tracking-[0.2em] text-muted-foreground hover:text-primary transition-all duration-300 relative group"
                         >
                             {link.name}
+                            <span className="absolute -bottom-1 left-0 w-0 h-px bg-primary transition-all duration-300 group-hover:w-full" />
                         </Link>
                     ))}
-                    <ThemeToggle />
-                    <Link href="/login">
-                        <Button size="sm" className="btn-3d-primary rounded-full px-6">
-                            Get Started
-                        </Button>
-                    </Link>
+                    <div className="flex items-center gap-6 pl-4 border-l border-white/10">
+                        <ThemeToggle />
+                        <Link href="/login">
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                className="btn-premium px-6 py-2 text-xs"
+                            >
+                                START EXTRACTION
+                            </motion.button>
+                        </Link>
+                    </div>
                 </nav>
 
                 {/* Mobile Nav */}
-                <div className="md:hidden">
+                <div className="md:hidden flex items-center gap-4">
+                    <ThemeToggle />
                     <Sheet>
                         <SheetTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                                <Menu className="h-6 w-6" />
+                            <Button variant="ghost" size="icon" className="text-white hover:bg-white/10">
+                                <Menu className="h-7 w-7" />
                                 <span className="sr-only">Toggle menu</span>
                             </Button>
                         </SheetTrigger>
-                        <SheetContent side="right" className="w-[300px] border-l border-border/50 backdrop-blur-xl bg-background/90">
-                            <div className="flex flex-col gap-8 mt-10">
-                                <Link href="/" className="flex items-center gap-2 mb-4">
-                                    <LuminaIcon className="h-8 w-8 text-primary" />
-                                    <span className="font-bold text-xl">Lumina</span>
+                        <SheetContent side="right" className="w-full sm:w-[400px] border-l border-primary/20 bg-[#050505] p-0">
+                            <div className="flex flex-col h-full bg-[#050505] p-10">
+                                <Link href="/" className="flex items-center gap-3 mb-16">
+                                    <LuminaIcon className="h-10 w-10 text-primary" />
+                                    <span className="font-black text-3xl tracking-tighter text-white uppercase">Lumina</span>
                                 </Link>
-                                <nav className="flex flex-col gap-4">
+                                <nav className="flex flex-col gap-8">
                                     {NAV_LINKS.map((link) => (
                                         <Link
                                             key={link.name}
                                             href={link.href}
-                                            className="text-lg font-medium text-foreground/80 hover:text-primary transition-colors border-b border-border/50 pb-2"
+                                            className="text-4xl font-black tracking-tighter text-white/50 hover:text-primary transition-all duration-300 hover:pl-4"
                                         >
                                             {link.name}
                                         </Link>
                                     ))}
-                                    <div className="mt-4 flex items-center gap-4">
-                                        <ThemeToggle />
-                                        <Link href="/login" className="flex-1">
-                                            <Button className="w-full btn-3d-primary">Get Started</Button>
+                                    <div className="mt-12 pt-12 border-t border-white/10">
+                                        <Link href="/login">
+                                            <Button className="w-full btn-premium py-8 text-xl">START EXTRACTION</Button>
                                         </Link>
                                     </div>
                                 </nav>

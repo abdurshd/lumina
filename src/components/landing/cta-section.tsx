@@ -4,55 +4,79 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LuminaIcon } from '@/components/icons/lumina-icon';
-import { ScrollReveal } from '@/components/motion/scroll-reveal';
-import { fadeInScale } from '@/lib/motion';
+import { motion } from 'framer-motion';
 import { FloatingParticles } from './floating-particles';
 
 export function CTASection() {
     return (
-        <section className="relative w-full py-24 sm:py-32 overflow-hidden flex items-center justify-center">
-            {/* Background ambient glow */}
-            <div className="absolute inset-0 z-0 bg-background">
-                <div className="absolute inset-0 bg-[url('/lumina-abstract-bg.png')] bg-cover bg-center opacity-20 mix-blend-screen" />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/20 blur-[120px] rounded-full opacity-50" />
-                <FloatingParticles count={3} className="z-0 opacity-20" />
+        <section className="relative w-full py-32 sm:py-48 overflow-hidden flex items-center justify-center bg-[#050505]">
+            {/* Background elements */}
+            <div className="absolute inset-0 z-0">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/10 blur-[150px] rounded-full opacity-50" />
+                <FloatingParticles count={6} className="z-0 opacity-30" />
+
+                {/* Futuristic Grid Overlay */}
+                <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)]" />
             </div>
 
             <div className="container mx-auto px-6 relative z-10">
-                <ScrollReveal variants={fadeInScale} className="max-w-4xl mx-auto">
-                    <div className="glass-heavy p-10 sm:p-20 text-center relative overflow-hidden group">
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.9, y: 30 }}
+                    whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+                    className="max-w-5xl mx-auto"
+                >
+                    <div className="glass-premium p-12 sm:p-24 text-center relative overflow-hidden group border-primary/20">
+                        {/* Shimmering background effect */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5" />
 
-                        {/* Animated Prism Icon */}
-                        <div className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-3xl bg-primary/10 border-2 border-primary/20 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3">
-                            <LuminaIcon className="h-10 w-10 text-primary" />
-                        </div>
+                        {/* Animated Icon */}
+                        <motion.div
+                            whileHover={{ scale: 1.1, rotate: 5 }}
+                            className="mx-auto mb-10 flex h-24 w-24 items-center justify-center rounded-3xl bg-primary/10 border border-primary/20 shadow-[0_0_30px_oklch(75%_0.18_200/0.2)]"
+                        >
+                            <LuminaIcon className="h-12 w-12 text-primary" />
+                        </motion.div>
 
-                        <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 tracking-tight">
-                            Ready to <span className="text-gradient-gold">illuminate</span> your potential?
+                        <h2 className="text-5xl sm:text-7xl md:text-8xl font-black mb-8 tracking-tighter text-white leading-[0.85] uppercase">
+                            Illuminate Your <br />
+                            <span className="text-primary group-hover:text-white transition-colors duration-700">Potential</span>
                         </h2>
 
-                        <p className="text-muted-foreground mb-10 max-w-xl mx-auto text-lg sm:text-xl leading-relaxed">
-                            Join Lumina today and let our multimodal AI reveal the career talents you didn&apos;t know you had.
+                        <p className="text-xl sm:text-2xl text-muted-foreground mb-12 max-w-2xl mx-auto font-light leading-relaxed">
+                            The era of generic career paths is over. Step into the high-fidelity future of talent discovery.
                         </p>
 
-                        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                            <Link href="/login">
-                                <Button size="lg" className="h-14 px-8 text-lg gap-2 btn-3d-primary rounded-2xl w-full sm:w-auto">
-                                    Get Started Free <ArrowRight className="h-5 w-5" />
-                                </Button>
+                        <div className="flex flex-col sm:flex-row items-center justify-center gap-6 relative z-20">
+                            <Link href="/login" className="w-full sm:w-auto">
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    className="btn-premium w-full flex items-center justify-center gap-3 px-12 py-5 text-xl"
+                                >
+                                    Initialize Extraction <ArrowRight className="h-6 w-6" />
+                                </motion.button>
                             </Link>
-                            <Link href="/about">
-                                <Button variant="outline" size="lg" className="h-14 px-8 text-lg btn-3d-outline rounded-2xl w-full sm:w-auto">
-                                    Learn More
-                                </Button>
+                            <Link href="/about" className="w-full sm:w-auto">
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    className="btn-premium-outline w-full px-12 py-5 text-xl"
+                                >
+                                    Visualizer Specs
+                                </motion.button>
                             </Link>
                         </div>
 
-                        {/* Decorative shimmer */}
-                        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent skew-x-12 translate-x-[-100%] group-hover:svg-shimmer pointer-events-none" />
+                        {/* Scanline Effect */}
+                        <div className="absolute inset-x-0 top-0 h-[1px] bg-primary/30 animate-scanline pointer-events-none" />
                     </div>
-                </ScrollReveal>
+                </motion.div>
             </div>
+
+            {/* Scroll-to-top accent or final visual anchor */}
+            <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
         </section>
     );
 }

@@ -1,73 +1,94 @@
 'use client';
 
 import { useRef } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { LightSectionContent } from './section-content';
-import { StaggerList, StaggerItem } from '@/components/motion/stagger-list';
-import { ScrollReveal } from '@/components/motion/scroll-reveal';
+import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
-
 const STEPS = [
-    { id: '01', title: 'Connect Data', desc: 'Securely link Gmail, Drive, or upload ChatGPT exports.' },
-    { id: '02', title: 'Take Quiz', desc: 'Complete the 15-minute AI-adaptive assessment modules.' },
-    { id: '03', title: 'Live Session', desc: 'Have a natural video conversation with your AI guide.' },
-    { id: '04', title: 'Get Report', desc: 'Receive your comprehensive talent profile and action plan.' },
+    { id: '01', title: 'Data Synthesis', desc: 'Securely link your professional footprint across Gmail, Drive, and social vectors.' },
+    { id: '02', title: 'Neural Assessment', desc: 'Complete our AI-adaptive modules that map your cognitive and psychological architecture.' },
+    { id: '03', title: 'Ethereal Interview', desc: 'Engage in a live, high-fidelity video session with our advanced Talent Oracle.' },
+    { id: '04', title: 'Quantum Profile', desc: 'Unlock your multi-dimensional talent report with precise growth trajectories.' },
 ];
 
 export function HowItWorksSection() {
-    const containerRef = useRef<HTMLDivElement>(null);
+    const targetRef = useRef<HTMLDivElement>(null);
     const { scrollYProgress } = useScroll({
-        target: containerRef,
-        offset: ["start center", "end center"]
+        target: targetRef,
     });
 
-    const lineHeight = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
-    const lineWidth = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
+    const x = useTransform(scrollYProgress, [0, 1], ["0%", "-75%"]);
+    const xSpring = useSpring(x, { stiffness: 100, damping: 30 });
 
     return (
-        <LightSectionContent className="bg-[var(--section-alt-bg)]" showWave={false}>
-            <div id="how-it-works" className="py-10" ref={containerRef}>
-                <ScrollReveal className="text-center mb-16">
-                    <h2 className="text-3xl sm:text-5xl font-bold mb-4">How It Works</h2>
-                    <p className="text-muted-foreground">From raw data to realized potential in four steps.</p>
-                </ScrollReveal>
+        <section ref={targetRef} className="relative h-[400vh] bg-[#050505]">
+            <div className="sticky top-0 flex h-screen items-center overflow-hidden">
+                {/* Section Header (Fixed) */}
+                <div className="absolute top-20 left-10 md:left-20 z-20">
+                    <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.8 }}
+                    >
+                        <span className="text-primary font-bold uppercase tracking-[0.3em] text-[10px] mb-4 block">Methodology</span>
+                        <h2 className="text-4xl sm:text-6xl font-black tracking-tighter text-white">How Lumina Works</h2>
+                    </motion.div>
+                </div>
 
-                <div className="relative">
-                    {/* Desktop Horizontal Line */}
-                    <div className="absolute top-8 left-0 w-full h-0.5 bg-border hidden md:block">
-                        <motion.div
-                            className="h-full bg-primary origin-left"
-                            style={{ scaleX: lineWidth }}
-                        />
-                    </div>
+                {/* Horizontal Scroll Track */}
+                <motion.div style={{ x: xSpring }} className="flex gap-10 px-10 md:px-20 min-w-max">
+                    {/* Empty spacer for initial header visibility */}
+                    <div className="w-[30vw]" />
 
-                    {/* Mobile Vertical Line */}
-                    <div className="absolute top-0 left-8 w-0.5 h-full bg-border md:hidden">
-                        <motion.div
-                            className="w-full bg-primary origin-top"
-                            style={{ height: lineHeight, maxHeight: '100%' }}
-                        />
-                    </div>
-
-                    <StaggerList className="grid md:grid-cols-4 gap-12 relative z-10">
-                        {STEPS.map((step, i) => (
-                            <StaggerItem key={i} className="flex md:flex-col items-start md:items-center gap-6 md:gap-4 md:text-center group">
-                                <div className={cn(
-                                    "h-16 w-16 shrink-0 rounded-full bg-background border-2 border-primary/20 flex items-center justify-center font-mono font-bold text-lg text-primary transition-colors",
-                                    "group-hover:border-primary group-hover:bg-primary/10"
-                                )}>
-                                    {step.id}
+                    {STEPS.map((step, i) => (
+                        <div
+                            key={i}
+                            className="relative group w-[400px] md:w-[600px] h-[400px] md:h-[500px]"
+                        >
+                            <div className="absolute inset-0 glass-premium rounded-3xl p-10 flex flex-col justify-end transition-all duration-500 group-hover:border-primary/50 group-hover:bg-primary/[0.02]">
+                                <div className="absolute top-0 right-0 p-10">
+                                    <span className="text-8xl font-black text-white/5 tracking-tighter transition-all duration-500 group-hover:text-primary/10">
+                                        {step.id}
+                                    </span>
                                 </div>
-                                <div className="pt-2 md:pt-4">
-                                    <h3 className="font-bold text-xl mb-2">{step.title}</h3>
-                                    <p className="text-sm text-muted-foreground leading-relaxed">{step.desc}</p>
+
+                                <div className="relative z-10">
+                                    <div className="w-12 h-1 bg-primary/30 mb-6 transition-all duration-500 group-hover:w-24 group-hover:bg-primary" />
+                                    <h3 className="text-3xl md:text-5xl font-black text-white mb-6 tracking-tighter leading-none uppercase">
+                                        {step.title}
+                                    </h3>
+                                    <p className="text-lg text-muted-foreground leading-relaxed max-w-sm font-light">
+                                        {step.desc}
+                                    </p>
                                 </div>
-                            </StaggerItem>
-                        ))}
-                    </StaggerList>
+                            </div>
+
+                            {/* Decorative line between steps */}
+                            {i < STEPS.length - 1 && (
+                                <div className="absolute top-1/2 -right-10 w-10 h-px bg-primary/10" />
+                            )}
+                        </div>
+                    ))}
+
+                    {/* Final Spacer */}
+                    <div className="w-[10vw]" />
+                </motion.div>
+
+                {/* Progress Bar (Bottom) */}
+                <div className="absolute bottom-20 left-10 right-10 md:left-20 md:right-20 h-px bg-white/5">
+                    <motion.div
+                        className="h-full bg-primary shadow-[0_0_15px_oklch(75%_0.18_200)]"
+                        style={{ scaleX: scrollYProgress, transformOrigin: "left" }}
+                    />
                 </div>
             </div>
-        </LightSectionContent>
+
+            {/* Background Accents */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                <div className="absolute top-1/4 -right-20 w-96 h-96 bg-primary/5 rounded-full blur-[150px]" />
+                <div className="absolute bottom-1/4 -left-20 w-96 h-96 bg-primary/5 rounded-full blur-[150px]" />
+            </div>
+        </section>
     );
 }
