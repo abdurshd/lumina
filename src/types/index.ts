@@ -343,6 +343,16 @@ export interface AgentDecision {
   metadata?: Record<string, string | number | boolean>;
 }
 
+// --- Source Recommendation Types ---
+
+export interface SourceRecommendation {
+  source: string;
+  reason: string;
+  expectedImpact: number;
+  /** Dimensions this source would strengthen */
+  dimensions: string[];
+}
+
 // --- Correlated Insight Types ---
 
 export interface CorrelatedInsight {

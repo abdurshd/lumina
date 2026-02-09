@@ -13,4 +13,5 @@ export interface EvaluateResponse {
   actions: import('@/types').AgentAction[];
   state: import('@/types').AgentState;
   decision: import('@/types').AgentDecision;
+  sourceRecommendations?: import('@/types').SourceRecommendation[];
 }

@@ -3,6 +3,8 @@ import type {
   AgentState,
   AgentAction,
   AgentActionPriority,
+  DimensionGap,
+  SourceRecommendation,
 } from '@/types';
 
 // --- Thresholds ---
@@ -273,17 +275,12 @@ function recommendNextModule(
   };
 }
 
-interface SourceRecommendation {
-  source: string;
-  reason: string;
-  expectedImpact: number;
-}
-
 /**
  * Recommend data sources that would best fill confidence gaps.
+ * Exported for use in the evaluate endpoint.
  */
-function recommendDataSources(
-  gaps: AgentState['gaps'],
+export function recommendDataSources(
+  gaps: DimensionGap[],
   connectedSources: string[]
 ): SourceRecommendation[] {
   // Map dimensions to the data sources most likely to provide evidence
@@ -329,6 +326,7 @@ function recommendDataSources(
       source,
       reason: `Connecting ${source} would strengthen ${data.dimensions.length} weak dimensions (${data.dimensions.slice(0, 3).join(', ')}${data.dimensions.length > 3 ? '...' : ''}).`,
       expectedImpact: Math.min(Math.round(data.score / 3), 25),
+      dimensions: data.dimensions,
     }));
 }
 

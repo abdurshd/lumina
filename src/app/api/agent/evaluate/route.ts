@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { verifyAuth, errorResponse, ErrorCode } from '@/lib/api-helpers';
-import { evaluateState } from '@/lib/agent/orchestrator';
-import type { ConfidenceProfile, DimensionGap, QuizModuleId } from '@/types';
+import { evaluateState, recommendDataSources } from '@/lib/agent/orchestrator';
+import type { ConfidenceProfile, DimensionGap, QuizModuleId, SourceRecommendation } from '@/types';
 import type { AgentState, AgentDecision, EvaluateResponse } from '@/lib/agent/types';
 
 const QuizModuleIds: [string, ...string[]] = [
@@ -109,10 +109,17 @@ export async function POST(req: NextRequest) {
     },
   };
 
+  // Compute source recommendations from gaps
+  const sourceRecommendations: SourceRecommendation[] = recommendDataSources(
+    agentState.gaps,
+    agentState.connectedSources
+  );
+
   const response: EvaluateResponse = {
     actions,
     state: agentState,
     decision,
+    sourceRecommendations,
   };
 
   return NextResponse.json(response);

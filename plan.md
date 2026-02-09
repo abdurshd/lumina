@@ -255,7 +255,7 @@ Modify existing data API routes (`/api/data/gmail`, `/api/data/drive`, `/api/dat
 ### Task 2.2 — Gap Detection & Source Recommendation
 
 ```
-STATUS: [ ]
+STATUS: [x]
 LOCK: UNLOCKED
 PRIORITY: MEDIUM
 DEPENDS ON: 2.1, 1.2
