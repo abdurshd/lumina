@@ -123,9 +123,9 @@ export function NeuralBrainScene() {
         <g className="svg-drift" style={{ animationDuration: '14s', animationDelay: '3s' }}>
           <g transform="rotate(10 1300 420)">
             <rect x="1250" y="360" width="100" height="130" rx="8" fill="var(--svg-fill-dim)" stroke="var(--svg-stroke-subtle)" strokeWidth="1" />
-            <circle cx="1280" cy="400" r="6" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
-            <circle cx="1280" cy="425" r="6" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
-            <circle cx="1280" cy="450" r="6" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
+            <circle cx="1280" cy="400" r="6" fill="none" stroke="var(--svg-stroke-subtle)" strokeWidth="1" />
+            <circle cx="1280" cy="425" r="6" fill="none" stroke="var(--svg-stroke-subtle)" strokeWidth="1" />
+            <circle cx="1280" cy="450" r="6" fill="none" stroke="var(--svg-stroke-subtle)" strokeWidth="1" />
             <line x1="1295" y1="400" x2="1330" y2="400" stroke="var(--svg-stroke-dim)" strokeWidth="2" />
             <line x1="1295" y1="425" x2="1325" y2="425" stroke="var(--svg-stroke-dim)" strokeWidth="2" />
             <line x1="1295" y1="450" x2="1335" y2="450" stroke="var(--svg-stroke-dim)" strokeWidth="2" />
@@ -137,7 +137,7 @@ export function NeuralBrainScene() {
           <g transform="rotate(-8 550 720)">
             <rect x="500" y="660" width="100" height="120" rx="8" fill="var(--svg-fill-dim)" stroke="var(--svg-stroke-dim)" strokeWidth="1" />
             <text x="550" y="700" textAnchor="middle" fill="var(--svg-text-faint)" fontSize="24">?</text>
-            <rect x="520" y="720" width="60" height="6" rx="3" fill="rgba(255,255,255,0.06)" />
+            <rect x="520" y="720" width="60" height="6" rx="3" fill="var(--svg-fill-dim)" />
             <rect x="520" y="735" width="45" height="6" rx="3" fill="var(--svg-fill-dim)" />
             <rect x="520" y="750" width="55" height="6" rx="3" fill="rgba(34,211,238,0.1)" />
           </g>
@@ -149,9 +149,9 @@ export function NeuralBrainScene() {
             <rect x="1350" y="190" width="100" height="120" rx="8" fill="var(--svg-fill-dim)" stroke="var(--svg-stroke-dim)" strokeWidth="1" />
             <text x="1400" y="235" textAnchor="middle" fill="var(--svg-text-faint)" fontSize="28">?</text>
             <circle cx="1375" cy="270" r="5" fill="rgba(34,211,238,0.2)" stroke="rgba(34,211,238,0.3)" strokeWidth="1" />
-            <line x1="1388" y1="270" x2="1430" y2="270" stroke="rgba(255,255,255,0.06)" strokeWidth="2" />
+            <line x1="1388" y1="270" x2="1430" y2="270" stroke="var(--svg-stroke-dim)" strokeWidth="2" />
             <circle cx="1375" cy="290" r="5" fill="none" stroke="var(--svg-stroke-subtle)" strokeWidth="1" />
-            <line x1="1388" y1="290" x2="1425" y2="290" stroke="rgba(255,255,255,0.06)" strokeWidth="2" />
+            <line x1="1388" y1="290" x2="1425" y2="290" stroke="var(--svg-stroke-dim)" strokeWidth="2" />
           </g>
         </g>
 
@@ -159,9 +159,9 @@ export function NeuralBrainScene() {
         <g className="svg-drift" style={{ animationDuration: '15s', animationDelay: '8s' }}>
           <g transform="rotate(12 1350 750)">
             <rect x="1300" y="690" width="100" height="120" rx="8" fill="var(--svg-fill-dim)" stroke="var(--svg-stroke-dim)" strokeWidth="1" />
-            <rect x="1320" y="710" width="60" height="8" rx="4" fill="rgba(255,255,255,0.06)" />
+            <rect x="1320" y="710" width="60" height="8" rx="4" fill="var(--svg-fill-dim)" />
             <rect x="1320" y="728" width="50" height="8" rx="4" fill="var(--svg-fill-dim)" />
-            <rect x="1320" y="746" width="55" height="8" rx="4" fill="rgba(255,255,255,0.05)" />
+            <rect x="1320" y="746" width="55" height="8" rx="4" fill="var(--svg-fill-dim)" />
             <rect x="1320" y="770" width="60" height="14" rx="7" fill="rgba(34,211,238,0.1)" stroke="rgba(34,211,238,0.2)" strokeWidth="0.5" />
           </g>
         </g>

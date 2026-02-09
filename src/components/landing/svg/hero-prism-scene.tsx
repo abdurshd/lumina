@@ -62,7 +62,7 @@ export function HeroPrismScene() {
         <circle cx="960" cy="540" r="500" fill="url(#hero-center-glow)" />
 
         {/* L8: Geometric decorative patterns — hexagons, circles, connecting lines */}
-        <g opacity="0.04" stroke="rgba(255,255,255,1)" strokeWidth="0.5" fill="none">
+        <g opacity="0.04" stroke="var(--foreground)" strokeWidth="0.5" fill="none">
           {/* Hexagon top-left */}
           <polygon points="300,200 340,180 380,200 380,240 340,260 300,240" className="svg-draw-path" style={{ animationDelay: '0.5s' }} />
           {/* Hexagon bottom-right */}
@@ -77,7 +77,7 @@ export function HeroPrismScene() {
           <polygon points="150,650 190,630 230,650 230,690 190,710 150,690" className="svg-draw-path" style={{ animationDelay: '1.8s' }} />
           <polygon points="1700,550 1740,530 1780,550 1780,590 1740,610 1700,590" className="svg-draw-path" style={{ animationDelay: '2.2s' }} />
         </g>
-        <g opacity="0.06" stroke="rgba(255,255,255,1)" strokeWidth="0.5" fill="none">
+        <g opacity="0.06" stroke="var(--foreground)" strokeWidth="0.5" fill="none">
           <line x1="340" y1="260" x2="200" y2="400" />
           <line x1="1580" y1="840" x2="1700" y2="590" />
           <line x1="1680" y1="200" x2="1750" y2="350" />
@@ -112,14 +112,14 @@ export function HeroPrismScene() {
           <path
             d="M-70 -90 L70 0 L-70 90 Z"
             fill="url(#hero-prism-grad)"
-            stroke="rgba(255,255,255,0.25)"
+            stroke="var(--svg-stroke-subtle)"
             strokeWidth="1.5"
           />
           {/* Inner prism highlight edge */}
           <path
             d="M-65 -80 L60 0 L-65 80"
             fill="none"
-            stroke="rgba(255,255,255,0.08)"
+            stroke="var(--svg-stroke-dim)"
             strokeWidth="0.5"
           />
 
@@ -257,7 +257,7 @@ export function HeroPrismScene() {
         </g>
         <g className="svg-drift" style={{ animationDuration: '25s', animationDelay: '10s' }}>
           <polygon points="500,600 515,575 530,600" fill="none" stroke="var(--svg-stroke-dim)" strokeWidth="0.5" />
-          <circle cx="1400" cy="150" r="10" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="0.5" />
+          <circle cx="1400" cy="150" r="10" fill="none" stroke="var(--svg-stroke-faint)" strokeWidth="0.5" />
           <rect x="800" y="900" width="10" height="10" fill="none" stroke="var(--svg-stroke-faint)" strokeWidth="0.5" transform="rotate(30 805 905)" />
         </g>
       </svg>

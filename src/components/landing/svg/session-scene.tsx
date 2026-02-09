@@ -81,16 +81,16 @@ export function SessionScene() {
           {/* Head */}
           <ellipse cx="0" cy="-40" rx="42" ry="48" fill="var(--svg-fill-card)" stroke="var(--svg-stroke-subtle)" strokeWidth="1.5" />
           {/* Neck */}
-          <rect x="-14" y="6" width="28" height="20" fill="var(--svg-fill-card)" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+          <rect x="-14" y="6" width="28" height="20" fill="var(--svg-fill-card)" stroke="var(--svg-stroke-subtle)" strokeWidth="1" />
           {/* Shoulders */}
           <path d="M-14 26 Q-14 26 -80 60 Q-90 65 -90 80 L-90 140 L90 140 L90 80 Q90 65 80 60 Q14 26 14 26"
-            fill="var(--svg-fill-card)" stroke="rgba(255,255,255,0.12)" strokeWidth="1.5" />
+            fill="var(--svg-fill-card)" stroke="var(--svg-stroke-subtle)" strokeWidth="1.5" />
           {/* Subtle face features */}
-          <circle cx="-12" cy="-45" r="3" fill="rgba(255,255,255,0.06)" />
-          <circle cx="12" cy="-45" r="3" fill="rgba(255,255,255,0.06)" />
-          <path d="M-6 -30 Q0 -25 6 -30" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+          <circle cx="-12" cy="-45" r="3" fill="var(--svg-fill-dim)" />
+          <circle cx="12" cy="-45" r="3" fill="var(--svg-fill-dim)" />
+          <path d="M-6 -30 Q0 -25 6 -30" fill="none" stroke="var(--svg-stroke-dim)" strokeWidth="1" />
           {/* Glow around human */}
-          <ellipse cx="0" cy="40" rx="110" ry="120" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1" className="svg-breathe" style={{ transformOrigin: '480px 540px' }} />
+          <ellipse cx="0" cy="40" rx="110" ry="120" fill="none" stroke="var(--svg-stroke-faint)" strokeWidth="1" className="svg-breathe" style={{ transformOrigin: '480px 540px' }} />
         </g>
 
         {/* --- Right Side: AI Crystal (multi-faceted diamond with inner glow) --- */}
@@ -142,27 +142,27 @@ export function SessionScene() {
 
         {/* --- Floating Insight Bubbles (5+) --- */}
         <g className="svg-float" style={{ animationDuration: '7s' }}>
-          <rect x="750" y="280" width="160" height="36" rx="18" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+          <rect x="750" y="280" width="160" height="36" rx="18" fill="var(--svg-fill-dim)" stroke="var(--svg-stroke-subtle)" strokeWidth="1" />
           <text x="830" y="303" textAnchor="middle" fill="#22d3ee" fontSize="12" fontFamily="sans-serif">Interest Detected</text>
         </g>
 
         <g className="svg-float" style={{ animationDuration: '8s', animationDelay: '1.5s' }}>
-          <rect x="1080" y="680" width="150" height="36" rx="18" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+          <rect x="1080" y="680" width="150" height="36" rx="18" fill="var(--svg-fill-dim)" stroke="var(--svg-stroke-subtle)" strokeWidth="1" />
           <text x="1155" y="703" textAnchor="middle" fill="#a78bfa" fontSize="12" fontFamily="sans-serif">High Engagement</text>
         </g>
 
         <g className="svg-float" style={{ animationDuration: '9s', animationDelay: '3s' }}>
-          <rect x="680" y="700" width="170" height="36" rx="18" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+          <rect x="680" y="700" width="170" height="36" rx="18" fill="var(--svg-fill-dim)" stroke="var(--svg-stroke-subtle)" strokeWidth="1" />
           <text x="765" y="723" textAnchor="middle" fill="#f97316" fontSize="12" fontFamily="sans-serif">Confidence: High</text>
         </g>
 
         <g className="svg-float" style={{ animationDuration: '7.5s', animationDelay: '5s' }}>
-          <rect x="1050" y="330" width="140" height="36" rx="18" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+          <rect x="1050" y="330" width="140" height="36" rx="18" fill="var(--svg-fill-dim)" stroke="var(--svg-stroke-subtle)" strokeWidth="1" />
           <text x="1120" y="353" textAnchor="middle" fill="#22d3ee" fontSize="12" fontFamily="sans-serif">Active Listening</text>
         </g>
 
         <g className="svg-float" style={{ animationDuration: '8.5s', animationDelay: '7s' }}>
-          <rect x="820" y="750" width="150" height="36" rx="18" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+          <rect x="820" y="750" width="150" height="36" rx="18" fill="var(--svg-fill-dim)" stroke="var(--svg-stroke-subtle)" strokeWidth="1" />
           <text x="895" y="773" textAnchor="middle" fill="#a78bfa" fontSize="12" fontFamily="sans-serif">Creative Pattern</text>
         </g>
       </svg>

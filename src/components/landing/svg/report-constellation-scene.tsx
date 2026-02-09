@@ -34,11 +34,11 @@ export function ReportConstellationScene() {
 
           {/* 3 Nested hexagonal grid rings */}
           <polygon points="0,-100 86,-50 86,50 0,100 -86,50 -86,-50"
-            fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="0.8" />
+            fill="none" stroke="var(--svg-stroke-subtle)" strokeWidth="0.8" />
           <polygon points="0,-66 57,-33 57,33 0,66 -57,33 -57,-33"
-            fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="0.6" />
+            fill="none" stroke="var(--svg-stroke-dim)" strokeWidth="0.6" />
           <polygon points="0,-33 29,-16 29,16 0,33 -29,16 -29,-16"
-            fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="0.5" />
+            fill="none" stroke="var(--svg-stroke-faint)" strokeWidth="0.5" />
 
           {/* 6 Axis lines radiating from center with glow */}
           <g stroke="rgba(34,211,238,0.15)" strokeWidth="0.5">
@@ -69,16 +69,16 @@ export function ReportConstellationScene() {
           />
 
           {/* Vertex stars on data shape — twinkling */}
-          <circle cx="0" cy="-80" r="2.5" fill="#fff" className="svg-twinkle" filter="url(#report-glow)" style={{ animationDelay: '0s' }} />
-          <circle cx="70" cy="-25" r="2.5" fill="#fff" className="svg-twinkle" filter="url(#report-glow)" style={{ animationDelay: '0.3s' }} />
-          <circle cx="55" cy="45" r="2.5" fill="#fff" className="svg-twinkle" filter="url(#report-glow)" style={{ animationDelay: '0.6s' }} />
-          <circle cx="0" cy="85" r="2.5" fill="#fff" className="svg-twinkle" filter="url(#report-glow)" style={{ animationDelay: '0.9s' }} />
-          <circle cx="-45" cy="35" r="2.5" fill="#fff" className="svg-twinkle" filter="url(#report-glow)" style={{ animationDelay: '1.2s' }} />
-          <circle cx="-65" cy="-30" r="2.5" fill="#fff" className="svg-twinkle" filter="url(#report-glow)" style={{ animationDelay: '1.5s' }} />
+          <circle cx="0" cy="-80" r="2.5" fill="var(--svg-dot)" className="svg-twinkle" filter="url(#report-glow)" style={{ animationDelay: '0s' }} />
+          <circle cx="70" cy="-25" r="2.5" fill="var(--svg-dot)" className="svg-twinkle" filter="url(#report-glow)" style={{ animationDelay: '0.3s' }} />
+          <circle cx="55" cy="45" r="2.5" fill="var(--svg-dot)" className="svg-twinkle" filter="url(#report-glow)" style={{ animationDelay: '0.6s' }} />
+          <circle cx="0" cy="85" r="2.5" fill="var(--svg-dot)" className="svg-twinkle" filter="url(#report-glow)" style={{ animationDelay: '0.9s' }} />
+          <circle cx="-45" cy="35" r="2.5" fill="var(--svg-dot)" className="svg-twinkle" filter="url(#report-glow)" style={{ animationDelay: '1.2s' }} />
+          <circle cx="-65" cy="-30" r="2.5" fill="var(--svg-dot)" className="svg-twinkle" filter="url(#report-glow)" style={{ animationDelay: '1.5s' }} />
         </g>
 
         {/* === Constellation star-map dots connected by thin lines (20+) === */}
-        <g stroke="rgba(255,255,255,0.05)" strokeWidth="0.5" fill="none">
+        <g stroke="var(--svg-stroke-dim)" strokeWidth="0.5" fill="none">
           {/* Upper-left cluster */}
           <line x1="180" y1="160" x2="280" y2="200" />
           <line x1="280" y1="200" x2="320" y2="140" />
@@ -108,43 +108,43 @@ export function ReportConstellationScene() {
         {/* Constellation dots */}
         <g>
           {/* Upper-left */}
-          <circle cx="180" cy="160" r="2" fill="#fff" className="svg-twinkle" style={{ animationDelay: '0.2s' }} />
-          <circle cx="280" cy="200" r="1.5" fill="#fff" className="svg-twinkle" style={{ animationDelay: '0.8s' }} />
-          <circle cx="320" cy="140" r="2" fill="#fff" className="svg-twinkle" style={{ animationDelay: '1.4s' }} />
-          <circle cx="420" cy="180" r="1.5" fill="#fff" className="svg-twinkle" style={{ animationDelay: '0.5s' }} />
-          <circle cx="250" cy="280" r="1.5" fill="#fff" className="svg-twinkle" style={{ animationDelay: '2.0s' }} />
-          <circle cx="350" cy="300" r="2" fill="#fff" className="svg-twinkle" style={{ animationDelay: '1.1s' }} />
+          <circle cx="180" cy="160" r="2" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '0.2s' }} />
+          <circle cx="280" cy="200" r="1.5" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '0.8s' }} />
+          <circle cx="320" cy="140" r="2" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '1.4s' }} />
+          <circle cx="420" cy="180" r="1.5" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '0.5s' }} />
+          <circle cx="250" cy="280" r="1.5" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '2.0s' }} />
+          <circle cx="350" cy="300" r="2" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '1.1s' }} />
 
           {/* Upper-right */}
-          <circle cx="1500" cy="120" r="2" fill="#fff" className="svg-twinkle" style={{ animationDelay: '0.3s' }} />
-          <circle cx="1600" cy="180" r="1.5" fill="#fff" className="svg-twinkle" style={{ animationDelay: '1.6s' }} />
-          <circle cx="1650" cy="130" r="2" fill="#fff" className="svg-twinkle" style={{ animationDelay: '0.9s' }} />
-          <circle cx="1750" cy="170" r="1.5" fill="#fff" className="svg-twinkle" style={{ animationDelay: '2.2s' }} />
-          <circle cx="1580" cy="260" r="1.5" fill="#fff" className="svg-twinkle" style={{ animationDelay: '0.6s' }} />
+          <circle cx="1500" cy="120" r="2" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '0.3s' }} />
+          <circle cx="1600" cy="180" r="1.5" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '1.6s' }} />
+          <circle cx="1650" cy="130" r="2" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '0.9s' }} />
+          <circle cx="1750" cy="170" r="1.5" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '2.2s' }} />
+          <circle cx="1580" cy="260" r="1.5" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '0.6s' }} />
 
           {/* Lower-left */}
-          <circle cx="200" cy="800" r="2" fill="#fff" className="svg-twinkle" style={{ animationDelay: '1.3s' }} />
-          <circle cx="300" cy="850" r="1.5" fill="#fff" className="svg-twinkle" style={{ animationDelay: '0.1s' }} />
-          <circle cx="280" cy="930" r="2" fill="#fff" className="svg-twinkle" style={{ animationDelay: '1.8s' }} />
-          <circle cx="380" cy="900" r="1.5" fill="#fff" className="svg-twinkle" style={{ animationDelay: '0.7s' }} />
-          <circle cx="150" cy="880" r="1.5" fill="#fff" className="svg-twinkle" style={{ animationDelay: '2.4s' }} />
+          <circle cx="200" cy="800" r="2" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '1.3s' }} />
+          <circle cx="300" cy="850" r="1.5" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '0.1s' }} />
+          <circle cx="280" cy="930" r="2" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '1.8s' }} />
+          <circle cx="380" cy="900" r="1.5" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '0.7s' }} />
+          <circle cx="150" cy="880" r="1.5" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '2.4s' }} />
 
           {/* Lower-right */}
-          <circle cx="1600" cy="800" r="2" fill="#fff" className="svg-twinkle" style={{ animationDelay: '0.4s' }} />
-          <circle cx="1700" cy="830" r="1.5" fill="#fff" className="svg-twinkle" style={{ animationDelay: '1.7s' }} />
-          <circle cx="1680" cy="920" r="2" fill="#fff" className="svg-twinkle" style={{ animationDelay: '1.0s' }} />
-          <circle cx="1780" cy="880" r="1.5" fill="#fff" className="svg-twinkle" style={{ animationDelay: '2.1s' }} />
-          <circle cx="1550" cy="900" r="1.5" fill="#fff" className="svg-twinkle" style={{ animationDelay: '0.5s' }} />
+          <circle cx="1600" cy="800" r="2" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '0.4s' }} />
+          <circle cx="1700" cy="830" r="1.5" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '1.7s' }} />
+          <circle cx="1680" cy="920" r="2" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '1.0s' }} />
+          <circle cx="1780" cy="880" r="1.5" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '2.1s' }} />
+          <circle cx="1550" cy="900" r="1.5" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '0.5s' }} />
 
           {/* Scattered solo stars */}
-          <circle cx="100" cy="500" r="1" fill="#fff" className="svg-twinkle" style={{ animationDelay: '1.5s' }} />
-          <circle cx="1850" cy="500" r="1" fill="#fff" className="svg-twinkle" style={{ animationDelay: '0.8s' }} />
-          <circle cx="500" cy="50" r="1.5" fill="#fff" className="svg-twinkle" style={{ animationDelay: '2.3s' }} />
-          <circle cx="1400" cy="1020" r="1" fill="#fff" className="svg-twinkle" style={{ animationDelay: '0.2s' }} />
+          <circle cx="100" cy="500" r="1" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '1.5s' }} />
+          <circle cx="1850" cy="500" r="1" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '0.8s' }} />
+          <circle cx="500" cy="50" r="1.5" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '2.3s' }} />
+          <circle cx="1400" cy="1020" r="1" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '0.2s' }} />
         </g>
 
         {/* Decorative: small crosses (+) at random positions */}
-        <g stroke="rgba(255,255,255,0.08)" strokeWidth="0.5">
+        <g stroke="var(--svg-stroke-dim)" strokeWidth="0.5">
           <line x1="140" y1="340" x2="140" y2="350" /><line x1="135" y1="345" x2="145" y2="345" />
           <line x1="1780" y1="300" x2="1780" y2="310" /><line x1="1775" y1="305" x2="1785" y2="305" />
           <line x1="350" y1="700" x2="350" y2="710" /><line x1="345" y1="705" x2="355" y2="705" />
