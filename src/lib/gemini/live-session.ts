@@ -48,6 +48,7 @@ export class LiveSessionManager {
   private dataContext: string | null = null;
   private transcriptCharCount = 0;
   private isReconnecting = false;
+  private _connected = false;
 
   constructor(callbacks: LiveSessionCallbacks) {
     this.callbacks = callbacks;
@@ -64,6 +65,7 @@ export class LiveSessionManager {
         model: GEMINI_MODELS.LIVE,
         callbacks: {
           onopen: () => {
+            this._connected = true;
             this.callbacks.onConnectionChange(true);
           },
           onmessage: (message: LiveServerMessage) => {
@@ -73,6 +75,7 @@ export class LiveSessionManager {
             this.callbacks.onError(new Error(e.message || "WebSocket error"));
           },
           onclose: () => {
+            this._connected = false;
             if (!this.isReconnecting) {
               this.callbacks.onConnectionChange(false);
             }
@@ -251,8 +254,12 @@ export class LiveSessionManager {
     }
   }
 
+  get connected(): boolean {
+    return this._connected;
+  }
+
   sendAudio(base64Audio: string): void {
-    if (!this.session) return;
+    if (!this.session || !this._connected) return;
     try {
       this.session.sendRealtimeInput({
         media: {
@@ -260,13 +267,13 @@ export class LiveSessionManager {
           mimeType: "audio/pcm;rate=16000",
         },
       });
-    } catch (error) {
-      console.error("Error sending audio:", error);
+    } catch {
+      // WebSocket already closed — suppress
     }
   }
 
   sendVideo(base64Image: string): void {
-    if (!this.session) return;
+    if (!this.session || !this._connected) return;
     try {
       this.session.sendRealtimeInput({
         media: {
@@ -274,13 +281,13 @@ export class LiveSessionManager {
           mimeType: "image/jpeg",
         },
       });
-    } catch (error) {
-      console.error("Error sending video:", error);
+    } catch {
+      // WebSocket already closed — suppress
     }
   }
 
   sendText(text: string): void {
-    if (!this.session) return;
+    if (!this.session || !this._connected) return;
     this.session.sendClientContent({
       turns: [{ role: "user", parts: [{ text }] }],
       turnComplete: true,
@@ -294,6 +301,7 @@ export class LiveSessionManager {
   }
 
   disconnect(): void {
+    this._connected = false;
     if (this.session) {
       try {
         this.session.close();

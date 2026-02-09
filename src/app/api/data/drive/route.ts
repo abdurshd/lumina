@@ -26,15 +26,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ data, tokenCount });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
+    const statusCode = (error as { code?: number }).code;
 
-    if (message.includes('401') || message.includes('invalid_grant')) {
+    if (statusCode === 401 || message.includes('401') || message.includes('invalid_grant')) {
       return errorResponse(
         'Google access token expired. Please sign out and sign in again.',
         ErrorCode.UNAUTHORIZED,
         401,
       );
     }
-    if (message.includes('403')) {
+    if (statusCode === 403 || message.includes('403') || message.toLowerCase().includes('insufficient permission')) {
       return errorResponse(
         'Drive access not granted. Please connect Google Drive permissions.',
         ErrorCode.FORBIDDEN,

@@ -65,6 +65,11 @@ export function useLiveSession() {
       if (connected) {
         setIsReconnecting(false);
         setReconnectAttempt(0);
+      } else {
+        // Stop sending audio/video when connection drops
+        capturerRef.current?.stop();
+        capturerRef.current = null;
+        microphoneRef.current.stop();
       }
     },
     onInterrupted: () => {

@@ -21,6 +21,7 @@ interface AuthState {
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   initAuthListener: () => () => void;
+  requestGmailAccess: () => Promise<string | null>;
   requestDriveAccess: () => Promise<string | null>;
   connectNotion: () => void;
 }
@@ -94,6 +95,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (!user) return;
     const p = await getUserProfile(user.uid);
     set({ profile: p });
+  },
+
+  requestGmailAccess: async () => {
+    const provider = new GoogleAuthProvider();
+    provider.addScope('https://www.googleapis.com/auth/gmail.readonly');
+
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      const accessToken = credential?.accessToken ?? null;
+      if (accessToken) {
+        set({ googleAccessToken: accessToken });
+      }
+      return accessToken;
+    } catch {
+      return null;
+    }
   },
 
   requestDriveAccess: async () => {

@@ -31,7 +31,7 @@ const CHATGPT_TYPES = ['application/json'];
 const FILE_UPLOAD_TYPES = ['.pdf', '.txt', '.md', '.html'];
 
 export default function ConnectionsPage() {
-  const { user, googleAccessToken, profile, requestDriveAccess, connectNotion } = useAuthStore();
+  const { user, googleAccessToken, profile, requestGmailAccess, requestDriveAccess, connectNotion } = useAuthStore();
   const { setDataInsights, advanceStage } = useAssessmentStore();
   const router = useRouter();
 
@@ -53,13 +53,17 @@ export default function ConnectionsPage() {
     [dataSources]
   );
 
-  const connectGmail = useCallback(() => {
-    if (!googleAccessToken) {
-      toast.error('Google access token not available. Please sign out and sign in again.');
+  const connectGmail = useCallback(async () => {
+    setError(null);
+
+    // Always request Gmail scope — basic sign-in doesn't include it
+    const token = await requestGmailAccess();
+    if (!token) {
+      toast.error('Failed to get Gmail access. Please try again.');
       return;
     }
-    setError(null);
-    gmailMutation.mutate({ accessToken: googleAccessToken }, {
+
+    gmailMutation.mutate({ accessToken: token }, {
       onSuccess: (result) => {
         setDataSources((prev) => ({ ...prev, gmail: result }));
         toast.success(`Gmail connected! ~${result.tokenCount.toLocaleString()} tokens collected.`);
@@ -70,7 +74,7 @@ export default function ConnectionsPage() {
         toast.error(message);
       },
     });
-  }, [googleAccessToken, gmailMutation]);
+  }, [requestGmailAccess, gmailMutation]);
 
   const handleChatGPTUpload = useCallback(() => {
     chatgptInputRef.current?.click();
@@ -145,14 +149,12 @@ export default function ConnectionsPage() {
 
   const connectDrive = useCallback(async () => {
     setError(null);
-    let token = googleAccessToken;
 
+    // Always request Drive scope — basic sign-in doesn't include it
+    const token = await requestDriveAccess();
     if (!token) {
-      token = await requestDriveAccess();
-      if (!token) {
-        toast.error('Failed to get Drive access. Please try again.');
-        return;
-      }
+      toast.error('Failed to get Drive access. Please try again.');
+      return;
     }
 
     driveMutation.mutate({ accessToken: token }, {
@@ -162,30 +164,11 @@ export default function ConnectionsPage() {
       },
       onError: (err) => {
         const message = err instanceof FetchError ? err.message : 'Failed to connect Drive';
-        if (message.includes('403') || message.includes('Drive access')) {
-          // Need drive scope - request it
-          requestDriveAccess().then((newToken) => {
-            if (newToken) {
-              driveMutation.mutate({ accessToken: newToken }, {
-                onSuccess: (result) => {
-                  setDataSources((prev) => ({ ...prev, drive: result }));
-                  toast.success(`Google Drive connected! ~${result.tokenCount.toLocaleString()} tokens collected.`);
-                },
-                onError: (retryErr) => {
-                  const retryMsg = retryErr instanceof FetchError ? retryErr.message : 'Failed to connect Drive';
-                  setError(retryMsg);
-                  toast.error(retryMsg);
-                },
-              });
-            }
-          });
-          return;
-        }
         setError(message);
         toast.error(message);
       },
     });
-  }, [googleAccessToken, requestDriveAccess, driveMutation]);
+  }, [requestDriveAccess, driveMutation]);
 
   const handleConnectNotion = useCallback(() => {
     if (profile?.notionAccessToken) {
@@ -251,8 +234,6 @@ export default function ConnectionsPage() {
           isLoading={gmailMutation.isPending}
           onConnect={connectGmail}
           tokenCount={dataSources.gmail?.tokenCount}
-          disabled={!googleAccessToken}
-          disabledReason={!googleAccessToken ? 'Sign in with Google to connect Gmail' : undefined}
         />
 
         <ConnectorCard
