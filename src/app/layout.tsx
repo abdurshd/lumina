@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { Outfit, Geist_Mono } from "next/font/google";
+import { Playpen_Sans, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AppProviders } from "@/components/providers/app-providers";
 import { Toaster } from "@/components/ui/sonner";
 
-const outfit = Outfit({
-  variable: "--font-outfit",
+const playpenSans = Playpen_Sans({
+  variable: "--font-playpen-sans",
   subsets: ["latin"],
 });
 
@@ -27,7 +27,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${outfit.variable} ${geistMono.variable} antialiased`}
+        className={`${playpenSans.variable} ${geistMono.variable} antialiased`}
       >
         <AppProviders>
           {children}
