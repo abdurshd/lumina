@@ -40,8 +40,8 @@ Build a multimodal talent-discovery platform that helps people find their strong
 Use centralized constants from `src/lib/gemini/models.ts` only.
 
 Current canonical model mapping:
-- Fast tasks: `gemini-2.5-flash`
-- Deep synthesis: `gemini-2.5-pro`
+- Fast tasks: `gemini-3-flash-preview`
+- Deep synthesis: `gemini-3-pro-preview`
 - Live sessions: `gemini-2.5-flash-native-audio-preview-12-2025`
 
 ## Live Session Security Policy

@@ -1,36 +1,112 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Lumina
+
+A multimodal talent-discovery platform that helps people find their strongest career direction through connected data sources, adaptive psychometric assessment, live AI video conversation, and evidence-grounded recommendations.
+
+## Tech Stack
+
+- **Framework:** Next.js 16 (App Router) + React 19 + TypeScript
+- **AI:** Google Gemini (Flash, Pro, Live Audio/Video)
+- **Auth & Database:** Firebase (Auth + Firestore)
+- **Styling:** Tailwind CSS v4 + shadcn/ui + Framer Motion
+- **State:** Zustand + React Query v5
+- **Validation:** Zod
+- **Integrations:** Gmail, Google Drive, Notion, ChatGPT exports, file uploads
+
+## Features
+
+**Data Integration** — Connect Gmail, Google Drive, Notion, ChatGPT exports, or upload files directly. Lumina analyzes patterns across your data to surface career-relevant signals.
+
+**Adaptive Quiz** — Five assessment modules (Interests, Work Values, Strengths & Skills, Learning Environment, Constraints) with AI-adaptive questions that respond to your answers in real time. Built on RIASEC + custom psychometric dimensions.
+
+**Live Multimodal Session** — Real-time video + voice conversation with an AI career counselor. Observes engagement, hesitation, confidence, and communication style (with explicit consent only). Uses server-minted ephemeral tokens for security.
+
+**Talent Report** — Personalized report with radar chart, top strengths with evidence and confidence levels, hidden talents, career path matches with scores, and a prioritized action plan.
+
+**Growth Loop** — Micro-challenges across categories (explore, create, connect, learn, reflect), reflection journaling with sentiment analysis, and profile snapshots that track your evolution over time.
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+
+- Firebase project (Firestore + Auth)
+- Google Gemini API key
+- Google OAuth credentials (for Gmail/Drive)
+- Notion OAuth app (optional)
+
+### Setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Fill in `.env.local`:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+GEMINI_API_KEY=
+FIREBASE_ADMIN_PROJECT_ID=
+FIREBASE_ADMIN_CLIENT_EMAIL=
+FIREBASE_ADMIN_PRIVATE_KEY=
+NEXT_PUBLIC_FIREBASE_API_KEY=
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+NEXT_PUBLIC_FIREBASE_APP_ID=
+NOTION_CLIENT_ID=
+NOTION_CLIENT_SECRET=
+NEXT_PUBLIC_NOTION_CLIENT_ID=
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Development
 
-## Learn More
+```bash
+npm run dev       # Start dev server at http://localhost:3000
+npm run lint      # Run linter
+npm run build     # Production build
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Project Structure
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+src/
+├── app/
+│   ├── api/              # API routes (auth, data connectors, Gemini, profile, admin)
+│   ├── (auth)/           # Login
+│   └── (app)/            # Protected routes
+│       ├── dashboard/    # Pre/post-completion dashboard
+│       ├── onboarding/   # Initial setup + consent
+│       ├── connections/  # Data source connections
+│       ├── quiz/         # Adaptive assessment
+│       ├── session/      # Live video/audio session
+│       ├── report/       # Talent report
+│       ├── evolution/    # Growth tracking
+│       └── settings/     # User settings
+├── components/           # UI components by feature area
+├── hooks/                # Custom hooks (API, live session, webcam, mic)
+├── lib/
+│   ├── gemini/           # Gemini client, models, prompts, audio/video utils
+│   ├── firebase/         # Firebase config, admin SDK, Firestore helpers
+│   ├── schemas/          # Zod schemas (report, quiz, session, analysis)
+│   ├── career/           # RIASEC profile builder, O*NET data, evolution
+│   ├── psychometrics/    # Dimension models
+│   └── analytics/        # Event tracking
+├── stores/               # Zustand stores (auth, assessment, iteration)
+└── types/                # TypeScript definitions
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Assessment Flow
 
-## Deploy on Vercel
+1. **Connections** — Link data sources (Gmail, Drive, Notion, ChatGPT, files)
+2. **Quiz** — Complete the adaptive psychometric assessment
+3. **Session** — Live video conversation with AI counselor
+4. **Report** — Review your personalized talent report
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Privacy & Security
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- API keys are never exposed to the browser; live sessions use server-minted ephemeral tokens
+- All consent is explicit: age verification (16+), video consent, behavioral inference consent
+- Raw imported content is transient; only derived insights are retained
+- Behavioral observations are limited to coaching signals — no identity recognition, medical diagnosis, or immutable personality claims
+- Every strong claim includes evidence source and confidence score

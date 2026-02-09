@@ -9,7 +9,7 @@ Last updated: 2026-02-09
 - [x] Workstream B: Session-Only Data Architecture
 - [x] Workstream C: Psychometric Core v2
 - [x] Workstream D: Live Session Intelligence v2
-- [ ] Workstream E: Connector and Ingestion Robustness
+- [x] Workstream E: Connector and Ingestion Robustness
 - [ ] Workstream F: BYOK and Cost Governance
 - [ ] Workstream G: Report, Roadmap, and Portfolio Task Engine
 - [ ] Workstream H: Iteration and Evolution Loop
@@ -48,11 +48,11 @@ Last updated: 2026-02-09
 - [x] D5. Add in-session user controls for behavioral capture.
 
 #### Workstream E Tasks
-- [ ] E1. Standardize ingestion response shape.
-- [ ] E2. Add per-source token/size/quality metadata.
-- [ ] E3. Add extraction limits and truncation summaries.
-- [ ] E4. Add corpus lifecycle management UX.
-- [ ] E5. Add source deletion and consent revocation handling.
+- [x] E1. Standardize ingestion response shape.
+- [x] E2. Add per-source token/size/quality metadata.
+- [x] E3. Add extraction limits and truncation summaries.
+- [x] E4. Add corpus lifecycle management UX.
+- [x] E5. Add source deletion and consent revocation handling.
 
 #### Workstream F Tasks
 - [ ] F1. Add BYOK settings UI.
