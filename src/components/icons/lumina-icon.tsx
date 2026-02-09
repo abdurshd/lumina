@@ -27,23 +27,30 @@ const LuminaIconBase = forwardRef<SVGSVGElement, LuminaIconProps>(
         {/* Prism — upward-pointing triangle, shifted left to leave room for rays */}
         <path d="M10 3L17 19H3Z" />
 
-        {/* Input beam — enters the left face at y=13 */}
-        <line x1="1" y1="13" x2="5.5" y2="13" />
+        {/* Input beam — dashes flow toward the prism */}
+        <line
+          x1="1" y1="13" x2="5.5" y2="13"
+          strokeDasharray="1.5 3"
+          className="animate-lumina-beam"
+        />
 
-        {/* Refracted rays — exit the right face at different heights and fan out */}
+        {/* Refracted rays — dashes flow outward with staggered phase */}
         <line
           x1="13" y1="9" x2="23" y2="4"
-          className="animate-lumina-refract"
+          strokeDasharray="2 4"
+          className="animate-lumina-ray"
         />
         <line
           x1="14.5" y1="12" x2="23" y2="12"
-          className="animate-lumina-refract"
-          style={{ animationDelay: '0.8s' }}
+          strokeDasharray="2 4"
+          className="animate-lumina-ray"
+          style={{ animationDelay: '0.3s' }}
         />
         <line
           x1="16" y1="16" x2="23" y2="20"
-          className="animate-lumina-refract"
-          style={{ animationDelay: '1.6s' }}
+          strokeDasharray="2 4"
+          className="animate-lumina-ray"
+          style={{ animationDelay: '0.6s' }}
         />
       </svg>
     );
