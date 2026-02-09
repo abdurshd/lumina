@@ -16,6 +16,7 @@ import { TranscriptPanel } from '@/components/session/transcript-panel';
 import { SessionControls } from '@/components/session/session-controls';
 import { SessionTimer } from '@/components/session/session-timer';
 import { AudioVisualizer } from '@/components/session/audio-visualizer';
+import { BehavioralTimelineView } from '@/components/session/behavioral-timeline';
 import { PageHeader, LoadingButton, ErrorAlert } from '@/components/shared';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -44,6 +45,10 @@ export default function SessionPage() {
     behaviorCaptureEnabled,
     suggestedModule,
     nextSteps,
+    trends,
+    correlations,
+    timelineSnapshots,
+    timelineNarrative,
     dismissSuggestedModule,
     error: sessionError,
     sessionDuration,
@@ -363,6 +368,14 @@ export default function SessionPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Behavioral Timeline */}
+      <BehavioralTimelineView
+        trends={trends}
+        correlations={correlations}
+        snapshots={timelineSnapshots}
+        narrative={timelineNarrative}
+      />
 
       {/* Next Steps with Stagger */}
       <AnimatePresence>

@@ -4,9 +4,10 @@ import { useRef, useState, useCallback, useEffect } from 'react';
 import { LiveSessionManager, type LiveSessionCallbacks, type NextStepSuggestion, type AgentReasoningEntry } from '@/lib/gemini/live-session';
 import { AudioPlaybackManager, base64ToFloat32 } from '@/lib/gemini/audio-utils';
 import { FrameCapturer } from '@/lib/gemini/video-utils';
+import { BehavioralTimeline } from '@/lib/agent/behavioral-timeline';
 import { useWebcam } from './use-webcam';
 import { useMicrophone } from './use-microphone';
-import type { SessionInsight, UserSignal, QuizModuleId, ConfidenceProfile } from '@/types';
+import type { SessionInsight, UserSignal, QuizModuleId, ConfidenceProfile, BehavioralTrend, BehavioralCorrelation, TimelineSnapshot } from '@/types';
 
 export interface TranscriptEntry {
   text: string;
@@ -30,6 +31,11 @@ export function useLiveSession() {
   const [agentReasoning, setAgentReasoning] = useState<AgentReasoningEntry[]>([]);
   const [behaviorCaptureEnabled, setBehaviorCaptureEnabled] = useState(true);
   const confidenceProfileRef = useRef<ConfidenceProfile | null>(null);
+  const timelineRef = useRef(new BehavioralTimeline());
+  const [trends, setTrends] = useState<BehavioralTrend[]>([]);
+  const [correlations, setCorrelations] = useState<BehavioralCorrelation[]>([]);
+  const [timelineSnapshots, setTimelineSnapshots] = useState<TimelineSnapshot[]>([]);
+  const [timelineNarrative, setTimelineNarrative] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [sessionDuration, setSessionDuration] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -63,6 +69,13 @@ export function useLiveSession() {
     onInsight: (insight: SessionInsight) => {
       if (!behaviorCaptureEnabledRef.current) return;
       setInsights((prev) => [...prev, insight]);
+      // Feed into behavioral timeline
+      const tl = timelineRef.current;
+      tl.addObservation(insight);
+      setTrends(tl.computeTrends());
+      setCorrelations(tl.findCorrelations());
+      setTimelineSnapshots([...tl.getSnapshots()]);
+      setTimelineNarrative(tl.generateNarrative());
     },
     onError: (err: Error) => {
       setError(err.message);
@@ -229,6 +242,10 @@ export function useLiveSession() {
     suggestedModule,
     nextSteps,
     agentReasoning,
+    trends,
+    correlations,
+    timelineSnapshots,
+    timelineNarrative,
     dismissSuggestedModule: () => setSuggestedModule(null),
     error,
     sessionDuration,

@@ -456,7 +456,7 @@ Modify `src/lib/gemini/prompts.ts`:
 ### Task 4.2 — Temporal Behavioral Timeline
 
 ```
-STATUS: [ ]
+STATUS: [x]
 LOCK: UNLOCKED
 PRIORITY: HIGH
 DEPENDS ON: 4.1

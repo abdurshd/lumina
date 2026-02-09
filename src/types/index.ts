@@ -343,6 +343,42 @@ export interface AgentDecision {
   metadata?: Record<string, string | number | boolean>;
 }
 
+// --- Behavioral Timeline Types ---
+
+export type BehavioralCategory = SessionInsight['category'];
+
+export type TrendDirection = 'rising' | 'falling' | 'stable';
+
+export interface BehavioralTrend {
+  category: BehavioralCategory;
+  direction: TrendDirection;
+  /** Average confidence in the first half vs second half */
+  startAvg: number;
+  endAvg: number;
+  /** Percentage change from start to end */
+  delta: number;
+  sampleCount: number;
+}
+
+export interface BehavioralCorrelation {
+  /** The behavioral category that changed */
+  category: BehavioralCategory;
+  /** The topic/dimension being discussed when the change occurred */
+  topic: string;
+  /** Whether the behavior increased or decreased during this topic */
+  effect: 'increase' | 'decrease';
+  /** Strength of the correlation 0-1 */
+  strength: number;
+  /** Human-readable description */
+  description: string;
+}
+
+export interface TimelineSnapshot {
+  timestamp: number;
+  /** Category averages at this point in time (rolling window) */
+  categories: Partial<Record<BehavioralCategory, number>>;
+}
+
 // --- Analytics Types ---
 
 export type AnalyticsEventType =
