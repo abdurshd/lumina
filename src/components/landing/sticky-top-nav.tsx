@@ -8,8 +8,10 @@ import { Button } from '@/components/ui/button';
 import { LuminaIcon } from '@/components/icons/lumina-icon';
 import { Menu } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { ThemeToggle } from '@/components/layout/theme-toggle';
 
 const NAV_LINKS = [
+    { name: 'Discovery', href: '#discovery' },
     { name: 'Analysis', href: '#analysis' },
     { name: 'Quiz', href: '#quiz' },
     { name: 'Live Session', href: '#session' },
@@ -29,7 +31,7 @@ export function StickyTopNav() {
         <motion.header
             className={cn(
                 "fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b border-transparent",
-                isScrolled ? "bg-background/80 backdrop-blur-md border-border/50 shadow-sm py-3" : "bg-transparent py-5"
+                isScrolled ? "bg-background/80 backdrop-blur-md border-b-2 border-overlay-subtle shadow-sm py-3" : "bg-transparent py-5"
             )}
         >
             <div className="container mx-auto px-6 flex items-center justify-between">
@@ -49,6 +51,7 @@ export function StickyTopNav() {
                             {link.name}
                         </Link>
                     ))}
+                    <ThemeToggle />
                     <Link href="/login">
                         <Button size="sm" className="btn-3d-primary rounded-full px-6">
                             Get Started
@@ -81,9 +84,12 @@ export function StickyTopNav() {
                                             {link.name}
                                         </Link>
                                     ))}
-                                    <Link href="/login" className="mt-4">
-                                        <Button className="w-full btn-3d-primary">Get Started</Button>
-                                    </Link>
+                                    <div className="mt-4 flex items-center gap-4">
+                                        <ThemeToggle />
+                                        <Link href="/login" className="flex-1">
+                                            <Button className="w-full btn-3d-primary">Get Started</Button>
+                                        </Link>
+                                    </div>
                                 </nav>
                             </div>
                         </SheetContent>

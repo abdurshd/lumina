@@ -7,6 +7,8 @@ import { SessionSection } from '@/components/landing/session-section';
 import { ReportSection } from '@/components/landing/report-section';
 import { HowItWorksSection } from '@/components/landing/how-it-works-section';
 import { CTASection } from '@/components/landing/cta-section';
+import { LuminaIcon } from '@/components/icons/lumina-icon';
+import { Shield } from 'lucide-react';
 
 export default function Home() {
   return (
@@ -28,14 +30,17 @@ export default function Home() {
         <CTASection />
       </div>
 
-      {/* Footer (Simple placeholder for now) */}
-      <footer className="py-8 border-t border-white/10 text-center text-sm text-muted-foreground">
-        <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p>© 2026 Lumina Intelligence. All rights reserved.</p>
-          <div className="flex gap-6">
-            <a href="#" className="hover:text-primary transition-colors">Privacy</a>
-            <a href="#" className="hover:text-primary transition-colors">Terms</a>
-            <a href="#" className="hover:text-primary transition-colors">Twitter</a>
+      {/* Footer */}
+      <footer className="border-t-2 border-overlay-subtle py-10">
+        <div className="mx-auto max-w-6xl px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <LuminaIcon className="h-5 w-5 text-primary" />
+            <span className="text-sm font-bold">Lumina</span>
+          </div>
+          <div className="flex items-center gap-6 text-sm text-muted-foreground">
+            <span className="flex items-center gap-1"><Shield className="h-3 w-3" /> Privacy-first</span>
+            <span>Built with Gemini AI</span>
+            <span>&copy; 2025 Lumina</span>
           </div>
         </div>
       </footer>

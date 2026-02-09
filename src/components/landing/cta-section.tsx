@@ -46,20 +46,11 @@ export function CTASection() {
                             </Link>
                         </div>
 
-                        {/* Decorative decorative shimmer */}
-                        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent skew-x-12 translate-x-[-100%] group-hover:animate-shimmer pointer-events-none" />
+                        {/* Decorative shimmer */}
+                        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent skew-x-12 translate-x-[-100%] group-hover:svg-shimmer pointer-events-none" />
                     </div>
                 </ScrollReveal>
             </div>
-
-            <style jsx>{`
-        @keyframes shimmer {
-          100% { transform: translateX(100%) skewX(12deg); }
-        }
-        .group-hover\\:animate-shimmer {
-           animation: shimmer 1.5s infinite;
-        }
-      `}</style>
         </section>
     );
 }

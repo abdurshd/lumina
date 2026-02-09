@@ -171,13 +171,96 @@
   to { stroke-dashoffset: 0; }
 }
 
+/* -- SVG scene animation keyframes ---------- */
+
+@keyframes svg-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+@keyframes svg-drift {
+  0% { transform: translate(0,0); }
+  25% { transform: translate(10px,-8px); }
+  50% { transform: translate(-5px,12px); }
+  75% { transform: translate(-12px,-6px); }
+  100% { transform: translate(0,0); }
+}
+@keyframes svg-pulse-node {
+  0%, 100% { opacity: 0.3; r: 3; }
+  50% { opacity: 0.9; r: 5; }
+}
+@keyframes svg-draw-path {
+  from { stroke-dashoffset: 500; }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes svg-draw-shape {
+  from { stroke-dashoffset: 1000; }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes svg-glow-pulse {
+  0%, 100% { filter: blur(4px); opacity: 0.4; }
+  50% { filter: blur(8px); opacity: 0.7; }
+}
+@keyframes svg-beam-flow {
+  from { stroke-dashoffset: 100; }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes svg-ray-flow {
+  from { stroke-dashoffset: 100; }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes svg-dash-flow {
+  to { stroke-dashoffset: -1000; }
+}
+@keyframes svg-pulse-fill {
+  0%, 100% { fill-opacity: 0.05; }
+  50% { fill-opacity: 0.25; }
+}
+@keyframes svg-twinkle {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 0.9; }
+}
+@keyframes svg-shimmer {
+  100% { transform: translateX(100%) skewX(12deg); }
+}
+@keyframes svg-breathe {
+  0%, 100% { transform: scale(0.98); }
+  50% { transform: scale(1.02); }
+}
+@keyframes svg-wave-morph {
+  0% { d: path("M-300 0 Q -150 -50 0 0 Q 150 50 300 0"); }
+  100% { d: path("M-300 0 Q -150 -80 0 0 Q 150 80 300 0"); }
+}
+@keyframes svg-pulse-ring {
+  0% { opacity: 0.6; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.8); }
+}
+
+/* SVG animation utility classes */
+.svg-float { animation: svg-float 6s ease-in-out infinite; }
+.svg-float-slow { animation: svg-float 20s ease-in-out infinite; }
+.svg-drift { animation: svg-drift 15s ease-in-out infinite; }
+.svg-pulse-node { animation: svg-pulse-node 3s ease-in-out infinite; }
+.svg-draw-path { stroke-dasharray: 500; stroke-dashoffset: 500; animation: svg-draw-path 3s ease-out forwards; }
+.svg-draw-shape { stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: svg-draw-shape 4s ease-out forwards; }
+.svg-glow-pulse { animation: svg-glow-pulse 4s ease-in-out infinite; }
+.svg-beam-flow { animation: svg-beam-flow 2s linear infinite; }
+.svg-ray-flow { animation: svg-ray-flow 3s linear infinite; }
+.svg-dash-flow { animation: svg-dash-flow 20s linear infinite; }
+.svg-pulse-fill { animation: svg-pulse-fill 4s ease-in-out infinite; }
+.svg-twinkle { animation: svg-twinkle 3s ease-in-out infinite; }
+.svg-shimmer { animation: svg-shimmer 1.5s infinite; }
+.svg-breathe { animation: svg-breathe 4s ease-in-out infinite; }
+.svg-pulse-ring { animation: svg-pulse-ring 3s ease-out infinite; }
+
 @media (prefers-reduced-motion: reduce) {
   .animate-lumina-beam,
   .animate-lumina-ray {
     animation: none !important;
   }
-  /* Framer Motion respects prefers-reduced-motion via useReducedMotion() hook */
-  /* This ensures any remaining CSS animations are also disabled */
+  [class^="svg-"],
+  [class*=" svg-"] {
+    animation: none !important;
+  }
   *,
   *::before,
   *::after {

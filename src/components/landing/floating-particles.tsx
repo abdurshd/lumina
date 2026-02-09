@@ -39,7 +39,7 @@ export function FloatingParticles({
             id: i,
             x: xRand * 100, // percentage
             y: yRand * 100, // percentage
-            size: sizeRand * 40 + 20, // px
+            size: sizeRand * 25 + 12, // px
             duration: durationRand * 20 + 10, // seconds
             delay: delayRand * 5,
             image: images[Math.floor(imageRand * images.length) % images.length],
@@ -53,7 +53,7 @@ export function FloatingParticles({
             {particles.map((p) => (
                 <motion.div
                     key={p.id}
-                    className="absolute opacity-60"
+                    className="absolute opacity-30"
                     style={{
                         left: `${p.x}%`,
                         top: `${p.y}%`,
@@ -64,7 +64,7 @@ export function FloatingParticles({
                         y: [0, -100, 0],
                         x: [0, 50, 0],
                         rotate: [0, 360],
-                        opacity: [0.4, 0.8, 0.4],
+                        opacity: [0.2, 0.5, 0.2],
                     }}
                     transition={{
                         duration: p.duration,

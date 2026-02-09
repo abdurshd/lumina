@@ -9,6 +9,7 @@ import { AnimatedText } from "@/components/motion/animated-text";
 import { ScrollReveal } from "@/components/motion/scroll-reveal";
 import { fadeInUp } from "@/lib/motion";
 import { FloatingParticles } from "@/components/landing/floating-particles";
+import { LuminaIcon } from "@/components/icons/lumina-icon";
 
 export function HeroSection() {
   const scrollToHowItWorks = () => {
@@ -17,13 +18,20 @@ export function HeroSection() {
   };
 
   return (
-    <section className="relative min-h-screen w-full flex items-center justify-center overflow-hidden">
+    <section id="discovery" className="relative min-h-screen w-full flex items-center justify-center overflow-hidden">
       {/* Background Visual */}
       <HeroPrismScene />
-      <FloatingParticles count={6} images={['/lumina-shard.png']} className="z-0" />
+      <FloatingParticles count={3} images={['/lumina-shard.png']} className="z-0" />
 
       {/* Content Overlay */}
       <div className="relative z-10 container mx-auto px-6 text-center">
+        {/* Powered by Gemini AI badge */}
+        <ScrollReveal variants={fadeInUp} className="mb-8" transition={{ delay: 0 }}>
+          <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 border-2 border-primary/20 px-5 py-2 text-sm font-bold text-primary uppercase tracking-wide">
+            <LuminaIcon className="h-4 w-4" /> Powered by Gemini AI
+          </div>
+        </ScrollReveal>
+
         {/* Title */}
         <div className="mb-6 max-w-5xl mx-auto">
           <h1 className="text-5xl sm:text-7xl lg:text-8xl font-bold tracking-tight text-foreground leading-[1.1]">
