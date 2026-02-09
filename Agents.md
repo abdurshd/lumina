@@ -19,7 +19,7 @@
 
 | Agent | Current Task | Started | Notes |
 |-------|-------------|---------|-------|
-| — | — | — | No agents currently active |
+| (none) | — | — | — |
 
 When you start working, add yourself here. When you finish, remove yourself.
 

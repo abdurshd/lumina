@@ -1,16 +1,51 @@
 import { create } from 'zustand';
 import {
   onAuthStateChanged,
+  getRedirectResult,
   signInWithPopup,
+  signInWithRedirect,
   GoogleAuthProvider,
   signOut as firebaseSignOut,
   type User,
+  type UserCredential,
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase/config';
 import { getUserProfile, createUserProfile } from '@/lib/firebase/firestore';
 import { clearAssessmentSessionCache, clearCachedRetentionMode, resolveRetentionMode, setCachedRetentionMode } from '@/lib/storage/assessment-storage';
 import type { UserProfile } from '@/types';
 import { useAssessmentStore } from './assessment-store';
+
+function buildDefaultProfile(user: User, accessToken?: string | null): UserProfile {
+  return {
+    uid: user.uid,
+    email: user.email ?? '',
+    displayName: user.displayName ?? '',
+    photoURL: user.photoURL ?? '',
+    createdAt: Date.now(),
+    stages: {
+      connections: 'active',
+      quiz: 'locked',
+      session: 'locked',
+      report: 'locked',
+    },
+    googleAccessToken: accessToken ?? undefined,
+    dataRetentionMode: 'session_only',
+    byokEnabled: false,
+    byokMonthlyBudgetUsd: 25,
+    byokHardStop: false,
+  };
+}
+
+async function ensureUserProfile(user: User, accessToken?: string | null): Promise<UserProfile> {
+  const existing = await getUserProfile(user.uid);
+  if (existing) {
+    return existing;
+  }
+
+  const profile = buildDefaultProfile(user, accessToken);
+  await createUserProfile(profile);
+  return profile;
+}
 
 interface AuthState {
   user: User | null;
@@ -37,15 +72,32 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   initAuthListener: () => {
     if (get()._listenerInitialized) return () => {};
     set({ _listenerInitialized: true });
+    let redirectResultChecked = false;
 
     const unsub = onAuthStateChanged(auth, async (u) => {
       set({ user: u });
       if (u) {
-        const existing = await getUserProfile(u.uid);
-        if (existing) {
-          setCachedRetentionMode(u.uid, resolveRetentionMode(existing.dataRetentionMode));
-          set({ profile: existing });
+        let accessToken: string | null = null;
+
+        if (!redirectResultChecked) {
+          redirectResultChecked = true;
+          try {
+            const redirectResult: UserCredential | null = await getRedirectResult(auth);
+            const redirectCredential = redirectResult
+              ? GoogleAuthProvider.credentialFromResult(redirectResult)
+              : null;
+            accessToken = redirectCredential?.accessToken ?? null;
+          } catch (error) {
+            console.warn('Failed to resolve redirect result', error);
+          }
         }
+
+        const profile = await ensureUserProfile(u, accessToken);
+        setCachedRetentionMode(u.uid, resolveRetentionMode(profile.dataRetentionMode));
+        set({
+          profile,
+          googleAccessToken: accessToken ?? profile.googleAccessToken ?? null,
+        });
       } else {
         set({ profile: null, googleAccessToken: null });
       }
@@ -57,40 +109,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   signInWithGoogle: async () => {
     const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
 
-    const result = await signInWithPopup(auth, provider);
-    const credential = GoogleAuthProvider.credentialFromResult(result);
-    const accessToken = credential?.accessToken ?? null;
-    set({ googleAccessToken: accessToken });
+    try {
+      // Redirect flow avoids COOP popup/window.closed browser restrictions.
+      await signInWithRedirect(auth, provider);
+    } catch {
+      // Popup fallback for environments where redirect initiation fails.
+      const result = await signInWithPopup(auth, provider);
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      const accessToken = credential?.accessToken ?? null;
+      set({ googleAccessToken: accessToken });
 
-    const u = result.user;
-    let existing = await getUserProfile(u.uid);
-    if (!existing) {
-      const newProfile: UserProfile = {
-        uid: u.uid,
-        email: u.email ?? '',
-        displayName: u.displayName ?? '',
-        photoURL: u.photoURL ?? '',
-        createdAt: Date.now(),
-        stages: {
-          connections: 'active',
-          quiz: 'locked',
-          session: 'locked',
-          report: 'locked',
-        },
-        googleAccessToken: accessToken ?? undefined,
-        dataRetentionMode: 'session_only',
-        byokEnabled: false,
-        byokMonthlyBudgetUsd: 25,
-        byokHardStop: false,
-      };
-      await createUserProfile(newProfile);
-      setCachedRetentionMode(u.uid, resolveRetentionMode(newProfile.dataRetentionMode));
-      existing = newProfile;
-    } else {
-      setCachedRetentionMode(u.uid, resolveRetentionMode(existing.dataRetentionMode));
+      const profile = await ensureUserProfile(result.user, accessToken);
+      setCachedRetentionMode(result.user.uid, resolveRetentionMode(profile.dataRetentionMode));
+      set({ profile });
     }
-    set({ profile: existing });
   },
 
   signOut: async () => {

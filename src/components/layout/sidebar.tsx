@@ -31,6 +31,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { ThemeToggle } from '@/components/layout/theme-toggle';
 
 const navItems = [
@@ -43,17 +44,21 @@ const navItems = [
   { href: '/settings', label: 'Settings', icon: Settings },
 ];
 
-export function Sidebar() {
+interface SidebarContentProps {
+  onNavClick?: () => void;
+}
+
+function SidebarContent({ onNavClick }: SidebarContentProps) {
   const pathname = usePathname();
   const { profile, signOut } = useAuthStore();
   const shouldReduceMotion = useReducedMotion();
   const [hoveredHref, setHoveredHref] = useState<string | null>(null);
 
   return (
-    <aside className="flex h-full w-64 flex-col bg-sidebar border-r-2 border-overlay-subtle">
+    <>
       <div className="flex items-center gap-2.5 px-6 py-5">
         <LuminaIcon className="h-6 w-6 text-primary" />
-        <span className="text-xl font-bold text-gradient-gold">Lumina</span>
+        <span className="text-xl font-bold text-foreground">Lumina</span>
       </div>
       <div className="h-[2px] bg-overlay-subtle" />
       <motion.nav
@@ -69,6 +74,7 @@ export function Sidebar() {
             <motion.div key={item.href} variants={shouldReduceMotion ? undefined : staggerItem}>
               <Link
                 href={item.href}
+                onClick={onNavClick}
                 className={cn(
                   'relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold transition-colors duration-200',
                   isActive
@@ -142,6 +148,43 @@ export function Sidebar() {
           </AlertDialogContent>
         </AlertDialog>
       </div>
+    </>
+  );
+}
+
+// Desktop sidebar - static
+export function Sidebar() {
+  return (
+    <aside className="hidden lg:flex h-full w-64 flex-col bg-sidebar border-r-2 border-overlay-subtle">
+      <SidebarContent />
     </aside>
+  );
+}
+
+// Mobile sidebar - slide-in sheet
+interface MobileSidebarProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent
+        side="left"
+        className="w-64 p-0 border-r-2 border-overlay-subtle bg-sidebar"
+        showCloseButton={false}
+      >
+        <SheetHeader className="sr-only">
+          <SheetTitle>Sidebar navigation</SheetTitle>
+          <SheetDescription>
+            Main application navigation and account controls.
+          </SheetDescription>
+        </SheetHeader>
+        <div className="flex h-full flex-col">
+          <SidebarContent onNavClick={() => onOpenChange(false)} />
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }

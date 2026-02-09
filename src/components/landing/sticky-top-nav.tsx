@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { LuminaIcon } from '@/components/icons/lumina-icon';
 import { Menu } from 'lucide-react';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { ThemeToggle } from '@/components/layout/theme-toggle';
 
 const NAV_LINKS = [
@@ -79,6 +79,12 @@ export function StickyTopNav() {
                             </Button>
                         </SheetTrigger>
                         <SheetContent side="right" className="w-full sm:w-[400px] border-l border-primary/20 bg-background p-0">
+                            <SheetHeader className="sr-only">
+                                <SheetTitle>Navigation menu</SheetTitle>
+                                <SheetDescription>
+                                    Main section links and sign-in entry point.
+                                </SheetDescription>
+                            </SheetHeader>
                             <div className="flex flex-col h-full bg-background p-10">
                                 <Link href="/" className="flex items-center gap-3 mb-16">
                                     <LuminaIcon className="h-10 w-10 text-primary" />

@@ -29,7 +29,6 @@ export default function LoginPage() {
     setError(null);
     try {
       await signInWithGoogle();
-      router.push('/dashboard');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Sign-in failed';
       // Firebase auth errors

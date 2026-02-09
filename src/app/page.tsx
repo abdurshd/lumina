@@ -39,7 +39,7 @@ export default function Home() {
             <span className="text-xl font-black tracking-tighter text-white uppercase">Lumina</span>
           </div>
 
-          <div className="flex items-center gap-10 text-[10px] font-black tracking-[0.2em] text-muted-foreground uppercase">
+          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-10 text-[10px] font-black tracking-[0.2em] text-muted-foreground uppercase text-center">
             <span className="flex items-center gap-2 hover:text-primary transition-colors cursor-default"><Shield className="h-3 w-3" /> Zero Persistence</span>
             <span className="hover:text-primary transition-colors cursor-default">Powered by Gemini AI</span>
             <span className="text-white/20">&copy; 2026 Lumina Synergy</span>
