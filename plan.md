@@ -719,7 +719,7 @@ Modify layout for assessment pages to include a collapsible agent panel:
 ### Task 7.1 — Agent-Driven Dashboard
 
 ```
-STATUS: [ ]
+STATUS: [x]
 LOCK: UNLOCKED
 PRIORITY: HIGH
 DEPENDS ON: 1.1, 2.2
