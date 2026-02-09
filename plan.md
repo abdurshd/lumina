@@ -373,7 +373,7 @@ Modify `src/app/api/gemini/quiz-score/route.ts`:
 ### Task 3.2 — Autonomous Module Selection
 
 ```
-STATUS: [ ]
+STATUS: [x]
 LOCK: UNLOCKED
 PRIORITY: MEDIUM
 DEPENDS ON: 3.1, 1.1

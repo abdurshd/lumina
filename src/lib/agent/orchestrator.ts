@@ -212,8 +212,9 @@ interface ModuleRecommendation {
 
 /**
  * Recommend the next quiz module based on confidence gaps.
+ * Exported for direct use in quiz page module selection.
  */
-function recommendNextModule(
+export function recommendNextModule(
   state: AgentState,
   availableModules: QuizModuleId[]
 ): ModuleRecommendation | null {

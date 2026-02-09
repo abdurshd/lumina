@@ -16,8 +16,9 @@ import { PageHeader, LoadingButton, ErrorAlert, EmptyState, QuestionSkeleton } f
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Brain, ArrowRight } from 'lucide-react';
-import type { QuizModuleId, QuizQuestion, QuizAnswer, QuizDimensionSummary } from '@/types';
+import { Brain, ArrowRight, Sparkles } from 'lucide-react';
+import { recommendNextModule } from '@/lib/agent/orchestrator';
+import type { QuizModuleId, QuizQuestion, QuizAnswer, QuizDimensionSummary, AgentState } from '@/types';
 
 const LEGACY_TOTAL_QUESTIONS = 15;
 const LEGACY_BATCH_SIZE = 5;
@@ -106,6 +107,56 @@ export default function QuizPage() {
           </div>
           <Progress value={(completedModules / QUIZ_MODULES.length) * 100} />
         </div>
+
+        {/* Agent Module Recommendation */}
+        {!allModulesComplete && (() => {
+          const completedModuleIds = Object.entries(moduleProgress)
+            .filter(([, p]) => p.status === 'completed')
+            .map(([id]) => id as QuizModuleId);
+          const inProgressModuleIds = Object.entries(moduleProgress)
+            .filter(([, p]) => p.status === 'in_progress')
+            .map(([id]) => id as QuizModuleId);
+          const availableModules = QUIZ_MODULES
+            .map((m) => m.id as QuizModuleId)
+            .filter((id) => !completedModuleIds.includes(id) && !inProgressModuleIds.includes(id));
+
+          // Build minimal AgentState for recommendation
+          const minimalState: AgentState = {
+            connectedSources: dataInsights.map((d) => d.source),
+            quizCompletedModules: completedModuleIds,
+            quizInProgressModules: inProgressModuleIds,
+            sessionCompleted: false,
+            sessionInsightsCount: 0,
+            confidenceProfile: { dimensions: {}, overallConfidence: 0, lastUpdated: Date.now() },
+            gaps: [],
+            reportGenerated: false,
+            overallConfidence: 0,
+          };
+
+          const rec = recommendNextModule(minimalState, availableModules);
+          if (!rec) return null;
+
+          return (
+            <Card className="mb-6 border-primary/30 bg-primary/[0.03]">
+              <CardContent className="flex items-start gap-3 py-4">
+                <Sparkles className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium">
+                    Agent recommends: <span className="text-primary">{QUIZ_MODULES.find((m) => m.id === rec.module)?.label ?? rec.module}</span>
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{rec.reason}</p>
+                </div>
+                <LoadingButton
+                  size="sm"
+                  onClick={() => setSelectedModule(rec.module)}
+                  icon={ArrowRight}
+                >
+                  Start
+                </LoadingButton>
+              </CardContent>
+            </Card>
+          );
+        })()}
 
         <ModuleSelector moduleProgress={moduleProgress} onSelectModule={setSelectedModule} />
       </div>
