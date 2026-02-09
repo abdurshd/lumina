@@ -46,7 +46,7 @@ export function Sidebar() {
               className={cn(
                 'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold transition-all duration-200 animate-fade-in-up',
                 isActive
-                  ? 'bg-primary/10 text-primary border-2 border-primary/20 shadow-[0_2px_0_rgba(88,204,2,0.1)]'
+                  ? 'bg-primary/10 text-primary border-2 border-primary/20 shadow-[0_2px_0_oklch(70.4%_0.14_182.503/0.1)]'
                   : 'text-muted-foreground hover:bg-overlay-subtle hover:text-foreground border-2 border-transparent'
               )}
               style={{ animationDelay: `${i * 60}ms` }}
