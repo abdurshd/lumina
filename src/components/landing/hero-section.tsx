@@ -4,11 +4,9 @@ import { motion } from "framer-motion";
 import { ArrowRight, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { HeroPrismScene } from "@/components/landing/svg/hero-prism-scene";
 import { AnimatedText } from "@/components/motion/animated-text";
 import { ScrollReveal } from "@/components/motion/scroll-reveal";
 import { fadeInUp } from "@/lib/motion";
-import { FloatingParticles } from "@/components/landing/floating-particles";
 import { LuminaIcon } from "@/components/icons/lumina-icon";
 
 export function HeroSection() {
@@ -19,9 +17,19 @@ export function HeroSection() {
 
   return (
     <section id="discovery" className="relative min-h-screen w-full flex items-center justify-center overflow-hidden">
-      {/* Background Visual */}
-      <HeroPrismScene />
-      <FloatingParticles count={6} className="z-0" />
+      {/* Background Video */}
+      <div className="absolute inset-0 z-0">
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="h-full w-full object-cover"
+        >
+          <source src="/hero-bg.mp4" type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-black/50" />
+      </div>
 
       {/* Content Overlay */}
       <div className="relative z-10 container mx-auto px-6 text-center">
