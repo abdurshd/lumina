@@ -6,10 +6,43 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { ChevronRight, ThumbsUp, ThumbsDown, Info } from 'lucide-react';
+import { ChevronRight, ThumbsUp, ThumbsDown, Info, ShieldCheck, ShieldAlert, ShieldQuestion } from 'lucide-react';
 import { staggerContainer, staggerItem, smoothTransition, reducedMotionVariants, collapseExpand, fadeInScale, snappySpring } from '@/lib/motion';
 import { AnimatedCounter } from '@/components/motion/animated-counter';
 import type { CareerPath, CareerRecommendation } from '@/types';
+
+function ConfidenceGateBadge({ confidence }: { confidence: number }) {
+  if (confidence >= 70) {
+    return (
+      <Badge variant="outline" className="text-[10px] gap-1 border-green-500/30 text-green-400 bg-green-500/5">
+        <ShieldCheck className="h-3 w-3" />
+        High confidence
+      </Badge>
+    );
+  }
+  if (confidence >= 40) {
+    return (
+      <Badge variant="outline" className="text-[10px] gap-1 border-yellow-500/30 text-yellow-400 bg-yellow-500/5">
+        <ShieldAlert className="h-3 w-3" />
+        Moderate — more data recommended
+      </Badge>
+    );
+  }
+  return (
+    <Badge variant="outline" className="text-[10px] gap-1 border-red-500/30 text-red-400 bg-red-500/5">
+      <ShieldQuestion className="h-3 w-3" />
+      Low confidence — needs more evidence
+    </Badge>
+  );
+}
+
+function confidenceImprovementTip(confidence: number): string | null {
+  if (confidence >= 70) return null;
+  if (confidence >= 40) {
+    return 'Connect additional data sources or complete more quiz modules to strengthen this recommendation.';
+  }
+  return 'This career match is based on limited evidence. Complete the full assessment (data + quiz + session) for a reliable recommendation.';
+}
 
 interface CareerPathsProps {
   paths: CareerPath[];
@@ -71,6 +104,7 @@ export const CareerPaths = memo(function CareerPaths({ paths, recommendations, o
                         <AnimatedCounter value={rec.confidence} suffix="%" /> conf
                       </span>
                     </div>
+                    <ConfidenceGateBadge confidence={rec.confidence} />
                   </div>
                   <Progress value={rec.matchScore} className="h-3" />
                 </CardHeader>
@@ -115,6 +149,13 @@ export const CareerPaths = memo(function CareerPaths({ paths, recommendations, o
                       ))}
                     </div>
                   )}
+                  {confidenceImprovementTip(rec.confidence) && (
+                    <div className="mt-3 rounded-lg border border-yellow-500/20 bg-yellow-500/5 p-2">
+                      <p className="text-xs text-yellow-400/80">
+                        {confidenceImprovementTip(rec.confidence)}
+                      </p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </motion.div>
@@ -157,6 +198,11 @@ export const CareerPaths = memo(function CareerPaths({ paths, recommendations, o
                   </Badge>
                 </div>
               </div>
+              {path.confidence != null && (
+                <div className="mt-1">
+                  <ConfidenceGateBadge confidence={path.confidence} />
+                </div>
+              )}
               <Progress value={path.match} className="h-3" />
             </CardHeader>
             <CardContent>
@@ -214,6 +260,15 @@ export const CareerPaths = memo(function CareerPaths({ paths, recommendations, o
                       </motion.div>
                     )}
                   </AnimatePresence>
+                </div>
+              )}
+
+              {/* Confidence improvement tip */}
+              {path.confidence != null && confidenceImprovementTip(path.confidence) && (
+                <div className="mt-3 rounded-lg border border-yellow-500/20 bg-yellow-500/5 p-2">
+                  <p className="text-xs text-yellow-400/80">
+                    {confidenceImprovementTip(path.confidence)}
+                  </p>
                 </div>
               )}
 

@@ -551,7 +551,7 @@ Modify `src/app/api/gemini/report/route.ts`:
 ### Task 5.2 — Confidence-Gated Report Sections
 
 ```
-STATUS: [ ]
+STATUS: [x]
 LOCK: UNLOCKED
 PRIORITY: MEDIUM
 DEPENDS ON: 5.1, 1.2
