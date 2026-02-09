@@ -1,12 +1,12 @@
 'use client';
 
-import { useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/auth-store';
 import { useAssessmentStore } from '@/stores/assessment-store';
 import { saveTalentReport, saveReportVersion, getDataInsights, getQuizAnswers, getSessionInsights, getQuizScores } from '@/lib/firebase/firestore';
 import { FetchError } from '@/lib/fetch-client';
-import { useReportMutation, useFeedbackMutation } from '@/hooks/use-api-mutations';
+import { useReportMutation, useFeedbackMutation, useRegenerateReportMutation } from '@/hooks/use-api-mutations';
 import { useTalentReportQuery } from '@/hooks/use-api-queries';
 import { TalentRadarChart } from '@/components/report/talent-radar-chart';
 import { CareerPaths } from '@/components/report/career-paths';
@@ -15,7 +15,9 @@ import { ReportHistory } from '@/components/report/report-history';
 import { EmptyState, LoadingButton, ErrorAlert, ReportSkeleton } from '@/components/shared';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Target, Lightbulb, Rocket, Eye } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Target, Lightbulb, Rocket, Eye, RefreshCw } from 'lucide-react';
 import { LuminaIcon } from '@/components/icons/lumina-icon';
 
 export default function ReportPage() {
@@ -24,7 +26,11 @@ export default function ReportPage() {
 
   const reportMutation = useReportMutation();
   const feedbackMutation = useFeedbackMutation();
+  const regenerateMutation = useRegenerateReportMutation();
   const reportQuery = useTalentReportQuery(user?.uid);
+  const [hasFeedback, setHasFeedback] = useState(false);
+  const [regenerateFeedback, setRegenerateFeedback] = useState('');
+  const [showRegenerateForm, setShowRegenerateForm] = useState(false);
 
   // Sync fetched report into store
   useEffect(() => {
@@ -67,11 +73,32 @@ export default function ReportPage() {
 
   const handleCareerFeedback = useCallback((pathTitle: string, feedback: 'agree' | 'disagree', reason?: string) => {
     feedbackMutation.mutate({ itemType: 'career', itemId: pathTitle, feedback, reason });
+    if (feedback === 'disagree') setHasFeedback(true);
   }, [feedbackMutation]);
 
   const handleStrengthFeedback = useCallback((strengthName: string, feedback: 'agree' | 'disagree', reason?: string) => {
     feedbackMutation.mutate({ itemType: 'strength', itemId: strengthName, feedback, reason });
+    if (feedback === 'disagree') setHasFeedback(true);
   }, [feedbackMutation]);
+
+  const handleRegenerate = useCallback(async () => {
+    if (!user || !regenerateFeedback.trim()) return;
+    regenerateMutation.mutate({ feedback: regenerateFeedback }, {
+      onSuccess: async (reportData) => {
+        await saveTalentReport(user.uid, reportData);
+        await saveReportVersion(user.uid, reportData);
+        setReport(reportData);
+        setShowRegenerateForm(false);
+        setRegenerateFeedback('');
+        setHasFeedback(false);
+        toast.success('Report has been regenerated with your feedback!');
+      },
+      onError: (err) => {
+        const message = err instanceof FetchError ? err.message : 'Regeneration failed. Please try again.';
+        toast.error(message);
+      },
+    });
+  }, [user, regenerateFeedback, regenerateMutation, setReport]);
 
   if (reportQuery.isLoading) {
     return (
@@ -197,7 +224,7 @@ export default function ReportPage() {
           <Rocket className="h-5 w-5 text-primary" />
           <span className="text-primary">Recommended</span> Career Paths
         </h2>
-        <CareerPaths paths={report.careerPaths} onFeedback={handleCareerFeedback} />
+        <CareerPaths paths={report.careerPaths} recommendations={report.careerRecommendations} onFeedback={handleCareerFeedback} />
       </div>
 
       {/* Action Plan */}
@@ -226,6 +253,50 @@ export default function ReportPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Regenerate with Feedback */}
+      {hasFeedback && (
+        <Card className="mb-8 border-primary/30 animate-fade-in-up" style={{ animationDelay: '750ms' }}>
+          <CardContent className="pt-6">
+            {showRegenerateForm ? (
+              <div className="space-y-3">
+                <p className="text-sm font-medium">Tell Lumina what to adjust in your report:</p>
+                <Input
+                  value={regenerateFeedback}
+                  onChange={(e) => setRegenerateFeedback(e.target.value)}
+                  placeholder="e.g., I'm more interested in creative roles than analytical ones..."
+                />
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => setShowRegenerateForm(false)}>
+                    Cancel
+                  </Button>
+                  <LoadingButton
+                    size="sm"
+                    onClick={handleRegenerate}
+                    loading={regenerateMutation.isPending}
+                    loadingText="Regenerating..."
+                    disabled={!regenerateFeedback.trim()}
+                    icon={RefreshCw}
+                  >
+                    Regenerate Report
+                  </LoadingButton>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium">Not quite right?</p>
+                  <p className="text-xs text-muted-foreground">Regenerate your report with your feedback to get better recommendations.</p>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => setShowRegenerateForm(true)}>
+                  <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+                  Regenerate with Feedback
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Report History */}
       {user && (

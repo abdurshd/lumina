@@ -7,6 +7,7 @@ import {
   GeminiError,
 } from "@/lib/api-helpers";
 import { getGeminiClient } from "@/lib/gemini/client";
+import { GEMINI_MODELS } from "@/lib/gemini/models";
 import { DATA_ANALYSIS_PROMPT } from "@/lib/gemini/prompts";
 import { AnalysisResponseSchema } from "@/lib/schemas/analysis";
 import { z } from "zod";
@@ -66,7 +67,7 @@ export async function POST(req: NextRequest) {
     }
 
     const response = await client.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: GEMINI_MODELS.FAST,
       contents: [
         {
           role: "user",

@@ -1,4 +1,5 @@
 import { getGeminiClient } from '@/lib/gemini/client';
+import { GEMINI_MODELS } from '@/lib/gemini/models';
 
 const SUPPORTED_MIME_TYPES = [
   'application/pdf',
@@ -31,7 +32,7 @@ async function extractPdfText(buffer: Buffer): Promise<string> {
   const base64 = buffer.toString('base64');
 
   const response = await client.models.generateContent({
-    model: 'gemini-3-flash-preview',
+    model: GEMINI_MODELS.FAST,
     contents: [
       {
         role: 'user',

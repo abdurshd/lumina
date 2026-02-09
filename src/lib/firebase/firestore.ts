@@ -1,6 +1,6 @@
 import { doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs } from 'firebase/firestore';
 import { db } from './config';
-import type { UserProfile, DataInsight, QuizAnswer, SessionInsight, TalentReport, StageStatus, AssessmentStage, QuizScore, QuizDimensionSummary, UserSignal, UserFeedback } from '@/types';
+import type { UserProfile, DataInsight, QuizAnswer, SessionInsight, TalentReport, StageStatus, AssessmentStage, QuizScore, QuizDimensionSummary, UserSignal, UserFeedback, QuizModuleProgress, UserConstraints, ComputedProfile, CareerRecommendation } from '@/types';
 
 export async function getUserProfile(uid: string): Promise<UserProfile | null> {
   const snap = await getDoc(doc(db, 'users', uid));
@@ -82,6 +82,60 @@ export async function saveFeedback(uid: string, feedback: UserFeedback): Promise
 export async function getFeedback(uid: string): Promise<UserFeedback[]> {
   const snap = await getDoc(doc(db, 'users', uid, 'assessment', 'feedback'));
   return snap.exists() ? snap.data().items : [];
+}
+
+// --- Module Progress ---
+
+export async function saveModuleProgress(uid: string, progress: QuizModuleProgress): Promise<void> {
+  const ref = doc(db, 'users', uid, 'assessment', 'moduleProgress');
+  const snap = await getDoc(ref);
+  const existing: Record<string, QuizModuleProgress> = snap.exists() ? snap.data().modules : {};
+  existing[progress.moduleId] = progress;
+  await setDoc(ref, { modules: existing, updatedAt: Date.now() });
+}
+
+export async function getModuleProgress(uid: string): Promise<Record<string, QuizModuleProgress>> {
+  const snap = await getDoc(doc(db, 'users', uid, 'assessment', 'moduleProgress'));
+  return snap.exists() ? snap.data().modules : {};
+}
+
+export async function saveConstraints(uid: string, constraints: UserConstraints): Promise<void> {
+  await setDoc(doc(db, 'users', uid, 'assessment', 'constraints'), { constraints, updatedAt: Date.now() });
+}
+
+export async function getConstraints(uid: string): Promise<UserConstraints | null> {
+  const snap = await getDoc(doc(db, 'users', uid, 'assessment', 'constraints'));
+  return snap.exists() ? snap.data().constraints : null;
+}
+
+// --- Computed Profile & Career Recommendations ---
+
+export async function saveComputedProfile(uid: string, profile: ComputedProfile): Promise<void> {
+  await setDoc(doc(db, 'users', uid, 'assessment', 'computedProfile'), { profile, updatedAt: Date.now() });
+}
+
+export async function getComputedProfile(uid: string): Promise<ComputedProfile | null> {
+  const snap = await getDoc(doc(db, 'users', uid, 'assessment', 'computedProfile'));
+  return snap.exists() ? snap.data().profile : null;
+}
+
+export async function saveCareerRecommendations(uid: string, recommendations: CareerRecommendation[]): Promise<void> {
+  await setDoc(doc(db, 'users', uid, 'assessment', 'careerRecommendations'), { recommendations, updatedAt: Date.now() });
+}
+
+export async function getCareerRecommendations(uid: string): Promise<CareerRecommendation[]> {
+  const snap = await getDoc(doc(db, 'users', uid, 'assessment', 'careerRecommendations'));
+  return snap.exists() ? snap.data().recommendations : [];
+}
+
+// --- User Profile Updates ---
+
+export async function updateUserProfile(uid: string, updates: Partial<Pick<UserProfile, 'displayName' | 'consentSources' | 'consentVersion'>>): Promise<void> {
+  await updateDoc(doc(db, 'users', uid), updates);
+}
+
+export async function disconnectNotion(uid: string): Promise<void> {
+  await updateDoc(doc(db, 'users', uid), { notionAccessToken: null });
 }
 
 export async function deleteAssessmentData(uid: string, sources?: string[]): Promise<void> {

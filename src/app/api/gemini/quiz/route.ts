@@ -7,8 +7,10 @@ import {
   GeminiError,
 } from "@/lib/api-helpers";
 import { getGeminiClient } from "@/lib/gemini/client";
-import { QUIZ_GENERATION_PROMPT } from "@/lib/gemini/prompts";
-import { QuizQuestionsResponseSchema } from "@/lib/schemas/quiz";
+import { GEMINI_MODELS } from "@/lib/gemini/models";
+import { QUIZ_GENERATION_PROMPT, getModuleQuizPrompt } from "@/lib/gemini/prompts";
+import { QuizQuestionsResponseSchema, QuizModuleIdSchema } from "@/lib/schemas/quiz";
+import { getModuleConfig } from "@/lib/quiz/module-config";
 import { z } from "zod";
 
 const RequestSchema = z.object({
@@ -22,6 +24,7 @@ const RequestSchema = z.object({
     )
     .default([]),
   batchIndex: z.number().int().min(0).max(10).default(0),
+  moduleId: QuizModuleIdSchema.optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -50,7 +53,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { dataContext, previousAnswers, batchIndex } = parsed.data;
+  const { dataContext, previousAnswers, batchIndex, moduleId } = parsed.data;
 
   try {
     const client = getGeminiClient();
@@ -60,21 +63,32 @@ export async function POST(req: NextRequest) {
         ? `\n\nPrevious answers from this user:\n${previousAnswers.map((a) => `Q${a.questionId}: ${a.answer}`).join("\n")}\n\nAdapt the next questions based on these answers.`
         : "";
 
-    const questionCount = batchIndex === 0 ? 4 : 3;
+    // Use module-scoped prompt when moduleId is provided
+    let prompt: string;
+    let questionCount: number;
+
+    if (moduleId) {
+      const moduleConfig = getModuleConfig(moduleId);
+      prompt = getModuleQuizPrompt(moduleId, moduleConfig.dimensions);
+      questionCount = moduleConfig.questionCount;
+    } else {
+      prompt = QUIZ_GENERATION_PROMPT;
+      questionCount = batchIndex === 0 ? 4 : 3;
+    }
 
     const response = await client.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: GEMINI_MODELS.FAST,
       contents: [
         {
           role: "user",
           parts: [
             {
-              text: `${QUIZ_GENERATION_PROMPT}
+              text: `${prompt}
 
 ${dataContext ? `User's data analysis:\n${dataContext}\n` : ""}
 ${previousContext}
 
-Generate exactly ${questionCount} questions for batch #${batchIndex + 1}. Each question needs: id (string like "q${batchIndex * 3 + 1}"), type ("multiple_choice" | "slider" | "freetext"), question, options (for multiple_choice, 4 options), sliderMin/sliderMax/sliderLabels (for slider), category.
+Generate exactly ${questionCount} questions${moduleId ? ` for the "${moduleId}" module` : ` for batch #${batchIndex + 1}`}. Each question needs: id (string like "q${moduleId ? moduleId + '_' : ''}${batchIndex * 3 + 1}"), type ("multiple_choice" | "slider" | "freetext"), question, options (for multiple_choice, 4 options), sliderMin/sliderMax/sliderLabels (for slider), category${moduleId ? `, moduleId ("${moduleId}")` : ''}.
 
 Respond with valid JSON: { "questions": [...] }`,
             },

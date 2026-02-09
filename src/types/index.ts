@@ -1,6 +1,23 @@
 export type AssessmentStage = 'connections' | 'quiz' | 'session' | 'report';
 export type StageStatus = 'locked' | 'active' | 'completed';
 
+export type QuizModuleId = 'interests' | 'work_values' | 'strengths_skills' | 'learning_environment' | 'constraints';
+
+export interface QuizModuleProgress {
+  moduleId: QuizModuleId;
+  status: 'pending' | 'in_progress' | 'completed';
+  answeredCount: number;
+  totalCount: number;
+}
+
+export interface UserConstraints {
+  locationFlexibility: 'anywhere' | 'prefer_remote' | 'specific_location' | 'no_preference';
+  salaryPriority: 'critical' | 'important' | 'flexible';
+  timeAvailability: 'full_time' | 'part_time' | 'flexible' | 'transitioning';
+  educationWillingness: 'none' | 'short_courses' | 'certificate' | 'degree';
+  relocationWillingness: 'yes' | 'maybe' | 'no';
+}
+
 export interface UserProfile {
   uid: string;
   email: string;
@@ -13,6 +30,7 @@ export interface UserProfile {
   consentGiven?: boolean;
   consentTimestamp?: number;
   consentSources?: string[];
+  consentVersion?: number;
 }
 
 export interface DataInsight {
@@ -35,6 +53,7 @@ export interface QuizQuestion {
   category: string;
   dimension?: string;
   scoringRubric?: Record<string, number>;
+  moduleId?: QuizModuleId;
 }
 
 export interface QuizAnswer {
@@ -65,6 +84,7 @@ export interface TalentReport {
   careerPaths: CareerPath[];
   actionPlan: ActionItem[];
   personalityInsights: string[];
+  careerRecommendations?: CareerRecommendation[];
 }
 
 export interface RadarDimension {
@@ -112,6 +132,33 @@ export interface UserSignal {
   evidence: string;
   confidence: number;
   timestamp: number;
+  evidenceRef?: EvidenceRef;
+  dimensions?: string[];
+}
+
+export interface EvidenceRef {
+  type: 'quiz' | 'session' | 'data_source' | 'signal';
+  questionId?: string;
+  transcriptTimestamp?: number;
+  excerpt: string;
+}
+
+export interface ComputedProfile {
+  riasecCode: string;
+  dimensionScores: Record<string, number>;
+  confidenceScores: Record<string, number>;
+  constraints?: UserConstraints;
+}
+
+export interface CareerRecommendation {
+  clusterId: string;
+  matchScore: number;
+  confidence: number;
+  whyYou: string;
+  whatYouDo: string;
+  howToTest: string;
+  skillsToBuild: string[];
+  evidenceChain: EvidenceRef[];
 }
 
 export interface UserFeedback {

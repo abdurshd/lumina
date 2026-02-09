@@ -73,8 +73,20 @@ export function useFeedbackMutation() {
   });
 }
 
+export function useRegenerateReportMutation() {
+  return useMutation({
+    mutationFn: apiClient.gemini.regenerateReport,
+  });
+}
+
 export function useDeleteDataMutation() {
   return useMutation({
     mutationFn: apiClient.user.deleteData,
+  });
+}
+
+export function useUpdateProfileMutation() {
+  return useMutation({
+    mutationFn: apiClient.user.updateProfile,
   });
 }

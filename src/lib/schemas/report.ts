@@ -38,6 +38,24 @@ export const ActionItemSchema = z.object({
   priority: z.enum(['high', 'medium', 'low']),
 });
 
+export const EvidenceRefSchema = z.object({
+  type: z.enum(['quiz', 'session', 'data_source', 'signal']),
+  questionId: z.string().optional(),
+  transcriptTimestamp: z.number().optional(),
+  excerpt: z.string(),
+});
+
+export const CareerRecommendationSchema = z.object({
+  clusterId: z.string(),
+  matchScore: z.number().min(0).max(100),
+  confidence: z.number().min(0).max(100),
+  whyYou: z.string(),
+  whatYouDo: z.string(),
+  howToTest: z.string(),
+  skillsToBuild: z.array(z.string()),
+  evidenceChain: z.array(EvidenceRefSchema),
+});
+
 export const TalentReportSchema = z.object({
   headline: z.string(),
   tagline: z.string(),
@@ -47,6 +65,7 @@ export const TalentReportSchema = z.object({
   careerPaths: z.array(CareerPathSchema),
   actionPlan: z.array(ActionItemSchema),
   personalityInsights: z.array(z.string()),
+  careerRecommendations: z.array(CareerRecommendationSchema).optional(),
 });
 
 export type TalentReportResponse = z.infer<typeof TalentReportSchema>;

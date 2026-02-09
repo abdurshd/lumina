@@ -27,6 +27,8 @@ TOOLS:
 - Use saveInsight to log behavioral observations
 - Use fetchUserProfile to retrieve the user's data insights and quiz scores for more personalized conversation
 - Use saveSignal to save atomic talent signals with evidence when you identify clear patterns
+- Use startQuizModule to suggest a specific quiz module when you notice gaps in their profile (interests, work_values, strengths_skills, learning_environment, constraints)
+- Use scheduleNextStep to record concrete action items that emerge from conversation
 
 IMPORTANT RULES:
 - Keep responses conversational and brief (2-4 sentences spoken)
@@ -77,6 +79,32 @@ RULES:
 - Reference insights from their data when possible to personalize
 - Cover at least 4 different dimensions per batch
 - Include constraint questions (location flexibility, salary needs, time availability)`;
+
+export function getModuleQuizPrompt(moduleId: string, dimensions: string[]): string {
+  return `Generate adaptive quiz questions for the "${moduleId}" module of a career assessment.
+
+FOCUS DIMENSIONS for this module:
+${dimensions.map((d) => `- ${d}`).join('\n')}
+
+Generate questions that specifically probe these dimensions. Each question should:
+- Feel conversational, not clinical
+- Avoid obvious "right answers" — make all options valid
+- Include a "dimension" field matching one of the focus dimensions above
+- Include a "moduleId" field set to "${moduleId}"
+
+QUESTION FORMAT:
+- For multiple_choice questions: include a "scoringRubric" mapping each option text to a score (0-100)
+- For slider questions: the slider value is the raw score
+- For freetext questions: leave scoring to the AI scorer
+- Mix question types for engagement
+
+${moduleId === 'constraints' ? `SPECIAL INSTRUCTIONS FOR CONSTRAINTS MODULE:
+- Questions should capture practical life constraints (location flexibility, salary needs, time availability, education willingness, relocation)
+- Use multiple_choice for clear categorical answers
+- These are NOT personality questions — they are practical preference questions` : ''}
+
+Respond with valid JSON: { "questions": [...] }`;
+}
 
 export const QUIZ_SCORING_PROMPT = `Score the following freetext quiz answer on the specified dimensions.
 
@@ -132,4 +160,31 @@ IMPORTANT:
 - Radar dimensions should cover: Creativity, Analysis, Leadership, Empathy, Resilience, Vision
 - Career paths should include both conventional and unexpected options
 - Action items should be concrete and time-bound
-- Hidden talents should be things the user likely doesn't recognize in themselves`;
+- Hidden talents should be things the user likely doesn't recognize in themselves
+
+ENHANCED CAREER RECOMMENDATIONS (when computedProfile is provided):
+For each career recommendation, include:
+- clusterId: O*NET cluster ID
+- matchScore: 0-100 overall match
+- confidence: 0-100 based on evidence depth
+- whyYou: personalized 2-3 sentence explanation
+- whatYouDo: day-to-day description (2-3 sentences)
+- howToTest: a concrete, low-cost way to test this path (1-2 sentences)
+- skillsToBuild: 3-5 specific skills to develop
+- evidenceChain: array of evidence references (type, excerpt)
+
+When user constraints are provided:
+- Filter out careers that clearly conflict with constraints (e.g., location-bound careers when user needs remote)
+- Highlight careers that align with salary priority and time availability
+- Note education requirements relative to education willingness`;
+
+export const REPORT_REGENERATION_PROMPT = `You are regenerating a talent report based on user feedback. The user has reviewed their previous report and provided specific feedback about what they agree or disagree with.
+
+INSTRUCTIONS:
+1. Review the existing report and the user's feedback
+2. Adjust recommendations that the user disagreed with — explore alternative interpretations of the evidence
+3. Strengthen sections the user agreed with — add more depth and specificity
+4. Maintain evidence-based reasoning throughout
+5. Keep the same overall structure but with refined content
+
+The regenerated report should feel like a conversation — acknowledging what the user shared and demonstrating that their input was heard.`;

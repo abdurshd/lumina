@@ -1,5 +1,5 @@
 import { apiFetch } from '@/lib/fetch-client';
-import type { DataInsight, QuizQuestion, QuizAnswer, TalentReport, QuizScore, QuizDimensionSummary, UserFeedback } from '@/types';
+import type { DataInsight, QuizQuestion, QuizAnswer, TalentReport, QuizScore, QuizDimensionSummary, UserFeedback, QuizModuleId, ComputedProfile, UserConstraints } from '@/types';
 
 // Request types
 interface GmailRequest {
@@ -31,6 +31,7 @@ interface QuizRequest {
   dataContext: string;
   previousAnswers: QuizAnswer[];
   batchIndex: number;
+  moduleId?: QuizModuleId;
 }
 
 interface QuizScoreRequest {
@@ -43,6 +44,17 @@ interface ReportRequest {
   quizAnswers: QuizAnswer[];
   sessionInsights: { timestamp: number; observation: string; category: string; confidence: number }[];
   quizScores?: QuizDimensionSummary;
+  computedProfile?: ComputedProfile;
+  constraints?: UserConstraints;
+}
+
+interface RegenerateReportRequest {
+  feedback: string;
+}
+
+interface UpdateProfileRequest {
+  displayName?: string;
+  consentSources?: string[];
 }
 
 interface FeedbackRequest {
@@ -151,11 +163,23 @@ export const apiClient = {
         method: 'POST',
         body: JSON.stringify(req),
       }),
+
+    regenerateReport: (req: RegenerateReportRequest) =>
+      apiFetch<TalentReport>('/api/gemini/regenerate-report', {
+        method: 'POST',
+        body: JSON.stringify(req),
+      }),
   },
 
   user: {
     deleteData: (req: { sources?: string[] }) =>
       apiFetch<{ success: boolean }>('/api/user/delete-data', {
+        method: 'POST',
+        body: JSON.stringify(req),
+      }),
+
+    updateProfile: (req: UpdateProfileRequest) =>
+      apiFetch<{ success: boolean }>('/api/user/update-profile', {
         method: 'POST',
         body: JSON.stringify(req),
       }),

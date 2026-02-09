@@ -64,3 +64,46 @@ export const SaveSignalDeclaration: FunctionDeclaration = {
     required: ['signal', 'evidence', 'confidence'],
   },
 };
+
+export const StartQuizModuleDeclaration: FunctionDeclaration = {
+  name: 'startQuizModule',
+  description: 'Suggest a specific quiz module for the user to take based on the conversation. Use this when you notice gaps in the user\'s assessment data that a particular module would fill. Valid modules: interests, work_values, strengths_skills, learning_environment, constraints.',
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      moduleId: {
+        type: Type.STRING,
+        enum: ['interests', 'work_values', 'strengths_skills', 'learning_environment', 'constraints'],
+        description: 'The quiz module to suggest',
+      },
+      reason: {
+        type: Type.STRING,
+        description: 'Why this module would be helpful for the user right now',
+      },
+    },
+    required: ['moduleId', 'reason'],
+  },
+};
+
+export const ScheduleNextStepDeclaration: FunctionDeclaration = {
+  name: 'scheduleNextStep',
+  description: 'Record a concrete next step or action item that emerged from the conversation. Use this when the user expresses interest in trying something or when you identify a specific actionable suggestion.',
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      title: {
+        type: Type.STRING,
+        description: 'Short title for the next step',
+      },
+      description: {
+        type: Type.STRING,
+        description: 'What the user should do and why',
+      },
+      timeframe: {
+        type: Type.STRING,
+        description: 'Suggested timeframe (e.g., "this week", "next month")',
+      },
+    },
+    required: ['title', 'description', 'timeframe'],
+  },
+};

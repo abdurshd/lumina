@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+export const QuizModuleIdSchema = z.enum(['interests', 'work_values', 'strengths_skills', 'learning_environment', 'constraints']);
+
 export const QuizQuestionSchema = z.object({
   id: z.string(),
   type: z.enum(['multiple_choice', 'slider', 'freetext']),
@@ -11,6 +13,7 @@ export const QuizQuestionSchema = z.object({
   category: z.string(),
   dimension: z.string().optional(),
   scoringRubric: z.record(z.string(), z.number()).optional(),
+  moduleId: QuizModuleIdSchema.optional(),
 });
 
 export const QuizQuestionsResponseSchema = z.object({
@@ -31,6 +34,21 @@ export const QuizScoreSchema = z.object({
 export const QuizScoringResponseSchema = z.object({
   scores: z.array(QuizScoreSchema),
   dimensionSummary: z.record(z.string(), z.number()),
+});
+
+export const QuizModuleProgressSchema = z.object({
+  moduleId: QuizModuleIdSchema,
+  status: z.enum(['pending', 'in_progress', 'completed']),
+  answeredCount: z.number().min(0),
+  totalCount: z.number().min(0),
+});
+
+export const UserConstraintsSchema = z.object({
+  locationFlexibility: z.enum(['anywhere', 'prefer_remote', 'specific_location', 'no_preference']),
+  salaryPriority: z.enum(['critical', 'important', 'flexible']),
+  timeAvailability: z.enum(['full_time', 'part_time', 'flexible', 'transitioning']),
+  educationWillingness: z.enum(['none', 'short_courses', 'certificate', 'degree']),
+  relocationWillingness: z.enum(['yes', 'maybe', 'no']),
 });
 
 export type QuizQuestionResponse = z.infer<typeof QuizQuestionsResponseSchema>;

@@ -1,29 +1,38 @@
 'use client';
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/auth-store';
 import { useAssessmentStore } from '@/stores/assessment-store';
-import { saveQuizAnswers, saveQuizScores } from '@/lib/firebase/firestore';
+import { saveQuizAnswers, saveQuizScores, getModuleProgress } from '@/lib/firebase/firestore';
 import { FetchError } from '@/lib/fetch-client';
 import { useQuizMutation, useQuizScoreMutation } from '@/hooks/use-api-mutations';
+import { QUIZ_MODULES } from '@/lib/quiz/module-config';
+import { ModuleSelector } from '@/components/quiz/module-selector';
+import { ModuleQuizFlow } from '@/components/quiz/module-quiz-flow';
 import { QuestionCard } from '@/components/quiz/question-card';
 import { PageHeader, LoadingButton, ErrorAlert, EmptyState, QuestionSkeleton } from '@/components/shared';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Brain, ArrowRight } from 'lucide-react';
-import type { QuizQuestion, QuizAnswer, QuizDimensionSummary } from '@/types';
+import type { QuizModuleId, QuizQuestion, QuizAnswer, QuizDimensionSummary } from '@/types';
 
-const TOTAL_QUESTIONS = 15;
-const BATCH_SIZE = 5;
+const LEGACY_TOTAL_QUESTIONS = 15;
+const LEGACY_BATCH_SIZE = 5;
 
 export default function QuizPage() {
   const { user } = useAuthStore();
-  const { dataInsights, setQuizAnswers, advanceStage } = useAssessmentStore();
+  const { dataInsights, setQuizAnswers, advanceStage, moduleProgress, setModuleProgress } = useAssessmentStore();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
+  const moduleParam = searchParams.get('module') as QuizModuleId | null;
+  const [selectedModule, setSelectedModule] = useState<QuizModuleId | null>(moduleParam);
+  const useModuleMode = true;
+
+  // Legacy flat quiz state (fallback)
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [answers, setAnswers] = useState<QuizAnswer[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -36,6 +45,17 @@ export default function QuizPage() {
   const quizMutation = useQuizMutation();
   const quizScoreMutation = useQuizScoreMutation();
 
+  // Load module progress on mount
+  useEffect(() => {
+    if (user) {
+      getModuleProgress(user.uid).then((progress) => {
+        if (Object.keys(progress).length > 0) {
+          setModuleProgress(progress);
+        }
+      });
+    }
+  }, [user, setModuleProgress]);
+
   const dataContext = useMemo(
     () => dataInsights.length > 0
       ? dataInsights.map((d) => `${d.source}: ${d.summary}`).join('\n')
@@ -43,7 +63,57 @@ export default function QuizPage() {
     [dataInsights]
   );
 
-  const fetchQuestions = useCallback((prevAnswers: QuizAnswer[], batch: number) => {
+  const completedModules = Object.values(moduleProgress).filter((p) => p.status === 'completed').length;
+  const allModulesComplete = completedModules >= QUIZ_MODULES.length;
+
+  const handleModuleComplete = useCallback(async () => {
+    if (allModulesComplete && user) {
+      await advanceStage('quiz');
+      router.push('/session');
+    } else {
+      setSelectedModule(null);
+    }
+  }, [allModulesComplete, user, advanceStage, router]);
+
+  // --- MODULE MODE ---
+  if (useModuleMode) {
+    if (selectedModule) {
+      return (
+        <ModuleQuizFlow
+          moduleId={selectedModule}
+          onBack={() => setSelectedModule(null)}
+          onComplete={handleModuleComplete}
+        />
+      );
+    }
+
+    return (
+      <div className="mx-auto max-w-4xl px-6 py-12">
+        <PageHeader
+          icon={Brain}
+          title="Talent Quiz"
+          description="Complete each module to help Lumina understand your unique abilities."
+        />
+
+        <div className="mb-8 animate-fade-in">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-muted-foreground">{completedModules} of {QUIZ_MODULES.length} modules complete</span>
+            {allModulesComplete && (
+              <LoadingButton onClick={() => { advanceStage('quiz'); router.push('/session'); }} size="sm" icon={ArrowRight}>
+                Continue to Session
+              </LoadingButton>
+            )}
+          </div>
+          <Progress value={(completedModules / QUIZ_MODULES.length) * 100} />
+        </div>
+
+        <ModuleSelector moduleProgress={moduleProgress} onSelectModule={setSelectedModule} />
+      </div>
+    );
+  }
+
+  // --- LEGACY FLAT QUIZ MODE (fallback) ---
+  const fetchQuestions = (prevAnswers: QuizAnswer[], batch: number) => {
     setError(null);
     quizMutation.mutate({ dataContext, previousAnswers: prevAnswers, batchIndex: batch }, {
       onSuccess: (result) => {
@@ -60,14 +130,9 @@ export default function QuizPage() {
         toast.error(message);
       },
     });
-  }, [dataContext, quizMutation]);
+  };
 
-  useEffect(() => {
-    fetchQuestions([], 0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const handleAnswer = useCallback(async (answer: string | number) => {
+  const handleAnswer = async (answer: string | number) => {
     const currentQ = questions[currentIndex];
     if (!currentQ) return;
 
@@ -77,15 +142,13 @@ export default function QuizPage() {
 
     const nextIndex = currentIndex + 1;
 
-    // Check if quiz is complete
-    if (nextIndex >= TOTAL_QUESTIONS) {
+    if (nextIndex >= LEGACY_TOTAL_QUESTIONS) {
       setIsScoring(true);
       try {
         if (user) {
           await saveQuizAnswers(user.uid, updatedAnswers);
           setQuizAnswers(updatedAnswers);
 
-          // Score the quiz
           quizScoreMutation.mutate({ answers: updatedAnswers, questions }, {
             onSuccess: async (result) => {
               try {
@@ -101,7 +164,6 @@ export default function QuizPage() {
               }
             },
             onError: () => {
-              // Still mark complete even if scoring fails
               advanceStage('quiz');
               setIsComplete(true);
               setIsScoring(false);
@@ -112,19 +174,16 @@ export default function QuizPage() {
       } catch {
         toast.error('Failed to save quiz answers. Please try again.');
         setIsScoring(false);
-        return;
       }
     } else {
       setCurrentIndex(nextIndex);
-
-      // Fetch next batch if needed
-      if (nextIndex % BATCH_SIZE === 0 && nextIndex >= questions.length) {
+      if (nextIndex % LEGACY_BATCH_SIZE === 0 && nextIndex >= questions.length) {
         const newBatch = batchIndex + 1;
         setBatchIndex(newBatch);
         fetchQuestions(updatedAnswers, newBatch);
       }
     }
-  }, [currentIndex, questions, answers, batchIndex, fetchQuestions, user, setQuizAnswers, advanceStage, quizScoreMutation]);
+  };
 
   if (isScoring) {
     return (
@@ -188,7 +247,7 @@ export default function QuizPage() {
       />
 
       <div className="mb-8 animate-fade-in">
-        <Progress value={(currentIndex / TOTAL_QUESTIONS) * 100} />
+        <Progress value={(currentIndex / LEGACY_TOTAL_QUESTIONS) * 100} />
       </div>
 
       {error && (
@@ -207,7 +266,7 @@ export default function QuizPage() {
             question={questions[currentIndex]}
             onAnswer={handleAnswer}
             questionNumber={currentIndex + 1}
-            totalQuestions={TOTAL_QUESTIONS}
+            totalQuestions={LEGACY_TOTAL_QUESTIONS}
           />
         ) : null}
       </div>

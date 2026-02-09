@@ -30,6 +30,9 @@ export default function SessionPage() {
     reconnectAttempt,
     transcript,
     insights,
+    suggestedModule,
+    nextSteps,
+    dismissSuggestedModule,
     error: sessionError,
     sessionDuration,
     webcam,
@@ -146,6 +149,29 @@ export default function SessionPage() {
         </div>
       )}
 
+      {/* Quiz Module Suggestion */}
+      {suggestedModule && (
+        <Card className="mb-6 border-primary/30 animate-fade-in">
+          <CardContent className="flex items-center justify-between py-4">
+            <div className="flex items-center gap-3">
+              <Brain className="h-5 w-5 text-primary" />
+              <div>
+                <p className="text-sm font-medium">Lumina suggests: Take the {suggestedModule.moduleId.replace(/_/g, ' ')} quiz</p>
+                <p className="text-xs text-muted-foreground">{suggestedModule.reason}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="outline" onClick={dismissSuggestedModule}>
+                Dismiss
+              </Button>
+              <Button size="sm" onClick={() => router.push(`/quiz?module=${suggestedModule.moduleId}`)}>
+                Take Quiz
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 animate-fade-in">
         {/* Video + Controls */}
         <div className="space-y-4">
@@ -220,6 +246,33 @@ export default function SessionPage() {
                     ? `${insight.observation.slice(0, 60)}...`
                     : insight.observation}
                 </Badge>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Next Steps from Session */}
+      {nextSteps.length > 0 && (
+        <Card className="mt-6 animate-fade-in-up">
+          <CardHeader>
+            <CardTitle className="text-lg font-sans">
+              Next Steps ({nextSteps.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {nextSteps.map((step, i) => (
+                <div key={i} className="flex items-start gap-3 rounded-lg border p-3">
+                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                    {i + 1}
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">{step.title}</p>
+                    <p className="text-xs text-muted-foreground">{step.description}</p>
+                    <Badge variant="outline" className="mt-1 text-[10px]">{step.timeframe}</Badge>
+                  </div>
+                </div>
               ))}
             </div>
           </CardContent>

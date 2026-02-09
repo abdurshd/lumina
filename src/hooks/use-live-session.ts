@@ -1,12 +1,12 @@
 'use client';
 
 import { useRef, useState, useCallback, useEffect } from 'react';
-import { LiveSessionManager, type LiveSessionCallbacks } from '@/lib/gemini/live-session';
+import { LiveSessionManager, type LiveSessionCallbacks, type NextStepSuggestion } from '@/lib/gemini/live-session';
 import { AudioPlaybackManager, base64ToFloat32 } from '@/lib/gemini/audio-utils';
 import { FrameCapturer } from '@/lib/gemini/video-utils';
 import { useWebcam } from './use-webcam';
 import { useMicrophone } from './use-microphone';
-import type { SessionInsight, UserSignal } from '@/types';
+import type { SessionInsight, UserSignal, QuizModuleId } from '@/types';
 
 export interface TranscriptEntry {
   text: string;
@@ -25,6 +25,8 @@ export function useLiveSession() {
   const [transcript, setTranscript] = useState<TranscriptEntry[]>([]);
   const [insights, setInsights] = useState<SessionInsight[]>([]);
   const [signals, setSignals] = useState<UserSignal[]>([]);
+  const [suggestedModule, setSuggestedModule] = useState<{ moduleId: QuizModuleId; reason: string } | null>(null);
+  const [nextSteps, setNextSteps] = useState<NextStepSuggestion[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [sessionDuration, setSessionDuration] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -74,6 +76,12 @@ export function useLiveSession() {
     },
     onSignal: (signal: UserSignal) => {
       setSignals((prev) => [...prev, signal]);
+    },
+    onQuizModuleSuggested: (moduleId: QuizModuleId, reason: string) => {
+      setSuggestedModule({ moduleId, reason });
+    },
+    onNextStepScheduled: (step: NextStepSuggestion) => {
+      setNextSteps((prev) => [...prev, step]);
     },
   });
 
@@ -151,6 +159,9 @@ export function useLiveSession() {
     transcript,
     insights,
     signals,
+    suggestedModule,
+    nextSteps,
+    dismissSuggestedModule: () => setSuggestedModule(null),
     error,
     sessionDuration,
     webcam,

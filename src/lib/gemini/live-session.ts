@@ -9,9 +9,16 @@ import {
   type Session,
   type LiveServerMessage,
 } from "@google/genai";
+import { GEMINI_MODELS } from "./models";
 import { LIVE_SESSION_SYSTEM_PROMPT } from "./prompts";
-import { SaveInsightFunctionDeclaration, FetchUserProfileDeclaration, SaveSignalDeclaration } from "@/lib/schemas/session";
-import type { SessionInsight, UserSignal } from "@/types";
+import { SaveInsightFunctionDeclaration, FetchUserProfileDeclaration, SaveSignalDeclaration, StartQuizModuleDeclaration, ScheduleNextStepDeclaration } from "@/lib/schemas/session";
+import type { SessionInsight, UserSignal, QuizModuleId } from "@/types";
+
+export interface NextStepSuggestion {
+  title: string;
+  description: string;
+  timeframe: string;
+}
 
 export interface LiveSessionCallbacks {
   onAudioData: (base64Audio: string) => void;
@@ -23,6 +30,8 @@ export interface LiveSessionCallbacks {
   onReconnecting?: (attempt: number) => void;
   onSignal?: (signal: UserSignal) => void;
   onProfileRequested?: () => Promise<string>;
+  onQuizModuleSuggested?: (moduleId: QuizModuleId, reason: string) => void;
+  onNextStepScheduled?: (step: NextStepSuggestion) => void;
 }
 
 const MAX_RECONNECT_RETRIES = 3;
@@ -52,7 +61,7 @@ export class LiveSessionManager {
       const client = new GoogleGenAI({ apiKey });
 
       this.session = await client.live.connect({
-        model: "gemini-live-2.5-flash-native-audio",
+        model: GEMINI_MODELS.LIVE,
         callbacks: {
           onopen: () => {
             this.callbacks.onConnectionChange(true);
@@ -85,7 +94,7 @@ export class LiveSessionManager {
               },
             ],
           },
-          tools: [{ functionDeclarations: [SaveInsightFunctionDeclaration, FetchUserProfileDeclaration, SaveSignalDeclaration] }],
+          tools: [{ functionDeclarations: [SaveInsightFunctionDeclaration, FetchUserProfileDeclaration, SaveSignalDeclaration, StartQuizModuleDeclaration, ScheduleNextStepDeclaration] }],
           sessionResumption: {
             handle: this.sessionHandle ?? undefined,
           },
@@ -153,6 +162,23 @@ export class LiveSessionManager {
             timestamp: Date.now(),
           };
           this.callbacks.onSignal?.(signal);
+          this.session?.sendToolResponse({
+            functionResponses: [{ id: fc.id!, response: { success: true } }],
+          });
+        } else if (fc.name === "startQuizModule") {
+          const moduleId = String(args.moduleId ?? "") as QuizModuleId;
+          const reason = String(args.reason ?? "");
+          this.callbacks.onQuizModuleSuggested?.(moduleId, reason);
+          this.session?.sendToolResponse({
+            functionResponses: [{ id: fc.id!, response: { success: true, message: "Quiz module suggestion shown to user" } }],
+          });
+        } else if (fc.name === "scheduleNextStep") {
+          const step: NextStepSuggestion = {
+            title: String(args.title ?? ""),
+            description: String(args.description ?? ""),
+            timeframe: String(args.timeframe ?? ""),
+          };
+          this.callbacks.onNextStepScheduled?.(step);
           this.session?.sendToolResponse({
             functionResponses: [{ id: fc.id!, response: { success: true } }],
           });

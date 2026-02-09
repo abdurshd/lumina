@@ -44,6 +44,7 @@ export default function OnboardingPage() {
         consentGiven: true,
         consentTimestamp: Date.now(),
         consentSources: selectedSources,
+        consentVersion: 1,
       });
       await refreshProfile();
       toast.success('Welcome to Lumina!');
@@ -155,6 +156,38 @@ export default function OnboardingPage() {
             </CardContent>
           </Card>
 
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="text-lg font-sans">Data Retention</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <p className="text-sm text-muted-foreground flex items-start gap-2">
+                <Shield className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                <span><strong>What IS stored:</strong> AI-generated insights, quiz scores, talent signals, and your report. These are structured summaries, not raw data.</span>
+              </p>
+              <p className="text-sm text-muted-foreground flex items-start gap-2">
+                <Shield className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                <span><strong>What is NOT stored:</strong> Raw email content, document text, or chat exports. These are processed in-memory and discarded after analysis.</span>
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="text-lg font-sans">Video Session</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <p className="text-sm text-muted-foreground flex items-start gap-2">
+                <Shield className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                Your camera is used for conversation context only — Lumina observes body language and engagement to understand you better.
+              </p>
+              <p className="text-sm text-muted-foreground flex items-start gap-2">
+                <Shield className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                No biometric inference, facial recognition, or video recording. Video frames are processed in real-time and never stored.
+              </p>
+            </CardContent>
+          </Card>
+
           <Card className="mb-8">
             <CardHeader>
               <CardTitle className="text-lg font-sans">Select data sources to consent to:</CardTitle>
@@ -206,9 +239,12 @@ export default function OnboardingPage() {
 
         {selectedSources.length > 0 && (
           <div className="flex flex-wrap justify-center gap-2 mb-6">
-            {selectedSources.map((s) => (
-              <Badge key={s} variant="secondary">{s}</Badge>
-            ))}
+            {selectedSources.map((s) => {
+              const source = DATA_SOURCE_OPTIONS.find((opt) => opt.id === s);
+              return (
+                <Badge key={s} variant="secondary">{source?.label ?? s}</Badge>
+              );
+            })}
           </div>
         )}
 

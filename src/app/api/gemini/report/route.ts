@@ -1,3 +1,5 @@
+export const maxDuration = 120;
+
 import { NextRequest, NextResponse } from "next/server";
 import {
   verifyAuth,
@@ -7,10 +9,11 @@ import {
   GeminiError,
 } from "@/lib/api-helpers";
 import { getGeminiClient } from "@/lib/gemini/client";
+import { GEMINI_MODELS } from "@/lib/gemini/models";
 import { REPORT_GENERATION_PROMPT } from "@/lib/gemini/prompts";
 import { TalentReportSchema } from "@/lib/schemas/report";
 import { z } from "zod";
-import type { DataInsight, QuizAnswer, SessionInsight } from "@/types";
+// types used implicitly via Zod schemas
 
 const RequestSchema = z.object({
   dataInsights: z
@@ -41,6 +44,25 @@ const RequestSchema = z.object({
     )
     .default([]),
   quizScores: z.record(z.string(), z.number()).optional(),
+  computedProfile: z.object({
+    riasecCode: z.string(),
+    dimensionScores: z.record(z.string(), z.number()),
+    confidenceScores: z.record(z.string(), z.number()),
+    constraints: z.object({
+      locationFlexibility: z.string(),
+      salaryPriority: z.string(),
+      timeAvailability: z.string(),
+      educationWillingness: z.string(),
+      relocationWillingness: z.string(),
+    }).optional(),
+  }).optional(),
+  constraints: z.object({
+    locationFlexibility: z.string(),
+    salaryPriority: z.string(),
+    timeAvailability: z.string(),
+    educationWillingness: z.string(),
+    relocationWillingness: z.string(),
+  }).optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -69,7 +91,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { dataInsights, quizAnswers, sessionInsights, quizScores } = parsed.data;
+  const { dataInsights, quizAnswers, sessionInsights, quizScores, computedProfile, constraints } = parsed.data;
 
   // Ensure there's at least some data to generate a report from
   if (
@@ -112,10 +134,22 @@ ${
 
 === QUIZ DIMENSION SCORES ===
 ${quizScores ? Object.entries(quizScores).map(([dim, score]) => `${dim}: ${score}/100`).join("\n") : "No dimension scores available."}
+
+${computedProfile ? `=== COMPUTED PROFILE ===
+RIASEC Code: ${computedProfile.riasecCode}
+Dimension Scores: ${Object.entries(computedProfile.dimensionScores).map(([dim, score]) => `${dim}: ${score}/100`).join(", ")}
+Confidence Scores: ${Object.entries(computedProfile.confidenceScores).map(([dim, conf]) => `${dim}: ${conf}%`).join(", ")}` : ""}
+
+${constraints ? `=== USER CONSTRAINTS ===
+Location: ${constraints.locationFlexibility}
+Salary Priority: ${constraints.salaryPriority}
+Time Availability: ${constraints.timeAvailability}
+Education Willingness: ${constraints.educationWillingness}
+Relocation: ${constraints.relocationWillingness}` : ""}
 `;
 
     const response = await client.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: GEMINI_MODELS.DEEP,
       contents: [
         {
           role: "user",
@@ -133,7 +167,9 @@ ${quizScores ? Object.entries(quizScores).map(([dim, score]) => `${dim}: ${score
   "personalityInsights": ["string"]
 }
 
-Include exactly 6 radar dimensions (Creativity, Analysis, Leadership, Empathy, Resilience, Vision), 5 top strengths, 3-5 hidden talents, 4 career paths, 5 action items, and 4 personality insights.`,
+Include exactly 6 radar dimensions (Creativity, Analysis, Leadership, Empathy, Resilience, Vision), 5 top strengths, 3-5 hidden talents, 4 career paths, 5 action items, and 4 personality insights.${computedProfile ? `
+
+Also include "careerRecommendations" array with 4 entries, each having: clusterId, matchScore (0-100), confidence (0-100), whyYou, whatYouDo, howToTest, skillsToBuild (array of 3-5 strings), evidenceChain (array of {type: "quiz"|"session"|"data_source"|"signal", excerpt: string}).` : ''}`,
             },
           ],
         },
