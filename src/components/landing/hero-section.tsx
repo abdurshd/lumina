@@ -45,18 +45,7 @@ export function HeroSection() {
         style={{ y: backgroundY, scale }}
         className="absolute inset-0 z-0"
       >
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="absolute inset-0 w-full h-full object-cover opacity-40 mix-blend-luminosity"
-        >
-          <source src="/hero-bg.mp4" type="video/mp4" />
-        </video>
-
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(5,5,5,0.8),#050505_90%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(34,211,238,0.15),transparent_60%)] mix-blend-screen" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.1),transparent_70%)]" />
 
         {/* Futuristic Grid/Neural Map Placeholder */}
         <div className="absolute inset-0 opacity-10" style={{

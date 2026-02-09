@@ -58,9 +58,27 @@ export function DataAnalysisSection() {
                         whileInView={{ opacity: 1, scale: 1 }}
                         viewport={{ once: true }}
                         transition={{ duration: 1.2, ease: "circOut" }}
-                        className="lg:w-1/2 relative min-h-[400px] w-full"
+                        className="lg:w-1/2 relative min-h-[400px] w-full flex items-center justify-center"
                     >
-                        <DataNetworkScene />
+                        <div className="relative w-full h-[300px] sm:h-[400px] rounded-2xl overflow-hidden glass-premium border-primary/20 shadow-[0_0_50px_rgba(34,211,238,0.1)]">
+                            <video
+                                autoPlay
+                                loop
+                                muted
+                                playsInline
+                                className="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-luminosity"
+                            >
+                                <source src="/hero-bg.mp4" type="video/mp4" />
+                            </video>
+                            <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent opacity-80" />
+                            <div className="absolute inset-0 bg-primary/5 mix-blend-overlay" />
+
+                            {/* Futuristic reticle overlay */}
+                            <div className="absolute inset-0 flex items-center justify-center opacity-30 pointer-events-none">
+                                <div className="w-24 h-24 rounded-full border border-primary/40 border-dashed animate-spin-slow" />
+                                <div className="absolute w-32 h-32 rounded-full border border-primary/20" />
+                            </div>
+                        </div>
                     </motion.div>
                 </div>
 
