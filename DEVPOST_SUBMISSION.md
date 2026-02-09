@@ -1,91 +1,112 @@
 # Devpost Submission — Lumina
 
-> **Tagline:** Discover your strongest career direction through AI-powered multimodal talent discovery.
+> **Tagline:** An autonomous career intelligence agent that orchestrates multi-source analysis, adaptive assessment, live multimodal coaching, and self-correcting synthesis to discover your strongest career direction.
 
 ---
 
 ## Inspiration
 
-Career guidance today is broken. Generic personality quizzes produce vague results. School counselors have 15 minutes per student. Career coaches cost hundreds per hour. Meanwhile, people have years of digital footprints — emails, documents, conversations, projects — that reveal more about their strengths than any quiz ever could.
+Career guidance today is broken. Generic assessments produce vague results. School counselors have 15 minutes per student. Career coaches cost hundreds per hour. Meanwhile, people have years of digital footprints — emails, documents, conversations, projects — that reveal more about their strengths than any single test ever could.
 
-We asked: what if AI could synthesize everything you've already created, combine it with validated psychometric science, and then actually talk to you — face to face — to uncover the career paths where you'd genuinely thrive?
+We asked: what if an autonomous AI agent could gather evidence from everything you've already created, identify gaps in its own understanding, adaptively probe the dimensions where it's least confident, hold a face-to-face conversation to observe what no written test can capture, and then critique and refine its own conclusions before presenting them?
 
-That's Lumina. Not another career quiz. A multimodal talent-discovery system that sees the full picture.
+That's Lumina. Not a linear tool. An autonomous intelligence agent that drives its own assessment loop, knows what it doesn't know, and self-corrects until it reaches high-confidence career recommendations.
 
 ---
 
 ## What it does
 
-Lumina guides users through a four-stage talent discovery journey:
+Lumina is an **agent orchestrator** that autonomously manages a multi-stage career intelligence pipeline. At its core, an orchestrator evaluates the current state of evidence, computes per-dimension confidence scores, identifies gaps, and decides the next best action — without waiting for the user to navigate a menu.
 
-**1. Data Integration** — Users connect Gmail, Google Drive, Notion, or upload ChatGPT exports and local files. Gemini 3 Flash analyzes communication patterns, writing style, vocabulary, recurring interests, and hidden skill demonstrations across all connected sources.
+**Stage 1: Multi-Source Evidence Gathering** — The agent ingests data from Gmail, Google Drive, Notion, ChatGPT exports, and file uploads. Gemini 3 Flash extracts behavioral signals: communication patterns, recurring interests, skill demonstrations, and vocabulary analysis. The orchestrator computes initial confidence across 31 psychometric dimensions and identifies which dimensions lack evidence.
 
-**2. Adaptive Psychometric Assessment** — A five-module quiz spanning Interests (RIASEC), Work Values, Strengths & Skills, Learning Environment, and Practical Constraints. Questions are AI-generated and adapt in real time based on previous answers and connected data insights. Freetext responses are scored across multiple psychometric dimensions simultaneously.
+**Stage 2: Adaptive Assessment with Autonomous Module Selection** — Rather than running a fixed assessment, the agent recommends which assessment module to complete next based on where confidence is lowest. Five modules (Interests, Work Values, Strengths & Skills, Learning Environment, Practical Constraints) can be completed in any order — the agent prioritizes the one that will produce the largest confidence gain. Questions adapt in real time based on prior answers and data insights. The agent gates progression: if confidence is too low, it recommends additional modules before moving forward. Users can override, but the agent makes the recommendation.
 
-**3. Live Multimodal Session** — A real-time video + voice conversation with an AI career counselor powered by Gemini's native audio model. The AI conducts a structured 9-phase coaching conversation, observing engagement patterns, hesitation, confidence, clarity, and collaboration style through behavioral cues — all with explicit user consent. During the conversation, the model autonomously decides when to save insights, fetch the user's profile for personalization, capture talent signals, suggest additional quiz modules for detected gaps, and schedule concrete next steps — all through live tool calling.
+**Stage 3: Live Multimodal Coaching with Behavioral Timeline** — A real-time video + voice conversation powered by Gemini's native audio model. During the session, the agent autonomously saves insights, fetches user profiles for personalization, captures talent signals, suggests additional assessment modules for detected gaps, and schedules next steps — all through live tool calling. A behavioral timeline tracks engagement, hesitation, confidence, clarity, and collaboration patterns over time, computing trends and cross-dimension correlations rather than single-point snapshots.
 
-**4. Evidence-Grounded Talent Report** — Gemini 3 Pro synthesizes everything into a comprehensive report: a personalized headline talent, 6-axis radar chart, top strengths with evidence chains citing specific quiz answers, session timestamps, and data source excerpts, hidden talents the user doesn't recognize, career path matches scored against O*NET career clusters with RIASEC codes, a prioritized action plan, and explicit confidence notes about data sparsity.
+**Stage 4: Self-Correcting Report Synthesis** — This is where Lumina fundamentally differs from single-shot generation. The report agent executes a five-step loop:
+1. **Generate Draft** — Gemini 3 Pro synthesizes all evidence into a comprehensive report
+2. **Self-Critique** — Gemini 3 Flash scores every section for evidence quality, identifying weak areas
+3. **Identify Refinement Targets** — Sections below the evidence quality threshold are flagged
+4. **Targeted Refinement** — Gemini 3 Pro re-generates only the weak sections with explicit instructions to strengthen evidence chains
+5. **Final Validation** — A consistency check ensures the refined report is coherent
 
-After the initial report, users enter a **growth loop** — completing micro-challenges (explore, create, connect, learn, reflect), journaling reflections analyzed for sentiment, and tracking their profile evolution through snapshots over time.
+Every step is traced. Users see a "How I Built This Report" visualization showing exactly what was critiqued, what was improved, and how confidence changed at each step. Career recommendations include confidence-gated badges — high confidence (strong evidence), moderate (more data recommended), or low (needs more evidence) — with actionable tips for improvement.
+
+After the initial report, users enter a **growth loop** — completing micro-challenges, journaling reflections analyzed for sentiment, and tracking profile evolution through snapshots over time.
 
 ---
 
 ## How we built it
 
-**Tri-Model Architecture** — We strategically route tasks across three Gemini models:
-- **Gemini 3 Flash** handles all fast operations: quiz generation, adaptive scoring, data source analysis, and real-time processing
-- **Gemini 3 Pro** handles deep synthesis: talent report generation requiring complex multi-source reasoning and evidence correlation
-- **Gemini 2.5 Flash Native Audio** powers the live multimodal session with bidirectional audio/video streaming over WebSocket
+**Agent Orchestrator Architecture** — At the center of Lumina is an orchestrator (`src/lib/agent/orchestrator.ts`) that evaluates the current state of all evidence, computes per-dimension confidence using source diversity multipliers, identifies knowledge gaps, and produces a ranked list of recommended actions. The orchestrator recommends but never auto-executes — maintaining human-in-the-loop control while driving autonomous decision-making.
 
-**Psychometric Foundation** — We built a 31-dimension psychometric framework grounded in career science: 6 RIASEC interest dimensions, 6 work value dimensions, 3 skill confidence dimensions, 3 learning environment dimensions, 5 practical constraint dimensions, 5 behavioral observation factors, and 3 legacy session categories. Scores are computed using winsorized averaging with multi-source evidence weighting.
+**Confidence-Gated Decision Making** — Every stage transition is gated by confidence thresholds. A confidence scoring engine (`src/lib/agent/confidence.ts`) tracks 31 dimensions across all data sources, computing weighted scores based on evidence freshness, source diversity, and cross-validation. The agent recommends when to proceed and when to gather more data. Users see real-time confidence dashboards and can override gates, but the agent's reasoning is always visible.
 
-**Stack** — Next.js 16 (App Router), React 19, TypeScript strict mode, Tailwind v4, shadcn/ui, Framer Motion, Firebase (Auth + Firestore), Zustand, React Query v5, and Zod for end-to-end schema validation of every AI output.
+**Self-Correcting Report Generation** — The report agent (`src/lib/agent/report-agent.ts`) implements a generate → critique → refine → validate loop. Each step produces a trace entry with confidence changes and timing. The thought chain visualization on the report page shows judges exactly how the agent improved its own output — proving this is not a single-call wrapper.
 
-**Security** — Live sessions use server-minted ephemeral tokens so the API key never touches the browser. Three consent gates (age 16+, video consent, behavioral inference consent) must be cleared before any session begins.
+**Cross-Stage Evidence Correlation** — A dedicated correlator agent (`src/lib/agent/correlator.ts`) finds convergent patterns, divergent signals, and hidden talents by analyzing evidence across all three stages (data analysis, assessment, live session). This produces insights that no single stage could generate alone.
+
+**Tri-Model Routing** — Tasks are routed across three Gemini models based on complexity:
+- **Gemini 3 Flash** — fast operations: assessment generation, scoring, data analysis, critique
+- **Gemini 3 Pro** — deep synthesis: report generation, targeted refinement, evidence correlation
+- **Gemini 2.5 Flash Native Audio** — live multimodal sessions with autonomous tool calling
+
+**Agent Decision Log** — Every autonomous action is logged with: what was decided, why, confidence before and after, and the data that informed the decision. This log is visible in a persistent side panel across all assessment pages, giving users (and judges) full transparency into the agent's reasoning.
+
+**Stack** — Next.js 16 (App Router), React 19, TypeScript strict mode, Tailwind v4, shadcn/ui, Framer Motion, Firebase (Auth + Firestore), Zustand, React Query v5, Zod for end-to-end schema validation of every AI output.
+
+**Security** — Live sessions use server-minted ephemeral tokens. Three consent gates (age 16+, video consent, behavioral inference consent) must be cleared before sessions begin.
 
 ---
 
 ## Challenges we ran into
 
-- **Context window management during live sessions** — Long coaching conversations can exceed token limits. We implemented sliding-window compression that triggers at 65K tokens, preserving conversation coherence while staying within bounds.
+- **Making the agent genuinely autonomous without being opaque** — The orchestrator needs to drive decisions independently, but users must understand and trust those decisions. We solved this with the agent decision log — every action is transparent, every recommendation shows its reasoning, and users can always override.
 
-- **Multi-source score normalization** — Combining scores from quizzes, behavioral observations, data analysis signals, and session insights into one coherent profile required careful statistical design. We settled on winsorized averaging with quartile outlier removal and source-weighted confidence scoring.
+- **Self-correction without infinite loops** — The report critique → refine loop could theoretically run forever. We implemented a fixed 5-step pipeline with an evidence quality threshold (60%) that determines which sections need refinement, ensuring bounded execution with meaningful improvement.
 
-- **Behavioral observation ethics** — We had to carefully scope what the AI can and cannot claim from video observation. We limited it to 5 evidence-based categories (engagement, hesitation, emotional intensity, clarity, collaboration) and explicitly prohibit identity recognition, medical diagnosis, or immutable personality claims.
+- **Cross-stage evidence correlation** — Finding patterns that span data analysis, assessment responses, and live session observations required careful evidence structuring. The correlator agent uses Gemini 3 Pro to identify convergent patterns, divergent signals, and hidden talents that no single source reveals.
 
-- **Adaptive quiz generation** — Making questions feel natural while ensuring they map cleanly to psychometric dimensions and adapt based on prior answers required extensive prompt engineering and structured output validation.
+- **Confidence scoring across heterogeneous sources** — Computing meaningful confidence from quiz scores, behavioral observations, data analysis signals, and session insights required source diversity multipliers and freshness weighting — not just raw averaging.
+
+- **Behavioral timeline vs. snapshots** — Instead of single-point behavioral observations, we built temporal tracking that computes trends (increasing/decreasing/stable) and cross-dimension correlations during live sessions, revealing patterns that snapshots miss entirely.
 
 ---
 
 ## Accomplishments that we're proud of
 
-- **Every career recommendation is evidence-grounded** — No generic advice. Every strength, career match, and action item cites specific quiz question IDs, session transcript timestamps, and data source excerpts with confidence scores.
+- **The self-correcting report loop is visible** — Users see exactly how the agent critiqued and improved its own output. The thought chain visualization proves the system does real multi-step reasoning, not single-shot generation.
 
-- **The live session feels like a real coaching conversation** — The 9-phase conversational structure with autonomous tool calling creates a natural flow where the AI genuinely adapts to the person in front of it.
+- **Confidence gates create genuine autonomy** — The agent doesn't just process stages in order. It evaluates what it knows, identifies what it doesn't, recommends what to do next, and gates progression based on evidence quality. This is an agent making decisions, not a pipeline executing steps.
 
-- **True multimodal fusion** — We don't just use text OR voice OR video. We fuse written data analysis, psychometric scoring, live behavioral observation, and conversational insights into a single coherent talent profile.
+- **Every recommendation cites specific evidence** — Career matches, strengths, and action items cite quiz question IDs, session timestamps, and data source excerpts with confidence scores. Confidence-gated badges tell users exactly how much to trust each recommendation.
 
-- **Privacy-first by design** — Raw imported content is transient. Session data defaults to session-only storage. Behavioral inference requires explicit opt-in. The system is built around minimal data retention from the ground up.
+- **The agent decision log shows all reasoning** — A persistent panel shows every autonomous decision the agent has made: what action, why, and how confidence changed. Full transparency into the agent's thought process.
+
+- **True multimodal fusion with behavioral trends** — Written data analysis, psychometric scoring, live behavioral observation with temporal trend analysis, and conversational insights are fused into a single coherent talent profile through cross-stage evidence correlation.
 
 ---
 
 ## What we learned
 
-- Gemini 3's structured output capabilities with tool calling during live sessions are transformative — the model can autonomously decide when to save an insight vs. fetch more context vs. suggest a quiz module, creating genuinely adaptive conversations.
+- Gemini 3's structured output capabilities combined with multi-step agent loops produce dramatically better results than single-shot generation. The self-critique step alone catches evidence gaps that would otherwise produce unfounded recommendations.
 
-- Career science (RIASEC, O*NET clusters) combined with AI produces dramatically better results than either alone. The psychometric framework grounds the AI's recommendations in validated career research.
+- Confidence scoring changes everything about how an agent system behaves. When the system knows what it doesn't know, it can make genuinely intelligent decisions about what to do next — turning a linear pipeline into an adaptive intelligence loop.
 
-- Evidence chains change everything. When users can see exactly why a career was recommended — "you scored 87 on Investigative, mentioned data analysis 4 times in your emails, and showed high engagement when discussing problem-solving at 3:42 in your session" — trust and engagement increase massively.
+- Career science (RIASEC, O*NET clusters) combined with agentic AI produces better results than either alone. The psychometric framework grounds the agent's recommendations in validated career research, while the agent's multi-source analysis reveals patterns that no fixed assessment can capture.
+
+- Showing the agent's reasoning builds trust. When users can see the decision log and thought chain, they engage more deeply and provide better feedback — creating a virtuous cycle of improving recommendations.
 
 ---
 
 ## What's next for Lumina
 
+- **Multi-agent specialization** — Dedicated sub-agents for different career domains (tech, creative, healthcare) with domain-specific evidence evaluation
+- **Longitudinal confidence tracking** — The agent monitors confidence evolution over weeks and months, proactively suggesting new evidence gathering when confidence decays
+- **Team talent mapping** — An orchestrator that maps complementary strengths across team members
 - **More data integrations** — LinkedIn, GitHub, Spotify listening patterns, and calendar analysis
-- **Team talent mapping** — Organizations can map complementary strengths across team members
-- **Longitudinal tracking** — Multi-month profile evolution with milestone celebrations
-- **Mentor matching** — Connect users with professionals in their recommended career paths
-- **Mobile native app** — Bring the live session experience to mobile with on-device audio processing
+- **Mentor matching** — Connect users with professionals in their recommended career paths based on evidence-grounded compatibility
 
 ---
 
@@ -97,12 +118,14 @@ After the initial report, users enter a **growth loop** — completing micro-cha
 
 ## Gemini 3 Feature Usage (~200 words)
 
-Lumina is built entirely on the Gemini 3 API with a strategic tri-model architecture. **Gemini 3 Flash** powers all fast-path operations: generating adaptive psychometric quiz questions that respond to prior answers, scoring freetext responses across multiple dimensions simultaneously, and analyzing connected data sources (Gmail, Drive, Notion, ChatGPT exports) to extract communication patterns, skill demonstrations, and hidden interests.
+Lumina is an autonomous agent system built entirely on the Gemini 3 API with strategic multi-model routing. The agent orchestrator evaluates state and routes tasks based on complexity.
 
-**Gemini 3 Pro** handles deep synthesis — generating comprehensive talent reports that correlate evidence across quiz scores, behavioral observations, data insights, and session transcripts. Every career recommendation must cite specific evidence (quiz question IDs, session timestamps, data excerpts) with confidence scores, requiring Pro's superior reasoning capabilities.
+**Gemini 3 Flash** powers all fast-path agent operations: generating adaptive assessment questions that respond to confidence gaps, scoring freetext responses across 31 psychometric dimensions, analyzing connected data sources to extract behavioral signals, and running the self-critique step of the report generation loop — evaluating every section for evidence quality and identifying refinement targets.
 
-**Gemini's Native Audio model** powers the live multimodal session — a real-time video + voice coaching conversation streamed over WebSocket. The model conducts a structured 9-phase career exploration while autonomously using 5 tool declarations (saveInsight, fetchUserProfile, saveSignal, startQuizModule, scheduleNextStep) to dynamically save behavioral observations, personalize based on user history, capture talent signals, suggest assessments for detected gaps, and record action items — all during live conversation without interrupting flow.
+**Gemini 3 Pro** handles deep synthesis requiring complex multi-source reasoning: generating comprehensive talent reports that correlate evidence across assessment scores, behavioral observations, and data insights; performing targeted refinement of weak report sections with explicit evidence-strengthening instructions; and running cross-stage evidence correlation to discover convergent patterns, divergent signals, and hidden talents across all data sources.
 
-Gemini 3 is not a feature we added — it is the core intelligence layer that makes multimodal talent discovery possible.
+**Gemini's Native Audio model** powers the live multimodal coaching session — a real-time video + voice conversation streamed over WebSocket. The model conducts structured career exploration while autonomously using 5 tool declarations (saveInsight, fetchUserProfile, saveSignal, startQuizModule, scheduleNextStep) to dynamically save behavioral observations, personalize based on evidence history, capture talent signals, trigger additional assessments for detected confidence gaps, and record action items — all during live conversation.
+
+Gemini 3 is not a feature we added — it is the autonomous intelligence layer that drives every decision Lumina makes.
 
 ---

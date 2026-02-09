@@ -802,7 +802,7 @@ Modify assessment store:
 ### Task 8.1 — Update Devpost Submission
 
 ```
-STATUS: [ ]
+STATUS: [x]
 LOCK: UNLOCKED
 PRIORITY: HIGH
 DEPENDS ON: all implementation tasks
