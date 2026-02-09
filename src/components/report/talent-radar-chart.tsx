@@ -19,17 +19,17 @@ export const TalentRadarChart = memo(function TalentRadarChart({ dimensions }: T
     <div className="h-[350px] w-full">
       <ResponsiveContainer width="100%" height="100%">
         <RadarChart cx="50%" cy="50%" outerRadius="80%" data={data}>
-          <PolarGrid stroke="rgba(255,255,255,0.08)" />
+          <PolarGrid stroke="var(--overlay-medium)" />
           <PolarAngleAxis
             dataKey="subject"
-            tick={{ fill: '#a3a3a3', fontSize: 12 }}
+            tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
           />
           <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
           <Radar
             name="Talent"
             dataKey="value"
-            stroke="#22c55e"
-            fill="#22c55e"
+            stroke="var(--primary)"
+            fill="var(--primary)"
             fillOpacity={0.15}
             strokeWidth={2}
           />

@@ -21,7 +21,7 @@ export function AudioVisualizer({ isActive }: AudioVisualizerProps) {
             animationDuration: `${0.4 + Math.random() * 0.4}s`,
             background: isActive
               ? `linear-gradient(to top, #22c55e, #4ade80)`
-              : 'rgba(255,255,255,0.15)',
+              : 'var(--overlay-heavy)',
             boxShadow: 'none',
           }}
         />

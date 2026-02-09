@@ -37,7 +37,7 @@ export default function DashboardPage() {
           Complete all four stages to unlock your personalized talent report.
         </p>
         <div className="mt-5 flex items-center gap-3">
-          <div className="h-4 flex-1 rounded-full bg-white/[0.06] overflow-hidden">
+          <div className="h-4 flex-1 rounded-full bg-overlay-light overflow-hidden">
             <div
               className="h-4 rounded-full bg-primary transition-all duration-500 ease-out"
               style={{ width: `${(completedCount / 4) * 100}%` }}
@@ -76,7 +76,7 @@ export default function DashboardPage() {
                         ? 'bg-primary/10 text-primary border-primary/20'
                         : isCompleted
                         ? 'bg-primary/10 text-primary border-primary/20'
-                        : 'bg-white/[0.03] text-muted-foreground border-white/[0.06]'
+                        : 'bg-overlay-subtle text-muted-foreground border-overlay-light'
                     }`}
                   >
                     <Icon className="h-6 w-6" />

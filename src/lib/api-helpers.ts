@@ -31,7 +31,8 @@ export async function verifyAuth(req: NextRequest): Promise<{ uid: string } | nu
     const token = authHeader.split('Bearer ')[1];
     const decoded = await getAdminAuth().verifyIdToken(token);
     return { uid: decoded.uid };
-  } catch {
+  } catch (err) {
+    console.error('[verifyAuth] Token verification failed:', err instanceof Error ? err.message : err);
     return null;
   }
 }

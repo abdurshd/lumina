@@ -166,7 +166,7 @@ export default function SessionPage() {
               <TranscriptPanel entries={transcript} />
             </div>
             {isConnected && (
-              <div className="border-t-2 border-white/[0.04] p-3">
+              <div className="border-t-2 border-overlay-subtle p-3">
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();

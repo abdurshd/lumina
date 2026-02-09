@@ -40,7 +40,7 @@ export function SessionControls({
 
   return (
     <div className="flex items-center gap-3">
-      <div className="flex items-center gap-2 rounded-xl bg-card border-2 border-white/[0.06] px-4 py-2">
+      <div className="flex items-center gap-2 rounded-xl bg-card border-2 border-overlay-light px-4 py-2">
         {isMicActive ? (
           <Mic className="h-4 w-4 text-primary" />
         ) : (
@@ -48,7 +48,7 @@ export function SessionControls({
         )}
         <span className="text-xs font-bold font-mono">{isMicActive ? 'Mic on' : 'Mic off'}</span>
       </div>
-      <div className="flex items-center gap-2 rounded-xl bg-card border-2 border-white/[0.06] px-4 py-2">
+      <div className="flex items-center gap-2 rounded-xl bg-card border-2 border-overlay-light px-4 py-2">
         {isCamActive ? (
           <Video className="h-4 w-4 text-primary" />
         ) : (

@@ -167,7 +167,7 @@ export default function ReportPage() {
         <CardContent>
           <div className="grid gap-3 sm:grid-cols-2">
             {report.personalityInsights.map((insight, i) => (
-              <div key={i} className="rounded-xl bg-white/[0.03] border-2 border-white/[0.06] p-4 text-sm">
+              <div key={i} className="rounded-xl bg-overlay-subtle border-2 border-overlay-light p-4 text-sm">
                 {insight}
               </div>
             ))}
@@ -175,7 +175,7 @@ export default function ReportPage() {
         </CardContent>
       </Card>
 
-      <div className="h-[2px] bg-white/[0.06] my-12" />
+      <div className="h-[2px] bg-overlay-light my-12" />
 
       {/* Career Paths */}
       <div className="mb-8 animate-fade-in-up" style={{ animationDelay: '500ms' }}>
@@ -194,7 +194,7 @@ export default function ReportPage() {
         <CardContent>
           <div className="space-y-4">
             {report.actionPlan.map((item, i) => (
-              <div key={i} className="flex items-start gap-3 rounded-xl border-2 border-white/[0.06] bg-white/[0.02] p-4">
+              <div key={i} className="flex items-start gap-3 rounded-xl border-2 border-overlay-light bg-overlay-subtle p-4">
                 <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white font-mono border-2 ${
                   item.priority === 'high' ? 'bg-destructive/80 border-destructive/30' : item.priority === 'medium' ? 'bg-primary/80 border-primary/30' : 'bg-primary/60 border-primary/20'
                 }`}>

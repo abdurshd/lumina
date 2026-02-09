@@ -66,7 +66,7 @@ export function QuestionCard({ question, onAnswer, questionNumber, totalQuestion
                     'mr-3 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold font-mono',
                     isSelected
                       ? 'border-primary bg-primary/10 text-primary'
-                      : 'border-white/[0.12] text-muted-foreground'
+                      : 'border-overlay-strong text-muted-foreground'
                   )}>
                     {String.fromCharCode(65 + i)}
                   </span>

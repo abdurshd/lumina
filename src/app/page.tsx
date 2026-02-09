@@ -11,6 +11,7 @@ import {
   FileText,
   Shield,
 } from 'lucide-react';
+import { ThemeToggle } from '@/components/layout/theme-toggle';
 
 const features = [
   {
@@ -46,15 +47,18 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       {/* Header - Remotion style clean nav */}
-      <header className="sticky top-0 z-40 bg-background/90 backdrop-blur-sm border-b-2 border-white/[0.04]">
+      <header className="sticky top-0 z-40 bg-background/90 backdrop-blur-sm border-b-2 border-overlay-subtle">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2.5">
             <Sparkles className="h-6 w-6 text-primary" />
             <span className="text-xl font-bold text-gradient-gold">Lumina</span>
           </div>
-          <Link href="/login">
-            <Button size="sm">Get Started</Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <Link href="/login">
+              <Button size="sm">Get Started</Button>
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -113,7 +117,7 @@ export default function LandingPage() {
 
       {/* How it works - Remotion-style section */}
       <section className="relative py-20">
-        <div className="absolute inset-0 bg-[#0d0d0d] -z-10" />
+        <div className="absolute inset-0 bg-[var(--section-alt-bg)] -z-10" />
         <div className="mx-auto max-w-4xl px-6">
           <div className="text-center mb-14">
             <h2 className="text-3xl font-bold sm:text-4xl">
@@ -156,7 +160,7 @@ export default function LandingPage() {
       </section>
 
       {/* Footer - Remotion-style clean */}
-      <footer className="border-t-2 border-white/[0.04] py-10">
+      <footer className="border-t-2 border-overlay-subtle py-10">
         <div className="mx-auto max-w-6xl px-6 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />

@@ -10,13 +10,13 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-primary text-white shadow-[0_4px_0_var(--primary-dark)] hover:brightness-110 active:shadow-none active:translate-y-1 disabled:bg-[#37464f] disabled:text-[#52656d] disabled:shadow-none disabled:translate-y-1 disabled:brightness-100",
+          "bg-primary text-white shadow-[0_4px_0_var(--primary-dark)] hover:brightness-110 active:shadow-none active:translate-y-1 disabled:bg-disabled-bg disabled:text-disabled-text disabled:shadow-none disabled:translate-y-1 disabled:brightness-100",
         destructive:
-          "bg-destructive text-white shadow-[0_4px_0_var(--destructive-dark)] hover:brightness-110 active:shadow-none active:translate-y-1 disabled:bg-[#37464f] disabled:text-[#52656d] disabled:shadow-none disabled:translate-y-1",
+          "bg-destructive text-white shadow-[0_4px_0_var(--destructive-dark)] hover:brightness-110 active:shadow-none active:translate-y-1 disabled:bg-disabled-bg disabled:text-disabled-text disabled:shadow-none disabled:translate-y-1",
         outline:
-          "bg-card text-foreground border-2 border-white/12 shadow-[0_3px_0_rgba(255,255,255,0.06)] hover:bg-white/[0.04] hover:border-white/18 active:shadow-none active:translate-y-[3px]",
+          "bg-card text-foreground border-2 border-overlay-strong shadow-[0_3px_0_var(--shadow-light)] hover:bg-overlay-subtle hover:border-overlay-heavy active:shadow-none active:translate-y-[3px]",
         secondary:
-          "bg-secondary text-secondary-foreground border-2 border-white/8 shadow-[0_2px_0_rgba(255,255,255,0.04)] hover:bg-secondary/80 active:shadow-none active:translate-y-[2px]",
+          "bg-secondary text-secondary-foreground border-2 border-overlay-medium shadow-[0_2px_0_var(--shadow-subtle)] hover:bg-secondary/80 active:shadow-none active:translate-y-[2px]",
         ghost:
           "hover:bg-accent hover:text-accent-foreground rounded-xl shadow-none uppercase-none tracking-normal font-medium",
         link: "text-primary underline-offset-4 hover:underline shadow-none uppercase-none tracking-normal font-medium",
