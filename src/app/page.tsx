@@ -49,7 +49,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       {/* Header */}
-      <header className="sticky top-0 z-40 glass border-b border-white/[0.06]">
+      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2.5">
             <Sparkles className="h-6 w-6 text-primary" />
@@ -62,7 +62,7 @@ export default function LandingPage() {
       </header>
 
       {/* Hero */}
-      <section className="relative mx-auto max-w-4xl px-6 py-24 text-center">
+      <section className="relative mx-auto max-w-5xl px-6 py-32 text-center">
         <div className="mb-6 inline-flex items-center gap-2 rounded-full glass px-4 py-1.5 text-sm text-primary animate-fade-in-up">
           <Zap className="h-4 w-4" />
           Powered by Gemini Multimodal AI
@@ -88,14 +88,14 @@ export default function LandingPage() {
       </section>
 
       {/* Features */}
-      <section className="relative mx-auto max-w-6xl px-6 py-20">
+      <section className="relative mx-auto max-w-6xl px-6 py-24">
         <div className="text-center mb-12 animate-fade-in-up">
-          <h2 className="text-3xl font-bold">Four Dimensions of Discovery</h2>
+          <h2 className="text-3xl font-bold"><span className="text-primary">Four Dimensions</span> of Discovery</h2>
           <p className="mt-2 text-muted-foreground">
             A multimodal AI pipeline that analyzes you from every angle
           </p>
         </div>
-        <div className="grid gap-6 sm:grid-cols-2">
+        <div className="grid gap-8 sm:grid-cols-2">
           {features.map((feature, i) => (
             <Card key={i} className="relative overflow-hidden glass hover:border-white/[0.18] transition-all duration-500 animate-fade-in-up" style={{ animationDelay: `${400 + i * 100}ms` }}>
               <CardContent className="pt-6">
@@ -111,17 +111,17 @@ export default function LandingPage() {
       </section>
 
       {/* How it works */}
-      <section className="relative py-20">
-        <div className="absolute inset-0 bg-[#1a1a1a] -z-10" />
+      <section className="relative py-24">
+        <div className="absolute inset-0 bg-[#111111] -z-10" />
         <div className="mx-auto max-w-4xl px-6">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold">How It Works</h2>
+            <h2 className="text-3xl font-bold"><span className="text-primary">How</span> It Works</h2>
             <p className="mt-2 text-muted-foreground">Four simple steps to illuminate your potential</p>
           </div>
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {howItWorks.map((item, i) => (
               <div key={item.step} className="text-center animate-fade-in-up" style={{ animationDelay: `${i * 100}ms` }}>
-                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold font-mono text-sm">
+                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-primary/30 text-primary font-bold font-mono text-sm">
                   {item.step}
                 </div>
                 <h3 className="font-semibold mb-1 font-sans">{item.title}</h3>
@@ -133,10 +133,10 @@ export default function LandingPage() {
       </section>
 
       {/* CTA */}
-      <section className="mx-auto max-w-4xl px-6 py-20 text-center relative">
+      <section className="mx-auto max-w-4xl px-6 py-24 text-center relative">
         <div className="relative rounded-2xl glass-heavy p-12 overflow-hidden">
           <Target className="mx-auto mb-4 h-10 w-10 text-primary" />
-          <h2 className="text-3xl font-bold mb-4">Ready to discover your hidden talents?</h2>
+          <h2 className="text-3xl font-bold mb-4">Ready to <span className="text-primary">discover</span> your hidden talents?</h2>
           <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
             Join Lumina and let AI illuminate the potential you didn&apos;t know you had.
           </p>
@@ -149,7 +149,7 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-white/[0.06] py-8">
+      <footer className="border-t border-white/[0.04] py-10">
         <div className="mx-auto max-w-6xl px-6 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />

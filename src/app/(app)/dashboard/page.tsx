@@ -23,7 +23,7 @@ export default function DashboardPage() {
     : 0;
 
   return (
-    <div className="mx-auto max-w-3xl px-6 py-10">
+    <div className="mx-auto max-w-3xl px-6 py-12">
       <div className="mb-8 animate-fade-in-up">
         <div className="flex items-center gap-3 mb-2">
           <Sparkles className="h-6 w-6 text-primary" />

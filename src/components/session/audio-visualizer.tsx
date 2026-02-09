@@ -22,7 +22,7 @@ export function AudioVisualizer({ isActive }: AudioVisualizerProps) {
             background: isActive
               ? `linear-gradient(to top, #22c55e, #4ade80)`
               : 'rgba(255,255,255,0.15)',
-            boxShadow: isActive ? '0 0 6px rgba(34,197,94,0.2)' : 'none',
+            boxShadow: 'none',
           }}
         />
       ))}

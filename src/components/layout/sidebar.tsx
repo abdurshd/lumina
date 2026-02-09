@@ -29,12 +29,12 @@ export function Sidebar() {
   const { profile, signOut } = useAuthStore();
 
   return (
-    <aside className="flex h-full w-64 flex-col glass border-r border-white/[0.06]">
+    <aside className="flex h-full w-64 flex-col bg-sidebar border-r border-white/[0.04]">
       <div className="flex items-center gap-2.5 px-6 py-5">
         <Sparkles className="h-6 w-6 text-primary" />
         <span className="text-xl font-bold text-gradient-gold">Lumina</span>
       </div>
-      <div className="h-px bg-white/[0.06]" />
+      <div className="h-px bg-white/[0.04]" />
       <nav className="flex-1 space-y-1 px-3 py-4">
         {navItems.map((item, i) => (
           <Link
@@ -53,7 +53,7 @@ export function Sidebar() {
           </Link>
         ))}
       </nav>
-      <div className="h-px bg-white/[0.06]" />
+      <div className="h-px bg-white/[0.04]" />
       <div className="flex items-center gap-3 px-4 py-4">
         <Avatar className="h-8 w-8 border border-white/[0.1]">
           <AvatarImage src={profile?.photoURL} />

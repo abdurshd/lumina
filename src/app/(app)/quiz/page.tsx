@@ -100,7 +100,7 @@ export default function QuizPage() {
 
   if (isComplete) {
     return (
-      <div className="mx-auto max-w-2xl px-6 py-10">
+      <div className="mx-auto max-w-2xl px-6 py-12">
         <EmptyState
           icon={Brain}
           title="Quiz Complete!"
@@ -116,7 +116,7 @@ export default function QuizPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-6 py-10">
+    <div className="mx-auto max-w-3xl px-6 py-12">
       <PageHeader
         icon={Brain}
         title="Talent Quiz"

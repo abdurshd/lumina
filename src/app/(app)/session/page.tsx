@@ -110,7 +110,7 @@ export default function SessionPage() {
   const displayError = error || sessionError;
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-8">
+    <div className="mx-auto max-w-6xl px-6 py-10">
       <PageHeader
         icon={Sparkles}
         title="Live Session"
@@ -166,7 +166,7 @@ export default function SessionPage() {
               <TranscriptPanel entries={transcript} />
             </div>
             {isConnected && (
-              <div className="border-t border-white/[0.06] p-3">
+              <div className="border-t border-white/[0.04] p-3">
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();

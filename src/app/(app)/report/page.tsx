@@ -99,7 +99,7 @@ export default function ReportPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-6 py-10">
+    <div className="mx-auto max-w-4xl px-6 py-12">
       {/* Hero */}
       <div className="mb-10 text-center animate-fade-in-up">
         <Badge className="mb-4 bg-white/[0.06]" variant="secondary">Your Talent Report</Badge>
@@ -134,7 +134,7 @@ export default function ReportPage() {
       <div className="mb-8 animate-fade-in-up" style={{ animationDelay: '200ms' }}>
         <h2 className="flex items-center gap-2 text-xl font-bold mb-4">
           <Sparkles className="h-5 w-5 text-primary" />
-          Top Strengths
+          <span className="text-primary">Top</span> Strengths
         </h2>
         <StrengthsGrid strengths={report.topStrengths} />
       </div>
@@ -175,13 +175,13 @@ export default function ReportPage() {
         </CardContent>
       </Card>
 
-      <div className="h-px bg-white/[0.06] my-8" />
+      <div className="h-px bg-white/[0.06] my-12" />
 
       {/* Career Paths */}
       <div className="mb-8 animate-fade-in-up" style={{ animationDelay: '500ms' }}>
         <h2 className="flex items-center gap-2 text-xl font-bold mb-4">
           <Rocket className="h-5 w-5 text-primary" />
-          Recommended Career Paths
+          <span className="text-primary">Recommended</span> Career Paths
         </h2>
         <CareerPaths paths={report.careerPaths} />
       </div>

@@ -51,20 +51,20 @@
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: #141414;
+  --radius: 0.75rem;
+  --background: #0b0b0b;
   --foreground: #ededed;
-  --card: #1c1c1c;
+  --card: #181818;
   --card-foreground: #ededed;
-  --popover: #1c1c1c;
+  --popover: #181818;
   --popover-foreground: #ededed;
   --primary: #22c55e;
   --primary-foreground: #052e16;
-  --secondary: #262626;
+  --secondary: #1a1a1a;
   --secondary-foreground: #a3a3a3;
-  --muted: #262626;
+  --muted: #1a1a1a;
   --muted-foreground: #a3a3a3;
-  --accent: #262626;
+  --accent: #1a1a1a;
   --accent-foreground: #ededed;
   --destructive: #ef4444;
   --border: rgba(255,255,255,0.1);
@@ -75,7 +75,7 @@
   --chart-3: #4ade80;
   --chart-4: #86efac;
   --chart-5: #15803d;
-  --sidebar: #181818;
+  --sidebar: #0e0e0e;
   --sidebar-foreground: #ededed;
   --sidebar-primary: #22c55e;
   --sidebar-primary-foreground: #052e16;
@@ -126,10 +126,10 @@
 
 @layer utilities {
   .glass {
-    @apply bg-[#1c1c1c] border border-white/[0.1] rounded-lg;
+    @apply bg-[#181818] border border-white/[0.08] rounded-xl;
   }
   .glass-heavy {
-    @apply bg-[#222222] border border-white/[0.12] rounded-lg;
+    @apply bg-[#1e1e1e] border border-white/[0.1] rounded-xl;
   }
   .text-gradient-gold {
     @apply text-[#22c55e];
