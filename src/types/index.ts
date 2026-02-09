@@ -93,6 +93,7 @@ export interface SessionInsight {
     | 'interpersonal';
   confidence: number;
   evidence?: string;
+  dimension?: string;
 }
 
 export interface TalentReport {

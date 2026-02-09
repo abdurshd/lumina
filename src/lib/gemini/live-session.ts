@@ -11,14 +11,22 @@ import {
 } from "@google/genai";
 import { GEMINI_MODELS } from "./models";
 import { LIVE_SESSION_SYSTEM_PROMPT } from "./prompts";
-import { SaveInsightFunctionDeclaration, FetchUserProfileDeclaration, SaveSignalDeclaration, StartQuizModuleDeclaration, ScheduleNextStepDeclaration } from "@/lib/schemas/session";
-import type { SessionInsight, UserSignal, QuizModuleId } from "@/types";
+import { SaveInsightFunctionDeclaration, FetchUserProfileDeclaration, SaveSignalDeclaration, StartQuizModuleDeclaration, ScheduleNextStepDeclaration, EvaluateConfidenceDeclaration, LogAgentReasoningDeclaration } from "@/lib/schemas/session";
+import type { SessionInsight, UserSignal, QuizModuleId, ConfidenceProfile } from "@/types";
 import { normalizeSessionInsightCategory } from "@/lib/psychometrics/dimension-model";
 
 export interface NextStepSuggestion {
   title: string;
   description: string;
   timeframe: string;
+}
+
+export interface AgentReasoningEntry {
+  action: string;
+  reason: string;
+  targetDimension?: string;
+  confidenceImpact?: number;
+  timestamp: number;
 }
 
 export interface LiveSessionCallbacks {
@@ -33,6 +41,8 @@ export interface LiveSessionCallbacks {
   onProfileRequested?: () => Promise<string>;
   onQuizModuleSuggested?: (moduleId: QuizModuleId, reason: string) => void;
   onNextStepScheduled?: (step: NextStepSuggestion) => void;
+  onConfidenceRequested?: () => ConfidenceProfile | null;
+  onAgentReasoning?: (entry: AgentReasoningEntry) => void;
 }
 
 const MAX_RECONNECT_RETRIES = 5;
@@ -48,6 +58,7 @@ export class LiveSessionManager {
   private apiKey: string | null = null;
   private apiVersion: 'v1alpha' | 'v1' = 'v1alpha';
   private dataContext: string | null = null;
+  private confidenceProfile: ConfidenceProfile | null = null;
   private transcriptCharCount = 0;
   private isReconnecting = false;
   private manualDisconnect = false;
@@ -61,12 +72,36 @@ export class LiveSessionManager {
   async connect(
     authToken: string,
     dataContext: string,
-    apiVersion: 'v1alpha' | 'v1' = 'v1alpha'
+    apiVersion: 'v1alpha' | 'v1' = 'v1alpha',
+    confidenceProfile?: ConfidenceProfile
   ): Promise<void> {
     this.apiKey = authToken;
     this.dataContext = dataContext;
     this.apiVersion = apiVersion;
+    this.confidenceProfile = confidenceProfile ?? null;
     this.manualDisconnect = false;
+
+    // Build confidence-aware system instruction
+    let confidenceContext = "";
+    if (confidenceProfile && Object.keys(confidenceProfile.dimensions).length > 0) {
+      const dimLines = Object.entries(confidenceProfile.dimensions)
+        .map(([dim, dc]) => `  ${dim}: ${dc.confidence}% (sources: ${dc.sourceTypes.join(", ")})`)
+        .join("\n");
+      const highConfDims = Object.entries(confidenceProfile.dimensions)
+        .filter(([, dc]) => dc.confidence >= 70)
+        .map(([dim]) => dim);
+      const lowConfDims = Object.entries(confidenceProfile.dimensions)
+        .filter(([, dc]) => dc.confidence < 40)
+        .map(([dim]) => dim);
+
+      confidenceContext = `\n\nDIMENSION CONFIDENCE PROFILE (overall: ${confidenceProfile.overallConfidence}%):\n${dimLines}`;
+      if (highConfDims.length > 0) {
+        confidenceContext += `\n\nHIGH CONFIDENCE (can skip): ${highConfDims.join(", ")}`;
+      }
+      if (lowConfDims.length > 0) {
+        confidenceContext += `\nLOW CONFIDENCE (prioritize probing): ${lowConfDims.join(", ")}`;
+      }
+    }
 
     try {
       const client = new GoogleGenAI({
@@ -109,11 +144,11 @@ export class LiveSessionManager {
           systemInstruction: {
             parts: [
               {
-                text: `${LIVE_SESSION_SYSTEM_PROMPT}\n\nCONTEXT ABOUT THIS USER (from their data analysis and quiz):\n${dataContext}`,
+                text: `${LIVE_SESSION_SYSTEM_PROMPT}${confidenceContext}\n\nCONTEXT ABOUT THIS USER (from their data analysis and quiz):\n${dataContext}`,
               },
             ],
           },
-          tools: [{ functionDeclarations: [SaveInsightFunctionDeclaration, FetchUserProfileDeclaration, SaveSignalDeclaration, StartQuizModuleDeclaration, ScheduleNextStepDeclaration] }],
+          tools: [{ functionDeclarations: [SaveInsightFunctionDeclaration, FetchUserProfileDeclaration, SaveSignalDeclaration, StartQuizModuleDeclaration, ScheduleNextStepDeclaration, EvaluateConfidenceDeclaration, LogAgentReasoningDeclaration] }],
           sessionResumption: {
             handle: this.sessionHandle ?? undefined,
           },
@@ -155,6 +190,7 @@ export class LiveSessionManager {
               ? Math.max(0, Math.min(1, parsedConfidence))
               : 0.5,
             evidence: String(args.evidence ?? ""),
+            dimension: args.dimension ? String(args.dimension) : undefined,
           };
           this.insights.push(insight);
           this.callbacks.onInsight(insight);
@@ -206,6 +242,43 @@ export class LiveSessionManager {
           this.callbacks.onNextStepScheduled?.(step);
           this.session?.sendToolResponse({
             functionResponses: [{ id: fc.id!, response: { success: true } }],
+          });
+        } else if (fc.name === "evaluateConfidence") {
+          // Return current confidence profile to the model
+          const profile = this.callbacks.onConfidenceRequested?.() ?? this.confidenceProfile;
+          if (profile) {
+            const dimSummary = Object.entries(profile.dimensions)
+              .map(([dim, dc]) => `${dim}: ${dc.confidence}%`)
+              .join(", ");
+            this.session?.sendToolResponse({
+              functionResponses: [{
+                id: fc.id!,
+                response: {
+                  overallConfidence: profile.overallConfidence,
+                  dimensions: dimSummary,
+                  lastUpdated: profile.lastUpdated,
+                },
+              }],
+            });
+          } else {
+            this.session?.sendToolResponse({
+              functionResponses: [{
+                id: fc.id!,
+                response: { error: "Confidence profile not available yet" },
+              }],
+            });
+          }
+        } else if (fc.name === "logAgentReasoning") {
+          const entry: AgentReasoningEntry = {
+            action: String(args.action ?? ""),
+            reason: String(args.reason ?? ""),
+            targetDimension: args.targetDimension ? String(args.targetDimension) : undefined,
+            confidenceImpact: typeof args.confidenceImpact === "number" ? args.confidenceImpact : undefined,
+            timestamp: Date.now(),
+          };
+          this.callbacks.onAgentReasoning?.(entry);
+          this.session?.sendToolResponse({
+            functionResponses: [{ id: fc.id!, response: { success: true, message: "Reasoning logged" } }],
           });
         }
       }

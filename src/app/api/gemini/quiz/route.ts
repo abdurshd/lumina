@@ -14,6 +14,13 @@ import { getModuleConfig } from "@/lib/quiz/module-config";
 import { trackGeminiUsage } from "@/lib/gemini/byok";
 import { z } from "zod";
 
+const ConfidenceGapSchema = z.object({
+  dimension: z.string(),
+  currentConfidence: z.number(),
+  targetConfidence: z.number(),
+  importance: z.number(),
+});
+
 const RequestSchema = z.object({
   dataContext: z.string().default(""),
   previousAnswers: z
@@ -26,6 +33,8 @@ const RequestSchema = z.object({
     .default([]),
   batchIndex: z.number().int().min(0).max(10).default(0),
   moduleId: QuizModuleIdSchema.optional(),
+  confidenceGaps: z.array(ConfidenceGapSchema).optional(),
+  previousScores: z.record(z.string(), z.number()).optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -54,7 +63,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { dataContext, previousAnswers, batchIndex, moduleId } = parsed.data;
+  const { dataContext, previousAnswers, batchIndex, moduleId, confidenceGaps, previousScores } = parsed.data;
 
   try {
     const { client, keySource } = await getGeminiClientForUser({
@@ -80,14 +89,34 @@ export async function POST(req: NextRequest) {
       questionCount = batchIndex === 0 ? 4 : 3;
     }
 
+    // Build confidence-aware context
+    let confidenceContext = "";
+    if (confidenceGaps && confidenceGaps.length > 0) {
+      const gapLines = confidenceGaps
+        .slice(0, 5)
+        .map((g) => `  - ${g.dimension}: ${g.currentConfidence}% confidence (target: ${g.targetConfidence}%, importance: ${g.importance})`)
+        .join("\n");
+      confidenceContext = `\n\nCONFIDENCE GAPS (prioritize questions for these weak dimensions):\n${gapLines}\n\nGenerate questions that specifically probe the low-confidence dimensions listed above. These are the areas where we need the most data.`;
+    }
+
+    let scoresContext = "";
+    if (previousScores && Object.keys(previousScores).length > 0) {
+      const scoreLines = Object.entries(previousScores)
+        .map(([dim, score]) => `  - ${dim}: ${score}/100`)
+        .join("\n");
+      scoresContext = `\n\nPREVIOUS DIMENSION SCORES:\n${scoreLines}\n\nUse these to generate deeper, more targeted questions — go beyond surface-level for dimensions with low or extreme scores.`;
+    }
+
     const promptText = `${prompt}
 
 ${dataContext ? `User's data analysis:\n${dataContext}\n` : ""}
-${previousContext}
+${previousContext}${confidenceContext}${scoresContext}
 
 Generate exactly ${questionCount} questions${moduleId ? ` for the "${moduleId}" module` : ` for batch #${batchIndex + 1}`}. Each question needs: id (string like "q${moduleId ? moduleId + '_' : ''}${batchIndex * 3 + 1}"), type ("multiple_choice" | "slider" | "freetext"), question, options (for multiple_choice, 4 options), sliderMin/sliderMax/sliderLabels (for slider), category${moduleId ? `, moduleId ("${moduleId}")` : ''}.
 
-Respond with valid JSON: { "questions": [...] }`;
+IMPORTANT: Include an "adaptationReason" field in your response explaining WHY you chose these specific questions based on the confidence gaps and previous scores.
+
+Respond with valid JSON: { "questions": [...], "adaptationReason": "string" }`;
 
     const response = await client.models.generateContent({
       model: GEMINI_MODELS.FAST,
@@ -120,10 +149,17 @@ Respond with valid JSON: { "questions": [...] }`;
       outputChars: text.length,
     });
 
-    const jsonData = safeParseJson(text);
+    const jsonData = safeParseJson(text) as Record<string, unknown>;
     const validated = QuizQuestionsResponseSchema.parse(jsonData);
 
-    return NextResponse.json(validated);
+    // Extract adaptation reason from the Gemini response
+    const adaptationReason = typeof jsonData.adaptationReason === "string"
+      ? jsonData.adaptationReason
+      : confidenceGaps && confidenceGaps.length > 0
+        ? `Questions target ${confidenceGaps.slice(0, 3).map((g) => g.dimension).join(", ")} — dimensions with lowest confidence.`
+        : undefined;
+
+    return NextResponse.json({ ...validated, adaptationReason });
   } catch (error) {
     if (error instanceof GeminiError) {
       return errorResponse(

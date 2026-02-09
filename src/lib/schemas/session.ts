@@ -34,6 +34,10 @@ export const SaveInsightFunctionDeclaration: FunctionDeclaration = {
         type: Type.STRING,
         description: 'Short evidence snippet describing what triggered this observation',
       },
+      dimension: {
+        type: Type.STRING,
+        description: 'Which psychometric dimension this observation strengthens (e.g., "Artistic", "communication", "leadership"). Include this whenever the observation maps to a specific dimension.',
+      },
     },
     required: ['observation', 'category', 'confidence', 'evidence'],
   },
@@ -88,6 +92,42 @@ export const StartQuizModuleDeclaration: FunctionDeclaration = {
       },
     },
     required: ['moduleId', 'reason'],
+  },
+};
+
+export const EvaluateConfidenceDeclaration: FunctionDeclaration = {
+  name: 'evaluateConfidence',
+  description: 'Check the current dimension confidence scores to understand which areas need more probing. Call this before each conversational phase to decide what topics to explore. Returns per-dimension confidence percentages.',
+  parameters: {
+    type: Type.OBJECT,
+    properties: {},
+  },
+};
+
+export const LogAgentReasoningDeclaration: FunctionDeclaration = {
+  name: 'logAgentReasoning',
+  description: 'Explicitly log WHY you chose to probe a specific topic or dimension. This makes your conversational choices visible in the agent decision log. Call this whenever you make a deliberate choice about conversation direction.',
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      action: {
+        type: Type.STRING,
+        description: 'What you decided to do (e.g., "probe Artistic dimension", "skip technical questions")',
+      },
+      reason: {
+        type: Type.STRING,
+        description: 'Why you made this choice (e.g., "Artistic confidence is only 25%, needs more data")',
+      },
+      targetDimension: {
+        type: Type.STRING,
+        description: 'The primary dimension this action targets, if applicable',
+      },
+      confidenceImpact: {
+        type: Type.NUMBER,
+        description: 'Expected confidence improvement (0-100)',
+      },
+    },
+    required: ['action', 'reason'],
   },
 };
 

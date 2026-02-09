@@ -1,12 +1,12 @@
 'use client';
 
 import { useRef, useState, useCallback, useEffect } from 'react';
-import { LiveSessionManager, type LiveSessionCallbacks, type NextStepSuggestion } from '@/lib/gemini/live-session';
+import { LiveSessionManager, type LiveSessionCallbacks, type NextStepSuggestion, type AgentReasoningEntry } from '@/lib/gemini/live-session';
 import { AudioPlaybackManager, base64ToFloat32 } from '@/lib/gemini/audio-utils';
 import { FrameCapturer } from '@/lib/gemini/video-utils';
 import { useWebcam } from './use-webcam';
 import { useMicrophone } from './use-microphone';
-import type { SessionInsight, UserSignal, QuizModuleId } from '@/types';
+import type { SessionInsight, UserSignal, QuizModuleId, ConfidenceProfile } from '@/types';
 
 export interface TranscriptEntry {
   text: string;
@@ -27,7 +27,9 @@ export function useLiveSession() {
   const [signals, setSignals] = useState<UserSignal[]>([]);
   const [suggestedModule, setSuggestedModule] = useState<{ moduleId: QuizModuleId; reason: string } | null>(null);
   const [nextSteps, setNextSteps] = useState<NextStepSuggestion[]>([]);
+  const [agentReasoning, setAgentReasoning] = useState<AgentReasoningEntry[]>([]);
   const [behaviorCaptureEnabled, setBehaviorCaptureEnabled] = useState(true);
+  const confidenceProfileRef = useRef<ConfidenceProfile | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sessionDuration, setSessionDuration] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -91,6 +93,12 @@ export function useLiveSession() {
     onNextStepScheduled: (step: NextStepSuggestion) => {
       setNextSteps((prev) => [...prev, step]);
     },
+    onConfidenceRequested: () => {
+      return confidenceProfileRef.current;
+    },
+    onAgentReasoning: (entry: AgentReasoningEntry) => {
+      setAgentReasoning((prev) => [...prev, entry]);
+    },
   });
 
   // Store webcam/microphone refs to avoid dependency issues
@@ -127,10 +135,14 @@ export function useLiveSession() {
     async (
       authToken: string,
       dataContext: string,
-      apiVersion: 'v1alpha' | 'v1' = 'v1alpha'
+      apiVersion: 'v1alpha' | 'v1' = 'v1alpha',
+      confidenceProfile?: ConfidenceProfile
     ) => {
     setIsConnecting(true);
     setError(null);
+    if (confidenceProfile) {
+      confidenceProfileRef.current = confidenceProfile;
+    }
 
     const manager = new LiveSessionManager(callbacksRef.current);
     managerRef.current = manager;
@@ -141,7 +153,7 @@ export function useLiveSession() {
     playbackRef.current = new AudioPlaybackManager();
     await playbackRef.current.resume();
 
-    await manager.connect(authToken, dataContext, apiVersion);
+    await manager.connect(authToken, dataContext, apiVersion, confidenceProfile);
     maybeStartFrameCapture();
 
     // Start session timer
@@ -216,6 +228,7 @@ export function useLiveSession() {
     behaviorCaptureEnabled,
     suggestedModule,
     nextSteps,
+    agentReasoning,
     dismissSuggestedModule: () => setSuggestedModule(null),
     error,
     sessionDuration,

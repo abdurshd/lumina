@@ -335,7 +335,7 @@ Create API route `src/app/api/agent/correlate/route.ts`.
 ### Task 3.1 — Confidence-Gated Quiz Adaptation
 
 ```
-STATUS: [ ]
+STATUS: [x]
 LOCK: UNLOCKED
 PRIORITY: HIGH
 DEPENDS ON: 1.2
@@ -415,7 +415,7 @@ Modify `src/app/(app)/quiz/page.tsx`:
 ### Task 4.1 — Enhanced Tool Orchestration with Confidence Awareness
 
 ```
-STATUS: [ ]
+STATUS: [x]
 LOCK: UNLOCKED
 PRIORITY: HIGH
 DEPENDS ON: 1.1, 1.2

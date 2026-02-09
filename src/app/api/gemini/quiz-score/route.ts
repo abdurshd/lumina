@@ -4,7 +4,7 @@ import { getGeminiClientForUser } from '@/lib/gemini/client';
 import { GEMINI_MODELS } from '@/lib/gemini/models';
 import { QUIZ_SCORING_PROMPT } from '@/lib/gemini/prompts';
 import { z } from 'zod';
-import type { QuizScore, QuizDimensionSummary } from '@/types';
+import type { QuizScore, QuizDimensionSummary, QuizModuleId } from '@/types';
 import { ALL_PSYCHOMETRIC_DIMENSIONS, normalizeDimensionName } from '@/lib/psychometrics/dimension-model';
 import { trackGeminiUsage } from '@/lib/gemini/byok';
 
@@ -260,7 +260,22 @@ Return strict JSON:
     dimensionConfidence[dimension] = clampScore(Math.max(20, calibratedConfidence));
   }
 
-  return NextResponse.json({ scores, dimensionSummary, dimensionConfidence });
+  // Compute updated confidence and recommend next module
+  const updatedConfidence: Record<string, number> = {};
+  for (const [dimension, conf] of Object.entries(dimensionConfidence)) {
+    updatedConfidence[dimension] = conf;
+  }
+
+  // Recommend next module based on which dimensions are weakest
+  const recommendedNextModule = computeRecommendedModule(dimensionConfidence);
+
+  return NextResponse.json({
+    scores,
+    dimensionSummary,
+    dimensionConfidence,
+    updatedConfidence,
+    recommendedNextModule,
+  });
 }
 
 function clampScore(value: number): number {
@@ -279,4 +294,42 @@ function winsorizeScores(values: number[]): number[] {
   const low = sorted[1];
   const high = sorted[sorted.length - 2];
   return sorted.map((value) => Math.max(low, Math.min(high, value)));
+}
+
+const MODULE_DIMENSION_MAP: Record<string, string[]> = {
+  interests: ['Realistic', 'Investigative', 'Artistic', 'Social', 'Enterprising', 'Conventional'],
+  work_values: ['Autonomy', 'Stability', 'Helping_Others', 'Achievement', 'Variety', 'Recognition'],
+  strengths_skills: ['Creative_Thinking', 'Analytical_Ability', 'Interpersonal_Skills', 'technical_aptitude', 'problem_solving'],
+  learning_environment: ['Learning_Style', 'Environment_Preference', 'adaptability', 'teamwork'],
+  constraints: ['Risk_Tolerance'],
+};
+
+function computeRecommendedModule(
+  dimensionConfidence: QuizDimensionSummary,
+): QuizModuleId | null {
+  let bestModule: QuizModuleId | null = null;
+  let lowestAvgConfidence = Infinity;
+
+  for (const [moduleId, dimensions] of Object.entries(MODULE_DIMENSION_MAP)) {
+    const confidences = dimensions
+      .map((d) => dimensionConfidence[d])
+      .filter((c): c is number => c !== undefined);
+
+    if (confidences.length === 0) {
+      // No data for this module's dimensions — it's the most needed
+      if (0 < lowestAvgConfidence) {
+        lowestAvgConfidence = 0;
+        bestModule = moduleId as QuizModuleId;
+      }
+      continue;
+    }
+
+    const avg = confidences.reduce((s, c) => s + c, 0) / confidences.length;
+    if (avg < lowestAvgConfidence) {
+      lowestAvgConfidence = avg;
+      bestModule = moduleId as QuizModuleId;
+    }
+  }
+
+  return bestModule;
 }
