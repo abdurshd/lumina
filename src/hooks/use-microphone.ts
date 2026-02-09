@@ -10,7 +10,10 @@ export function useMicrophone(onAudioData: (base64: string) => void) {
   const [isActive, setIsActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const onAudioDataRef = useRef(onAudioData);
-  onAudioDataRef.current = onAudioData;
+
+  useEffect(() => {
+    onAudioDataRef.current = onAudioData;
+  });
 
   const start = useCallback(async () => {
     try {

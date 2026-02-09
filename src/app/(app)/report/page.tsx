@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/auth-store';
 import { useAssessmentStore } from '@/stores/assessment-store';
@@ -13,6 +14,8 @@ import { CareerPaths } from '@/components/report/career-paths';
 import { StrengthsGrid } from '@/components/report/strengths-grid';
 import { ReportHistory } from '@/components/report/report-history';
 import { EmptyState, LoadingButton, ErrorAlert, ReportSkeleton } from '@/components/shared';
+import { ScrollReveal } from '@/components/motion/scroll-reveal';
+import { staggerContainer, staggerItem, fadeInUp, scaleIn, reducedMotionVariants } from '@/lib/motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -31,6 +34,7 @@ export default function ReportPage() {
   const [hasFeedback, setHasFeedback] = useState(false);
   const [regenerateFeedback, setRegenerateFeedback] = useState('');
   const [showRegenerateForm, setShowRegenerateForm] = useState(false);
+  const shouldReduceMotion = useReducedMotion();
 
   // Sync fetched report into store
   useEffect(() => {
@@ -142,167 +146,235 @@ export default function ReportPage() {
   return (
     <div className="mx-auto max-w-4xl px-6 py-12">
       {/* Hero */}
-      <div className="mb-10 text-center animate-fade-in-up">
-        <Badge className="mb-4" variant="secondary">Your Talent Report</Badge>
-        <h1 className="text-4xl font-bold mb-2 text-gradient-gold">
+      <motion.div
+        className="mb-10 text-center"
+        initial="hidden"
+        animate="visible"
+        variants={shouldReduceMotion ? reducedMotionVariants : staggerContainer}
+      >
+        <motion.div variants={shouldReduceMotion ? reducedMotionVariants : scaleIn}>
+          <Badge className="mb-4" variant="secondary">Your Talent Report</Badge>
+        </motion.div>
+        <motion.h1
+          className="text-4xl font-bold mb-2 text-gradient-gold"
+          variants={shouldReduceMotion ? reducedMotionVariants : scaleIn}
+        >
           {report.headline}
-        </h1>
-        <p className="text-lg text-muted-foreground">{report.tagline}</p>
-      </div>
+        </motion.h1>
+        <motion.p
+          className="text-lg text-muted-foreground"
+          variants={shouldReduceMotion ? reducedMotionVariants : fadeInUp}
+        >
+          {report.tagline}
+        </motion.p>
+      </motion.div>
 
       {/* Radar Chart */}
-      <Card className="mb-8 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 font-sans">
-            <Target className="h-5 w-5 text-primary" />
-            Talent Dimensions
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <TalentRadarChart dimensions={report.radarDimensions} />
-          <div className="grid grid-cols-2 gap-3 mt-4 sm:grid-cols-3">
-            {report.radarDimensions.map((dim, i) => (
-              <div key={i} className="text-center">
-                <p className="text-sm font-bold font-sans">{dim.label}: {dim.value}</p>
-                <p className="text-xs text-muted-foreground">{dim.description}</p>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      <ScrollReveal>
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 font-sans">
+              <Target className="h-5 w-5 text-primary" />
+              Talent Dimensions
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TalentRadarChart dimensions={report.radarDimensions} />
+            <div className="grid grid-cols-2 gap-3 mt-4 sm:grid-cols-3">
+              {report.radarDimensions.map((dim, i) => (
+                <div key={i} className="text-center">
+                  <p className="text-sm font-bold font-sans">{dim.label}: {dim.value}</p>
+                  <p className="text-xs text-muted-foreground">{dim.description}</p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </ScrollReveal>
 
       {/* Strengths */}
-      <div className="mb-8 animate-fade-in-up" style={{ animationDelay: '200ms' }}>
-        <h2 className="flex items-center gap-2 text-xl font-bold mb-4">
-          <LuminaIcon className="h-5 w-5 text-primary" />
-          <span className="text-primary">Top</span> Strengths
-        </h2>
-        <StrengthsGrid strengths={report.topStrengths} onFeedback={handleStrengthFeedback} />
-      </div>
+      <ScrollReveal>
+        <div className="mb-8">
+          <h2 className="flex items-center gap-2 text-xl font-bold mb-4">
+            <LuminaIcon className="h-5 w-5 text-primary" />
+            <span className="text-primary">Top</span> Strengths
+          </h2>
+          <StrengthsGrid strengths={report.topStrengths} onFeedback={handleStrengthFeedback} />
+        </div>
+      </ScrollReveal>
 
       {/* Hidden Talents */}
-      <Card className="mb-8 animate-fade-in-up" style={{ animationDelay: '300ms' }}>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 font-sans">
-            <Eye className="h-5 w-5 text-primary" />
-            Hidden Talents You Didn&apos;t Know About
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {report.hiddenTalents.map((talent, i) => (
-              <div key={i} className="flex items-start gap-3 rounded-xl bg-primary/[0.03] border-2 border-primary/10 p-3">
-                <Lightbulb className="h-5 w-5 mt-0.5 text-primary shrink-0" />
-                <p className="text-sm">{talent}</p>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      <ScrollReveal>
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 font-sans">
+              <Eye className="h-5 w-5 text-primary" />
+              Hidden Talents You Didn&apos;t Know About
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <motion.div
+              className="space-y-3"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={shouldReduceMotion ? reducedMotionVariants : staggerContainer}
+            >
+              {report.hiddenTalents.map((talent, i) => (
+                <motion.div
+                  key={i}
+                  className="flex items-start gap-3 rounded-xl bg-primary/[0.03] border-2 border-primary/10 p-3"
+                  variants={shouldReduceMotion ? reducedMotionVariants : staggerItem}
+                >
+                  <Lightbulb className="h-5 w-5 mt-0.5 text-primary shrink-0" />
+                  <p className="text-sm">{talent}</p>
+                </motion.div>
+              ))}
+            </motion.div>
+          </CardContent>
+        </Card>
+      </ScrollReveal>
 
       {/* Personality Insights */}
-      <Card className="mb-8 animate-fade-in-up" style={{ animationDelay: '400ms' }}>
-        <CardHeader>
-          <CardTitle className="font-sans">Personality Insights</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {report.personalityInsights.map((insight, i) => (
-              <div key={i} className="rounded-xl bg-overlay-subtle border-2 border-overlay-light p-4 text-sm">
-                {insight}
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      <ScrollReveal>
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="font-sans">Personality Insights</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <motion.div
+              className="grid gap-3 sm:grid-cols-2"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={shouldReduceMotion ? reducedMotionVariants : staggerContainer}
+            >
+              {report.personalityInsights.map((insight, i) => (
+                <motion.div
+                  key={i}
+                  className="rounded-xl bg-overlay-subtle border-2 border-overlay-light p-4 text-sm"
+                  variants={shouldReduceMotion ? reducedMotionVariants : staggerItem}
+                >
+                  {insight}
+                </motion.div>
+              ))}
+            </motion.div>
+          </CardContent>
+        </Card>
+      </ScrollReveal>
 
       <div className="h-[2px] bg-overlay-light my-12" />
 
       {/* Career Paths */}
-      <div className="mb-8 animate-fade-in-up" style={{ animationDelay: '500ms' }}>
-        <h2 className="flex items-center gap-2 text-xl font-bold mb-4">
-          <Rocket className="h-5 w-5 text-primary" />
-          <span className="text-primary">Recommended</span> Career Paths
-        </h2>
-        <CareerPaths paths={report.careerPaths} recommendations={report.careerRecommendations} onFeedback={handleCareerFeedback} />
-      </div>
+      <ScrollReveal>
+        <div className="mb-8">
+          <h2 className="flex items-center gap-2 text-xl font-bold mb-4">
+            <Rocket className="h-5 w-5 text-primary" />
+            <span className="text-primary">Recommended</span> Career Paths
+          </h2>
+          <CareerPaths paths={report.careerPaths} recommendations={report.careerRecommendations} onFeedback={handleCareerFeedback} />
+        </div>
+      </ScrollReveal>
 
       {/* Action Plan */}
-      <Card className="mb-8 animate-fade-in-up" style={{ animationDelay: '600ms' }}>
-        <CardHeader>
-          <CardTitle className="font-sans">Your Action Plan</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {report.actionPlan.map((item, i) => (
-              <div key={i} className="flex items-start gap-3 rounded-xl border-2 border-overlay-light bg-overlay-subtle p-4">
-                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white font-mono border-2 ${
-                  item.priority === 'high' ? 'bg-destructive/80 border-destructive/30' : item.priority === 'medium' ? 'bg-primary/80 border-primary/30' : 'bg-primary/60 border-primary/20'
-                }`}>
-                  {i + 1}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h4 className="font-bold font-sans">{item.title}</h4>
-                    <Badge variant="outline">{item.timeframe}</Badge>
+      <ScrollReveal>
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="font-sans">Your Action Plan</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <motion.div
+              className="space-y-4"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={shouldReduceMotion ? reducedMotionVariants : staggerContainer}
+            >
+              {report.actionPlan.map((item, i) => (
+                <motion.div
+                  key={i}
+                  className="flex items-start gap-3 rounded-xl border-2 border-overlay-light bg-overlay-subtle p-4"
+                  variants={shouldReduceMotion ? reducedMotionVariants : staggerItem}
+                >
+                  <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white font-mono border-2 ${
+                    item.priority === 'high' ? 'bg-destructive/80 border-destructive/30' : item.priority === 'medium' ? 'bg-primary/80 border-primary/30' : 'bg-primary/60 border-primary/20'
+                  }`}>
+                    {i + 1}
                   </div>
-                  <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Regenerate with Feedback */}
-      {hasFeedback && (
-        <Card className="mb-8 border-primary/30 animate-fade-in-up" style={{ animationDelay: '750ms' }}>
-          <CardContent className="pt-6">
-            {showRegenerateForm ? (
-              <div className="space-y-3">
-                <p className="text-sm font-medium">Tell Lumina what to adjust in your report:</p>
-                <Input
-                  value={regenerateFeedback}
-                  onChange={(e) => setRegenerateFeedback(e.target.value)}
-                  placeholder="e.g., I'm more interested in creative roles than analytical ones..."
-                />
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={() => setShowRegenerateForm(false)}>
-                    Cancel
-                  </Button>
-                  <LoadingButton
-                    size="sm"
-                    onClick={handleRegenerate}
-                    loading={regenerateMutation.isPending}
-                    loadingText="Regenerating..."
-                    disabled={!regenerateFeedback.trim()}
-                    icon={RefreshCw}
-                  >
-                    Regenerate Report
-                  </LoadingButton>
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium">Not quite right?</p>
-                  <p className="text-xs text-muted-foreground">Regenerate your report with your feedback to get better recommendations.</p>
-                </div>
-                <Button variant="outline" size="sm" onClick={() => setShowRegenerateForm(true)}>
-                  <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
-                  Regenerate with Feedback
-                </Button>
-              </div>
-            )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h4 className="font-bold font-sans">{item.title}</h4>
+                      <Badge variant="outline">{item.timeframe}</Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
           </CardContent>
         </Card>
-      )}
+      </ScrollReveal>
+
+      {/* Regenerate with Feedback */}
+      <AnimatePresence>
+        {hasFeedback && (
+          <motion.div
+            initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -10 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+          >
+            <Card className="mb-8 border-primary/30">
+              <CardContent className="pt-6">
+                {showRegenerateForm ? (
+                  <div className="space-y-3">
+                    <p className="text-sm font-medium">Tell Lumina what to adjust in your report:</p>
+                    <Input
+                      value={regenerateFeedback}
+                      onChange={(e) => setRegenerateFeedback(e.target.value)}
+                      placeholder="e.g., I'm more interested in creative roles than analytical ones..."
+                    />
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" onClick={() => setShowRegenerateForm(false)}>
+                        Cancel
+                      </Button>
+                      <LoadingButton
+                        size="sm"
+                        onClick={handleRegenerate}
+                        loading={regenerateMutation.isPending}
+                        loadingText="Regenerating..."
+                        disabled={!regenerateFeedback.trim()}
+                        icon={RefreshCw}
+                      >
+                        Regenerate Report
+                      </LoadingButton>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium">Not quite right?</p>
+                      <p className="text-xs text-muted-foreground">Regenerate your report with your feedback to get better recommendations.</p>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => setShowRegenerateForm(true)}>
+                      <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+                      Regenerate with Feedback
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Report History */}
       {user && (
-        <div className="mb-8 animate-fade-in-up" style={{ animationDelay: '700ms' }}>
-          <ReportHistory uid={user.uid} />
-        </div>
+        <ScrollReveal>
+          <div className="mb-8">
+            <ReportHistory uid={user.uid} />
+          </div>
+        </ScrollReveal>
       )}
     </div>
   );

@@ -54,8 +54,6 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
-  --animate-fade-in-up: fadeInUp 0.6s ease-out both;
-  --animate-fade-in: fadeIn 0.5s ease-out both;
   --animate-audio-bar: audioBar 1s ease-in-out infinite;
   --animate-lumina-beam: lumina-beam-flow 0.8s linear infinite;
   --animate-lumina-ray: lumina-ray-flow 1.2s linear infinite;
@@ -158,22 +156,6 @@
 
 /* -- Keyframes ------------------------------ */
 
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
 @keyframes audioBar {
   0%, 100% { transform: scaleY(0.3); }
   50% { transform: scaleY(1); }
@@ -193,6 +175,15 @@
   .animate-lumina-beam,
   .animate-lumina-ray {
     animation: none !important;
+  }
+  /* Framer Motion respects prefers-reduced-motion via useReducedMotion() hook */
+  /* This ensures any remaining CSS animations are also disabled */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 

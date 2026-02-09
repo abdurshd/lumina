@@ -1,12 +1,15 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/auth-store';
 import { useAssessmentStore } from '@/stores/assessment-store';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StatusBadge, StageCardSkeleton, LoadingButton } from '@/components/shared';
+import { AnimatedCounter } from '@/components/motion/animated-counter';
+import { staggerContainer, staggerItem, smoothTransition, fadeInUp, reducedMotionVariants } from '@/lib/motion';
 import { Plug, Brain, Video, FileText, ChevronRight, RotateCcw } from 'lucide-react';
 import { LuminaIcon } from '@/components/icons/lumina-icon';
 import Link from 'next/link';
@@ -23,6 +26,7 @@ export default function DashboardPage() {
   const { profile, loading } = useAuthStore();
   const { resetForRetake } = useAssessmentStore();
   const [isRetaking, setIsRetaking] = useState(false);
+  const shouldReduceMotion = useReducedMotion();
 
   const completedCount = profile
     ? Object.values(profile.stages).filter((s) => s === 'completed').length
@@ -44,11 +48,21 @@ export default function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-12">
-      <div className="mb-8 animate-fade-in-up">
+      <motion.div
+        className="mb-8"
+        initial="hidden"
+        animate="visible"
+        variants={shouldReduceMotion ? reducedMotionVariants : fadeInUp}
+      >
         <div className="flex items-center gap-3 mb-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 border-2 border-primary/20">
+          <motion.div
+            className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 border-2 border-primary/20"
+            initial={shouldReduceMotion ? false : { scale: 0.6 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+          >
             <LuminaIcon className="h-5 w-5 text-primary" />
-          </div>
+          </motion.div>
           <h1 className="text-3xl font-bold">
             Welcome back{profile?.displayName ? `, ${profile.displayName.split(' ')[0]}` : ''}
           </h1>
@@ -58,76 +72,99 @@ export default function DashboardPage() {
         </p>
         <div className="mt-5 flex items-center gap-3">
           <div className="h-4 flex-1 rounded-full bg-overlay-light overflow-hidden">
-            <div
-              className="h-4 rounded-full bg-primary transition-all duration-500 ease-out"
-              style={{ width: `${(completedCount / 4) * 100}%` }}
+            <motion.div
+              className="h-4 rounded-full bg-primary"
+              initial={{ width: 0 }}
+              animate={{ width: `${(completedCount / 4) * 100}%` }}
+              transition={shouldReduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 200, damping: 25 }}
             />
           </div>
-          <span className="text-sm font-bold text-muted-foreground font-mono">{completedCount}/4</span>
+          <span className="text-sm font-bold text-muted-foreground font-mono">
+            <AnimatedCounter value={completedCount} />/4
+          </span>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="space-y-4">
+      <motion.div
+        className="space-y-4"
+        initial="hidden"
+        animate="visible"
+        variants={shouldReduceMotion ? reducedMotionVariants : staggerContainer}
+      >
         {loading ? (
           Array.from({ length: 4 }).map((_, i) => <StageCardSkeleton key={i} />)
         ) : (
-          stages.map((stage, i) => {
+          stages.map((stage) => {
             const status = profile?.stages[stage.key] ?? 'locked';
             const isActive = status === 'active';
             const isCompleted = status === 'completed';
             const Icon = stage.icon;
 
             return (
-              <Card
+              <motion.div
                 key={stage.key}
-                className={`transition-all duration-300 animate-fade-in-up ${
-                  isActive
-                    ? 'border-primary/30 bg-primary/[0.03]'
-                    : isCompleted
-                    ? 'border-primary/20'
-                    : 'opacity-50'
-                }`}
-                style={{ animationDelay: `${i * 80}ms` }}
+                variants={shouldReduceMotion ? reducedMotionVariants : staggerItem}
+                whileHover={shouldReduceMotion ? undefined : { y: -2 }}
+                transition={smoothTransition}
               >
-                <CardHeader className="flex flex-row items-center gap-4 py-4">
-                  <div
-                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl transition-colors border-2 ${
-                      isActive
-                        ? 'bg-primary/10 text-primary border-primary/20'
-                        : isCompleted
-                        ? 'bg-primary/10 text-primary border-primary/20'
-                        : 'bg-overlay-subtle text-muted-foreground border-overlay-light'
-                    }`}
-                  >
-                    <Icon className="h-6 w-6" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <CardTitle className="text-lg font-sans">
-                        <span className="mr-2 text-muted-foreground font-mono text-sm">0{i + 1}</span>
-                        {stage.label}
-                      </CardTitle>
-                      <StatusBadge status={status} />
+                <Card
+                  className={`transition-colors duration-200 ${
+                    isActive
+                      ? 'border-primary/30 bg-primary/[0.03]'
+                      : isCompleted
+                      ? 'border-primary/20'
+                      : 'opacity-50'
+                  }`}
+                >
+                  <CardHeader className="flex flex-row items-center gap-4 py-4">
+                    <div
+                      className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl transition-colors border-2 ${
+                        isActive
+                          ? 'bg-primary/10 text-primary border-primary/20'
+                          : isCompleted
+                          ? 'bg-primary/10 text-primary border-primary/20'
+                          : 'bg-overlay-subtle text-muted-foreground border-overlay-light'
+                      }`}
+                    >
+                      <Icon className="h-6 w-6" />
                     </div>
-                    <CardDescription>{stage.description}</CardDescription>
-                  </div>
-                  {(isActive || isCompleted) && (
-                    <Link href={stage.href}>
-                      <Button variant={isActive ? 'default' : 'outline'} size="sm">
-                        {isActive ? 'Start' : 'Review'}
-                        <ChevronRight className="ml-1 h-4 w-4" />
-                      </Button>
-                    </Link>
-                  )}
-                </CardHeader>
-              </Card>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <CardTitle className="text-lg font-sans">
+                          {stage.label}
+                        </CardTitle>
+                        <StatusBadge status={status} />
+                      </div>
+                      <CardDescription>{stage.description}</CardDescription>
+                    </div>
+                    {(isActive || isCompleted) && (
+                      <Link href={stage.href}>
+                        <motion.div
+                          whileHover={shouldReduceMotion ? undefined : { scale: 1.05 }}
+                          whileTap={shouldReduceMotion ? undefined : { scale: 0.95 }}
+                        >
+                          <Button variant={isActive ? 'default' : 'outline'} size="sm">
+                            {isActive ? 'Start' : 'Review'}
+                            <ChevronRight className="ml-1 h-4 w-4" />
+                          </Button>
+                        </motion.div>
+                      </Link>
+                    )}
+                  </CardHeader>
+                </Card>
+              </motion.div>
             );
           })
         )}
-      </div>
+      </motion.div>
 
       {allCompleted && (
-        <div className="mt-8 animate-fade-in-up" style={{ animationDelay: '400ms' }}>
+        <motion.div
+          className="mt-8"
+          initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={shouldReduceMotion ? { duration: 0.01 } : { type: 'spring', stiffness: 300, damping: 25, delay: 0.3 }}
+        >
           <Card className="border-primary/20">
             <CardHeader className="flex flex-row items-center gap-4 py-4">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary border-2 border-primary/20">
@@ -150,7 +187,7 @@ export default function DashboardPage() {
               </LoadingButton>
             </CardHeader>
           </Card>
-        </div>
+        </motion.div>
       )}
     </div>
   );

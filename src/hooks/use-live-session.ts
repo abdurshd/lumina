@@ -92,9 +92,12 @@ export function useLiveSession() {
 
   // Store webcam/microphone refs to avoid dependency issues
   const webcamRef = useRef(webcam);
-  webcamRef.current = webcam;
   const microphoneRef = useRef(microphone);
-  microphoneRef.current = microphone;
+
+  useEffect(() => {
+    webcamRef.current = webcam;
+    microphoneRef.current = microphone;
+  });
 
   const connect = useCallback(async (apiKey: string, dataContext: string) => {
     setIsConnecting(true);

@@ -1,5 +1,6 @@
 'use client';
 
+import { motion, useReducedMotion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, Lock, Circle } from 'lucide-react';
 import type { StageStatus } from '@/types';
@@ -16,10 +17,18 @@ const config: Record<StageStatus, { label: string; icon: typeof CheckCircle2; va
 
 export function StatusBadge({ status }: StatusBadgeProps) {
   const { label, icon: Icon, variant, className } = config[status];
+  const shouldReduceMotion = useReducedMotion();
+
   return (
-    <Badge variant={variant} className={className}>
-      <Icon className="mr-1 h-3 w-3" />
-      {label}
-    </Badge>
+    <motion.span
+      initial={shouldReduceMotion ? false : { scale: 0.8, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+    >
+      <Badge variant={variant} className={className}>
+        <Icon className="mr-1 h-3 w-3" />
+        {label}
+      </Badge>
+    </motion.span>
   );
 }

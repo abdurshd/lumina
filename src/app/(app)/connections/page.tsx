@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { motion, useReducedMotion } from 'framer-motion';
 import { useAuthStore } from '@/stores/auth-store';
 import { useAssessmentStore } from '@/stores/assessment-store';
 import { saveDataInsights } from '@/lib/firebase/firestore';
@@ -20,6 +21,8 @@ import { PageHeader, LoadingButton, ErrorAlert } from '@/components/shared';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plug, Mail, Upload, FileUp, HardDrive, BookOpen, ArrowRight } from 'lucide-react';
 import { LuminaIcon } from '@/components/icons/lumina-icon';
+import { StaggerList, StaggerItem } from '@/components/motion/stagger-list';
+import { fadeInUp, reducedMotionVariants } from '@/lib/motion';
 
 interface DataSource {
   data: string;
@@ -31,7 +34,7 @@ const CHATGPT_TYPES = ['application/json'];
 const FILE_UPLOAD_TYPES = ['.pdf', '.txt', '.md', '.html'];
 
 export default function ConnectionsPage() {
-  const { user, googleAccessToken, profile, requestGmailAccess, requestDriveAccess, connectNotion } = useAuthStore();
+  const { user, profile, requestGmailAccess, requestDriveAccess, connectNotion } = useAuthStore();
   const { setDataInsights, advanceStage } = useAssessmentStore();
   const router = useRouter();
 
@@ -47,6 +50,8 @@ export default function ConnectionsPage() {
   const driveMutation = useDriveMutation();
   const notionMutation = useNotionMutation();
   const analyzeMutation = useAnalyzeMutation();
+
+  const shouldReduceMotion = useReducedMotion();
 
   const connectedCount = useMemo(
     () => Object.values(dataSources).filter((d) => d.data).length,
@@ -225,56 +230,66 @@ export default function ConnectionsPage() {
 
       {error && <ErrorAlert message={error} onRetry={() => setError(null)} className="mb-6" />}
 
-      <div className="space-y-4 animate-fade-in">
-        <ConnectorCard
-          title="Gmail"
-          description="Analyze your sent emails to understand communication style and interests"
-          icon={<Mail className="h-6 w-6" />}
-          isConnected={!!dataSources.gmail?.data}
-          isLoading={gmailMutation.isPending}
-          onConnect={connectGmail}
-          tokenCount={dataSources.gmail?.tokenCount}
-        />
+      <StaggerList className="space-y-4">
+        <StaggerItem>
+          <ConnectorCard
+            title="Gmail"
+            description="Analyze your sent emails to understand communication style and interests"
+            icon={<Mail className="h-6 w-6" />}
+            isConnected={!!dataSources.gmail?.data}
+            isLoading={gmailMutation.isPending}
+            onConnect={connectGmail}
+            tokenCount={dataSources.gmail?.tokenCount}
+          />
+        </StaggerItem>
 
-        <ConnectorCard
-          title="ChatGPT"
-          description="Upload your ChatGPT conversations.json export to analyze your thinking patterns"
-          icon={<Upload className="h-6 w-6" />}
-          isConnected={!!dataSources.chatgpt?.data}
-          isLoading={chatgptMutation.isPending}
-          onConnect={handleChatGPTUpload}
-          tokenCount={dataSources.chatgpt?.tokenCount}
-        />
+        <StaggerItem>
+          <ConnectorCard
+            title="ChatGPT"
+            description="Upload your ChatGPT conversations.json export to analyze your thinking patterns"
+            icon={<Upload className="h-6 w-6" />}
+            isConnected={!!dataSources.chatgpt?.data}
+            isLoading={chatgptMutation.isPending}
+            onConnect={handleChatGPTUpload}
+            tokenCount={dataSources.chatgpt?.tokenCount}
+          />
+        </StaggerItem>
 
-        <ConnectorCard
-          title="File Upload"
-          description="Upload a resume, portfolio, or writing samples (PDF, TXT, Markdown, HTML)"
-          icon={<FileUp className="h-6 w-6" />}
-          isConnected={!!dataSources.file_upload?.data}
-          isLoading={fileUploadMutation.isPending}
-          onConnect={handleFileUpload}
-          tokenCount={dataSources.file_upload?.tokenCount}
-        />
+        <StaggerItem>
+          <ConnectorCard
+            title="File Upload"
+            description="Upload a resume, portfolio, or writing samples (PDF, TXT, Markdown, HTML)"
+            icon={<FileUp className="h-6 w-6" />}
+            isConnected={!!dataSources.file_upload?.data}
+            isLoading={fileUploadMutation.isPending}
+            onConnect={handleFileUpload}
+            tokenCount={dataSources.file_upload?.tokenCount}
+          />
+        </StaggerItem>
 
-        <ConnectorCard
-          title="Google Drive"
-          description="Analyze your Google Docs to uncover writing and work patterns"
-          icon={<HardDrive className="h-6 w-6" />}
-          isConnected={!!dataSources.drive?.data}
-          isLoading={driveMutation.isPending}
-          onConnect={connectDrive}
-          tokenCount={dataSources.drive?.tokenCount}
-        />
+        <StaggerItem>
+          <ConnectorCard
+            title="Google Drive"
+            description="Analyze your Google Docs to uncover writing and work patterns"
+            icon={<HardDrive className="h-6 w-6" />}
+            isConnected={!!dataSources.drive?.data}
+            isLoading={driveMutation.isPending}
+            onConnect={connectDrive}
+            tokenCount={dataSources.drive?.tokenCount}
+          />
+        </StaggerItem>
 
-        <ConnectorCard
-          title="Notion"
-          description="Connect your Notion workspace to analyze notes, journals, and documentation"
-          icon={<BookOpen className="h-6 w-6" />}
-          isConnected={!!dataSources.notion?.data}
-          isLoading={notionMutation.isPending}
-          onConnect={handleConnectNotion}
-          tokenCount={dataSources.notion?.tokenCount}
-        />
+        <StaggerItem>
+          <ConnectorCard
+            title="Notion"
+            description="Connect your Notion workspace to analyze notes, journals, and documentation"
+            icon={<BookOpen className="h-6 w-6" />}
+            isConnected={!!dataSources.notion?.data}
+            isLoading={notionMutation.isPending}
+            onConnect={handleConnectNotion}
+            tokenCount={dataSources.notion?.tokenCount}
+          />
+        </StaggerItem>
 
         <input
           ref={chatgptInputRef}
@@ -292,42 +307,48 @@ export default function ConnectionsPage() {
           className="hidden"
           aria-label="Upload file"
         />
-      </div>
+      </StaggerList>
 
       {connectedCount > 0 && (
-        <Card className="mt-8 glass animate-fade-in-up">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 font-sans">
-              <LuminaIcon className="h-5 w-5 text-primary" />
-              Ready to Analyze
-            </CardTitle>
-            <CardDescription>
-              {connectedCount} source{connectedCount > 1 ? 's' : ''} connected.
-              Let Lumina analyze your data to find patterns.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {analysisComplete ? (
-              <LoadingButton
-                onClick={() => router.push('/quiz')}
-                icon={ArrowRight}
-                className="w-full"
-              >
-                Continue to Quiz
-              </LoadingButton>
-            ) : (
-              <LoadingButton
-                onClick={analyzeData}
-                loading={analyzeMutation.isPending}
-                loadingText="Analyzing your data with AI..."
-                icon={LuminaIcon}
-                className="w-full"
-              >
-                Analyze Data
-              </LoadingButton>
-            )}
-          </CardContent>
-        </Card>
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={shouldReduceMotion ? reducedMotionVariants : fadeInUp}
+        >
+          <Card className="mt-8 glass">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 font-sans">
+                <LuminaIcon className="h-5 w-5 text-primary" />
+                Ready to Analyze
+              </CardTitle>
+              <CardDescription>
+                {connectedCount} source{connectedCount > 1 ? 's' : ''} connected.
+                Let Lumina analyze your data to find patterns.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {analysisComplete ? (
+                <LoadingButton
+                  onClick={() => router.push('/quiz')}
+                  icon={ArrowRight}
+                  className="w-full"
+                >
+                  Continue to Quiz
+                </LoadingButton>
+              ) : (
+                <LoadingButton
+                  onClick={analyzeData}
+                  loading={analyzeMutation.isPending}
+                  loadingText="Analyzing your data with AI..."
+                  icon={LuminaIcon}
+                  className="w-full"
+                >
+                  Analyze Data
+                </LoadingButton>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
       )}
     </div>
   );

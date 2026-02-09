@@ -3,6 +3,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useLiveSession } from '@/hooks/use-live-session';
 import { useAuthStore } from '@/stores/auth-store';
 import { useAssessmentStore } from '@/stores/assessment-store';
@@ -21,6 +22,14 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Send, Brain } from 'lucide-react';
 import { LuminaIcon } from '@/components/icons/lumina-icon';
+import {
+  staggerContainer,
+  staggerItem,
+  fadeInUp,
+  fadeInDown,
+  popIn,
+  reducedMotionVariants,
+} from '@/lib/motion';
 
 export default function SessionPage() {
   const {
@@ -50,6 +59,7 @@ export default function SessionPage() {
   const [isSaving, setIsSaving] = useState(false);
 
   const ephemeralTokenMutation = useEphemeralTokenMutation();
+  const shouldReduceMotion = useReducedMotion();
 
   const dataContext = useMemo(() => {
     const data = dataInsights.length > 0
@@ -115,6 +125,25 @@ export default function SessionPage() {
 
   const displayError = error || sessionError;
 
+  // Motion variants
+  const gridVariants = shouldReduceMotion ? reducedMotionVariants : staggerContainer;
+  const itemVariants = shouldReduceMotion ? reducedMotionVariants : staggerItem;
+  const fadeUpVariants = shouldReduceMotion ? reducedMotionVariants : fadeInUp;
+  const fadeDownVariants = shouldReduceMotion ? reducedMotionVariants : fadeInDown;
+  const popVariants = shouldReduceMotion ? reducedMotionVariants : popIn;
+
+  // Pulse animation for View Report button area
+  const pulseVariants = shouldReduceMotion
+    ? {}
+    : {
+        scale: [1, 1.02, 1],
+        transition: {
+          duration: 2,
+          repeat: Infinity,
+          ease: 'easeInOut' as const,
+        },
+      };
+
   return (
     <div className="mx-auto max-w-6xl px-6 py-10">
       <PageHeader
@@ -125,9 +154,11 @@ export default function SessionPage() {
         <div className="flex items-center gap-4">
           {isConnected && <SessionTimer seconds={sessionDuration} />}
           {!isConnected && insights.length > 0 && (
-            <LoadingButton onClick={handleFinish} loading={isSaving} icon={Brain}>
-              View Report
-            </LoadingButton>
+            <motion.div animate={pulseVariants}>
+              <LoadingButton onClick={handleFinish} loading={isSaving} icon={Brain}>
+                View Report
+              </LoadingButton>
+            </motion.div>
           )}
         </div>
       </PageHeader>
@@ -140,41 +171,65 @@ export default function SessionPage() {
         />
       )}
 
-      {isReconnecting && (
-        <div className="mb-6 flex items-center gap-3 rounded-xl border-2 border-yellow-500/30 bg-yellow-500/5 p-4 animate-fade-in">
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-yellow-500 border-t-transparent" />
-          <p className="text-sm font-medium text-yellow-500">
-            Reconnecting (attempt {reconnectAttempt}/3)...
-          </p>
-        </div>
-      )}
+      {/* Reconnecting Banner */}
+      <AnimatePresence>
+        {isReconnecting && (
+          <motion.div
+            variants={fadeDownVariants}
+            initial="hidden"
+            animate="visible"
+            exit={{ opacity: 0, y: -20, transition: { duration: 0.2 } }}
+            className="mb-6 flex items-center gap-3 rounded-xl border-2 border-yellow-500/30 bg-yellow-500/5 p-4"
+          >
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-yellow-500 border-t-transparent" />
+            <p className="text-sm font-medium text-yellow-500">
+              Reconnecting (attempt {reconnectAttempt}/3)...
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Quiz Module Suggestion */}
-      {suggestedModule && (
-        <Card className="mb-6 border-primary/30 animate-fade-in">
-          <CardContent className="flex items-center justify-between py-4">
-            <div className="flex items-center gap-3">
-              <Brain className="h-5 w-5 text-primary" />
-              <div>
-                <p className="text-sm font-medium">Lumina suggests: Take the {suggestedModule.moduleId.replace(/_/g, ' ')} quiz</p>
-                <p className="text-xs text-muted-foreground">{suggestedModule.reason}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button size="sm" variant="outline" onClick={dismissSuggestedModule}>
-                Dismiss
-              </Button>
-              <Button size="sm" onClick={() => router.push(`/quiz?module=${suggestedModule.moduleId}`)}>
-                Take Quiz
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <AnimatePresence>
+        {suggestedModule && (
+          <motion.div
+            variants={fadeDownVariants}
+            initial="hidden"
+            animate="visible"
+            exit={{ opacity: 0, y: -10, transition: { duration: 0.2 } }}
+          >
+            <Card className="mb-6 border-primary/30">
+              <CardContent className="flex items-center justify-between py-4">
+                <div className="flex items-center gap-3">
+                  <Brain className="h-5 w-5 text-primary" />
+                  <div>
+                    <p className="text-sm font-medium">Lumina suggests: Take the {suggestedModule.moduleId.replace(/_/g, ' ')} quiz</p>
+                    <p className="text-xs text-muted-foreground">{suggestedModule.reason}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button size="sm" variant="outline" onClick={dismissSuggestedModule}>
+                    Dismiss
+                  </Button>
+                  <Button size="sm" onClick={() => router.push(`/quiz?module=${suggestedModule.moduleId}`)}>
+                    Take Quiz
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 animate-fade-in">
+      {/* Main Grid with Stagger */}
+      <motion.div
+        variants={gridVariants}
+        initial="hidden"
+        animate="visible"
+        className="grid grid-cols-1 gap-6 lg:grid-cols-3"
+      >
         {/* Video + Controls */}
-        <div className="space-y-4">
+        <motion.div variants={itemVariants} className="space-y-4">
           <WebcamPreview videoRef={webcam.videoRef} isActive={webcam.isActive} />
           <div className="flex justify-center">
             <SessionControls
@@ -192,92 +247,128 @@ export default function SessionPage() {
               <p className="mt-1 text-xs text-muted-foreground font-medium">Lumina is listening...</p>
             </div>
           )}
-        </div>
+        </motion.div>
 
         {/* Transcript */}
-        <Card className="lg:col-span-2">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-sans">Conversation</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="h-[400px]">
-              <TranscriptPanel entries={transcript} />
-            </div>
-            {isConnected && (
-              <div className="border-t-2 border-overlay-subtle p-3">
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    handleSendText();
-                  }}
-                  className="flex gap-2"
-                >
-                  <Input
-                    value={textInput}
-                    onChange={(e) => setTextInput(e.target.value)}
-                    placeholder="Type a message (or just speak)..."
-                    aria-label="Chat message input"
-                  />
-                  <Button type="submit" size="icon" disabled={!textInput.trim()} aria-label="Send message">
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </form>
+        <motion.div variants={itemVariants} className="lg:col-span-2">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg font-sans">Conversation</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="h-[400px]">
+                <TranscriptPanel entries={transcript} />
               </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Insights */}
-      {insights.length > 0 && (
-        <Card className="mt-6 animate-fade-in-up">
-          <CardHeader>
-            <CardTitle className="text-lg font-sans">
-              <Brain className="mr-2 inline h-5 w-5" />
-              Session Insights ({insights.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {insights.map((insight, i) => (
-                <Badge key={i} variant="secondary" className="py-1.5">
-                  <span className="font-bold mr-1">{insight.category}:</span>
-                  {insight.observation.length > 60
-                    ? `${insight.observation.slice(0, 60)}...`
-                    : insight.observation}
-                </Badge>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Next Steps from Session */}
-      {nextSteps.length > 0 && (
-        <Card className="mt-6 animate-fade-in-up">
-          <CardHeader>
-            <CardTitle className="text-lg font-sans">
-              Next Steps ({nextSteps.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {nextSteps.map((step, i) => (
-                <div key={i} className="flex items-start gap-3 rounded-lg border p-3">
-                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-                    {i + 1}
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">{step.title}</p>
-                    <p className="text-xs text-muted-foreground">{step.description}</p>
-                    <Badge variant="outline" className="mt-1 text-[10px]">{step.timeframe}</Badge>
-                  </div>
+              {isConnected && (
+                <div className="border-t-2 border-overlay-subtle p-3">
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      handleSendText();
+                    }}
+                    className="flex gap-2"
+                  >
+                    <Input
+                      value={textInput}
+                      onChange={(e) => setTextInput(e.target.value)}
+                      placeholder="Type a message (or just speak)..."
+                      aria-label="Chat message input"
+                    />
+                    <Button type="submit" size="icon" disabled={!textInput.trim()} aria-label="Send message">
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </form>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+      </motion.div>
+
+      {/* Insights with Stagger Badges */}
+      <AnimatePresence>
+        {insights.length > 0 && (
+          <motion.div
+            variants={fadeUpVariants}
+            initial="hidden"
+            animate="visible"
+            exit={{ opacity: 0, y: 20, transition: { duration: 0.2 } }}
+          >
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="text-lg font-sans">
+                  <Brain className="mr-2 inline h-5 w-5" />
+                  Session Insights ({insights.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <motion.div
+                  variants={shouldReduceMotion ? {} : staggerContainer}
+                  initial="hidden"
+                  animate="visible"
+                  className="flex flex-wrap gap-2"
+                >
+                  {insights.map((insight, i) => (
+                    <motion.div key={i} variants={popVariants}>
+                      <Badge variant="secondary" className="py-1.5">
+                        <span className="font-bold mr-1">{insight.category}:</span>
+                        {insight.observation.length > 60
+                          ? `${insight.observation.slice(0, 60)}...`
+                          : insight.observation}
+                      </Badge>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Next Steps with Stagger */}
+      <AnimatePresence>
+        {nextSteps.length > 0 && (
+          <motion.div
+            variants={fadeUpVariants}
+            initial="hidden"
+            animate="visible"
+            exit={{ opacity: 0, y: 20, transition: { duration: 0.2 } }}
+          >
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="text-lg font-sans">
+                  Next Steps ({nextSteps.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <motion.div
+                  variants={shouldReduceMotion ? {} : staggerContainer}
+                  initial="hidden"
+                  animate="visible"
+                  className="space-y-3"
+                >
+                  {nextSteps.map((step, i) => (
+                    <motion.div
+                      key={i}
+                      variants={itemVariants}
+                      className="flex items-start gap-3 rounded-lg border p-3"
+                    >
+                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                        {i + 1}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">{step.title}</p>
+                        <p className="text-xs text-muted-foreground">{step.description}</p>
+                        <Badge variant="outline" className="mt-1 text-[10px]">{step.timeframe}</Badge>
+                      </div>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

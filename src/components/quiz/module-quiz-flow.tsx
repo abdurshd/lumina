@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/auth-store';
 import { useAssessmentStore } from '@/stores/assessment-store';
@@ -13,6 +14,7 @@ import { LoadingButton, ErrorAlert, QuestionSkeleton, EmptyState } from '@/compo
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Brain, CheckCircle } from 'lucide-react';
+import { smoothTransition, fadeInUp } from '@/lib/motion';
 import type { QuizModuleId, QuizQuestion, QuizAnswer, UserConstraints } from '@/types';
 
 interface ModuleQuizFlowProps {
@@ -25,6 +27,7 @@ export function ModuleQuizFlow({ moduleId, onBack, onComplete }: ModuleQuizFlowP
   const { user } = useAuthStore();
   const { dataInsights, quizAnswers: allAnswers, setQuizAnswers, updateModuleProgress, setConstraints } = useAssessmentStore();
   const moduleConfig = getModuleConfig(moduleId);
+  const prefersReducedMotion = useReducedMotion();
 
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [answers, setAnswers] = useState<QuizAnswer[]>([]);
@@ -209,18 +212,35 @@ export function ModuleQuizFlow({ moduleId, onBack, onComplete }: ModuleQuizFlowP
         />
       )}
 
-      <div className="animate-fade-in">
+      <AnimatePresence mode="wait">
         {quizMutation.isPending && questions.length === 0 ? (
-          <QuestionSkeleton />
+          <motion.div
+            key="skeleton"
+            variants={prefersReducedMotion ? undefined : fadeInUp}
+            initial="hidden"
+            animate="visible"
+            exit="hidden"
+          >
+            <QuestionSkeleton />
+          </motion.div>
         ) : questions[currentIndex] ? (
-          <QuestionCard
-            question={questions[currentIndex]}
-            onAnswer={handleAnswer}
-            questionNumber={currentIndex + 1}
-            totalQuestions={questions.length}
-          />
+          <motion.div
+            key={currentIndex}
+            variants={prefersReducedMotion ? undefined : fadeInUp}
+            initial="hidden"
+            animate="visible"
+            exit="hidden"
+            transition={smoothTransition}
+          >
+            <QuestionCard
+              question={questions[currentIndex]}
+              onAnswer={handleAnswer}
+              questionNumber={currentIndex + 1}
+              totalQuestions={questions.length}
+            />
+          </motion.div>
         ) : null}
-      </div>
+      </AnimatePresence>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/auth-store';
 import { useAssessmentStore } from '@/stores/assessment-store';
@@ -23,6 +24,8 @@ import {
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Settings, Trash2, Database, Shield, ChevronDown, ChevronRight, User, Link2Off } from 'lucide-react';
+import { StaggerList, StaggerItem } from '@/components/motion/stagger-list';
+import { staggerContainer, staggerItem, reducedMotionVariants } from '@/lib/motion';
 
 const DATA_SOURCES = [
   { key: 'dataInsights', label: 'Data Analysis', description: 'Gmail, ChatGPT, Drive, Notion analysis results' },
@@ -47,6 +50,7 @@ export default function SettingsPage() {
   const { reset: resetAssessment } = useAssessmentStore();
   const deleteDataMutation = useDeleteDataMutation();
   const updateProfileMutation = useUpdateProfileMutation();
+  const shouldReduceMotion = useReducedMotion();
 
   const [showDataSection, setShowDataSection] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -132,214 +136,263 @@ export default function SettingsPage() {
         description="Manage your data, privacy, and account settings."
       />
 
-      {/* Profile */}
-      <Card className="mb-6 animate-fade-in">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 font-sans">
-            <User className="h-5 w-5 text-primary" />
-            Profile
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium">Display Name</p>
-              {isEditingName ? (
-                <div className="flex items-center gap-2 mt-1">
-                  <Input
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    className="h-8 w-60"
-                  />
-                  <Button size="sm" onClick={handleSaveName} disabled={updateProfileMutation.isPending}>
-                    Save
-                  </Button>
-                  <Button size="sm" variant="ghost" onClick={() => { setIsEditingName(false); setDisplayName(profile?.displayName ?? ''); }}>
-                    Cancel
-                  </Button>
-                </div>
-              ) : (
-                <p className="text-xs text-muted-foreground">{profile?.displayName}</p>
-              )}
-            </div>
-            {!isEditingName && (
-              <Button variant="ghost" size="sm" onClick={() => setIsEditingName(true)}>
-                Edit
-              </Button>
-            )}
-          </div>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium">Email</p>
-              <p className="text-xs text-muted-foreground">{profile?.email}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Privacy & Consent */}
-      <Card className="mb-6 animate-fade-in" style={{ animationDelay: '50ms' }}>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 font-sans">
-            <Shield className="h-5 w-5 text-primary" />
-            Privacy & Consent
-          </CardTitle>
-          <CardDescription>
-            Update which data sources you consent to. Changes take effect immediately.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {CONSENT_SOURCE_OPTIONS.map((source) => (
-              <label key={source.id} className="flex items-center gap-3 cursor-pointer">
-                <Checkbox
-                  checked={consentSources.includes(source.id)}
-                  onCheckedChange={() => handleConsentToggle(source.id)}
-                />
-                <span className="text-sm">{source.label}</span>
-              </label>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Connected Sources */}
-      <Card className="mb-6 animate-fade-in" style={{ animationDelay: '100ms' }}>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 font-sans">
-            <Database className="h-5 w-5 text-primary" />
-            Connected Data Sources
-          </CardTitle>
-          <CardDescription>
-            These are the sources you&apos;ve connected to Lumina.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium">Google Account</p>
-                <p className="text-xs text-muted-foreground">{profile?.email}</p>
-              </div>
-              <Badge>Connected</Badge>
-            </div>
-            {profile?.notionAccessToken && (
+      <StaggerList className="space-y-6">
+        {/* Profile */}
+        <StaggerItem>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 font-sans">
+                <User className="h-5 w-5 text-primary" />
+                Profile
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium">Notion</p>
-                  <p className="text-xs text-muted-foreground">Workspace connected</p>
+                  <p className="text-sm font-medium">Display Name</p>
+                  {isEditingName ? (
+                    <div className="flex items-center gap-2 mt-1">
+                      <Input
+                        value={displayName}
+                        onChange={(e) => setDisplayName(e.target.value)}
+                        className="h-8 w-60"
+                      />
+                      <Button size="sm" onClick={handleSaveName} disabled={updateProfileMutation.isPending}>
+                        Save
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => { setIsEditingName(false); setDisplayName(profile?.displayName ?? ''); }}>
+                        Cancel
+                      </Button>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">{profile?.displayName}</p>
+                  )}
                 </div>
-                <div className="flex items-center gap-2">
-                  <Badge>Connected</Badge>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-destructive hover:text-destructive"
-                    onClick={handleDisconnectNotion}
-                  >
-                    <Link2Off className="h-3 w-3 mr-1" />
-                    Disconnect
+                {!isEditingName && (
+                  <Button variant="ghost" size="sm" onClick={() => setIsEditingName(true)}>
+                    Edit
                   </Button>
+                )}
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium">Email</p>
+                  <p className="text-xs text-muted-foreground">{profile?.email}</p>
                 </div>
               </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </StaggerItem>
 
-      {/* What Data We Have */}
-      <Card className="mb-6 animate-fade-in" style={{ animationDelay: '150ms' }}>
-        <CardHeader>
-          <button
-            onClick={() => setShowDataSection(!showDataSection)}
-            className="flex items-center gap-2 text-left w-full"
-          >
-            <Shield className="h-5 w-5 text-primary" />
-            <CardTitle className="font-sans flex-1">What Data We Have</CardTitle>
-            {showDataSection ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-          </button>
-          <CardDescription>
-            View and manage individual data categories.
-          </CardDescription>
-        </CardHeader>
-        {showDataSection && (
-          <CardContent>
-            <div className="space-y-3">
-              {DATA_SOURCES.map((source) => (
-                <div key={source.key} className="flex items-center justify-between rounded-lg border p-3">
+        {/* Privacy & Consent */}
+        <StaggerItem>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 font-sans">
+                <Shield className="h-5 w-5 text-primary" />
+                Privacy & Consent
+              </CardTitle>
+              <CardDescription>
+                Update which data sources you consent to. Changes take effect immediately.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {CONSENT_SOURCE_OPTIONS.map((source) => (
+                  <label key={source.id} className="flex items-center gap-3 cursor-pointer">
+                    <Checkbox
+                      checked={consentSources.includes(source.id)}
+                      onCheckedChange={() => handleConsentToggle(source.id)}
+                    />
+                    <span className="text-sm">{source.label}</span>
+                  </label>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </StaggerItem>
+
+        {/* Connected Sources */}
+        <StaggerItem>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 font-sans">
+                <Database className="h-5 w-5 text-primary" />
+                Connected Data Sources
+              </CardTitle>
+              <CardDescription>
+                These are the sources you&apos;ve connected to Lumina.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium">{source.label}</p>
-                    <p className="text-xs text-muted-foreground">{source.description}</p>
+                    <p className="text-sm font-medium">Google Account</p>
+                    <p className="text-xs text-muted-foreground">{profile?.email}</p>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-destructive hover:text-destructive"
-                    onClick={() => handleDeleteSource(source.key)}
-                    disabled={deleteDataMutation.isPending}
-                  >
-                    <Trash2 className="h-3 w-3 mr-1" />
-                    Delete
-                  </Button>
+                  <Badge>Connected</Badge>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        )}
-      </Card>
-
-      {/* Delete All Data */}
-      <Card className="border-destructive/30 animate-fade-in" style={{ animationDelay: '200ms' }}>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 font-sans text-destructive">
-            <Trash2 className="h-5 w-5" />
-            Delete All My Data
-          </CardTitle>
-          <CardDescription>
-            Permanently delete all assessment data and reset your progress. This cannot be undone.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="destructive">Delete All Data</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Are you absolutely sure?</DialogTitle>
-                <DialogDescription>
-                  This will permanently delete all your assessment data including quiz answers, session insights, and your talent report. Your account will remain but all stages will be reset.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="py-4">
-                <label className="text-sm font-medium">
-                  Type <span className="font-mono font-bold">DELETE</span> to confirm:
-                </label>
-                <input
-                  type="text"
-                  value={confirmText}
-                  onChange={(e) => setConfirmText(e.target.value)}
-                  className="mt-2 w-full rounded-md border bg-transparent px-3 py-2 text-sm"
-                  placeholder="DELETE"
-                />
+                {profile?.notionAccessToken && (
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium">Notion</p>
+                      <p className="text-xs text-muted-foreground">Workspace connected</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge>Connected</Badge>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive"
+                        onClick={handleDisconnectNotion}
+                      >
+                        <Link2Off className="h-3 w-3 mr-1" />
+                        Disconnect
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => { setDeleteDialogOpen(false); setConfirmText(''); }}>
-                  Cancel
-                </Button>
-                <LoadingButton
-                  variant="destructive"
-                  onClick={handleDeleteAll}
-                  loading={deleteDataMutation.isPending}
-                  disabled={confirmText !== 'DELETE'}
+            </CardContent>
+          </Card>
+        </StaggerItem>
+
+        {/* What Data We Have */}
+        <StaggerItem>
+          <Card>
+            <CardHeader>
+              <button
+                onClick={() => setShowDataSection(!showDataSection)}
+                className="flex items-center gap-2 text-left w-full"
+              >
+                <Shield className="h-5 w-5 text-primary" />
+                <CardTitle className="font-sans flex-1">What Data We Have</CardTitle>
+                {showDataSection ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+              </button>
+              <CardDescription>
+                View and manage individual data categories.
+              </CardDescription>
+            </CardHeader>
+            <AnimatePresence initial={false}>
+              {showDataSection && (
+                <motion.div
+                  initial="hidden"
+                  animate="visible"
+                  exit="hidden"
+                  variants={
+                    shouldReduceMotion
+                      ? reducedMotionVariants
+                      : {
+                          hidden: { opacity: 0, height: 0 },
+                          visible: {
+                            opacity: 1,
+                            height: 'auto',
+                            transition: {
+                              height: { duration: 0.3, ease: 'easeOut' },
+                              opacity: { duration: 0.2, delay: 0.1 },
+                              staggerChildren: 0.05,
+                            },
+                          },
+                        }
+                  }
                 >
-                  Delete Everything
-                </LoadingButton>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </CardContent>
-      </Card>
+                  <CardContent>
+                    <motion.div
+                      variants={shouldReduceMotion ? reducedMotionVariants : staggerContainer}
+                      className="space-y-3"
+                    >
+                      {DATA_SOURCES.map((source) => (
+                        <motion.div
+                          key={source.key}
+                          variants={shouldReduceMotion ? reducedMotionVariants : staggerItem}
+                          className="flex items-center justify-between rounded-lg border p-3"
+                        >
+                          <div>
+                            <p className="text-sm font-medium">{source.label}</p>
+                            <p className="text-xs text-muted-foreground">{source.description}</p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => handleDeleteSource(source.key)}
+                            disabled={deleteDataMutation.isPending}
+                          >
+                            <Trash2 className="h-3 w-3 mr-1" />
+                            Delete
+                          </Button>
+                        </motion.div>
+                      ))}
+                    </motion.div>
+                  </CardContent>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </Card>
+        </StaggerItem>
+
+        {/* Delete All Data */}
+        <StaggerItem>
+          <Card className="border-destructive/30">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 font-sans text-destructive">
+                <Trash2 className="h-5 w-5" />
+                Delete All My Data
+              </CardTitle>
+              <CardDescription>
+                Permanently delete all assessment data and reset your progress. This cannot be undone.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                <DialogTrigger asChild>
+                  <motion.div
+                    whileHover={shouldReduceMotion ? {} : { scale: 1.02 }}
+                    whileTap={shouldReduceMotion ? {} : { scale: 0.98 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                  >
+                    <Button variant="destructive">Delete All Data</Button>
+                  </motion.div>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Are you absolutely sure?</DialogTitle>
+                    <DialogDescription>
+                      This will permanently delete all your assessment data including quiz answers, session insights, and your talent report. Your account will remain but all stages will be reset.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="py-4">
+                    <label className="text-sm font-medium">
+                      Type <span className="font-mono font-bold">DELETE</span> to confirm:
+                    </label>
+                    <input
+                      type="text"
+                      value={confirmText}
+                      onChange={(e) => setConfirmText(e.target.value)}
+                      className="mt-2 w-full rounded-md border bg-transparent px-3 py-2 text-sm"
+                      placeholder="DELETE"
+                    />
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => { setDeleteDialogOpen(false); setConfirmText(''); }}>
+                      Cancel
+                    </Button>
+                    <LoadingButton
+                      variant="destructive"
+                      onClick={handleDeleteAll}
+                      loading={deleteDataMutation.isPending}
+                      disabled={confirmText !== 'DELETE'}
+                    >
+                      Delete Everything
+                    </LoadingButton>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </CardContent>
+          </Card>
+        </StaggerItem>
+      </StaggerList>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { apiFetch } from '@/lib/fetch-client';
-import type { DataInsight, QuizQuestion, QuizAnswer, TalentReport, QuizScore, QuizDimensionSummary, UserFeedback, QuizModuleId, ComputedProfile, UserConstraints } from '@/types';
+import type { DataInsight, QuizQuestion, QuizAnswer, TalentReport, QuizScore, QuizDimensionSummary, QuizModuleId, ComputedProfile, UserConstraints } from '@/types';
 
 // Request types
 interface GmailRequest {

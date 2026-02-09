@@ -18,7 +18,7 @@ export function float32ToPcm16Base64(float32Array: Float32Array): string {
   return btoa(binary);
 }
 
-export function base64ToFloat32(base64: string, sampleRate: number = 24000): Float32Array {
+export function base64ToFloat32(base64: string): Float32Array {
   const binary = atob(base64);
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) {

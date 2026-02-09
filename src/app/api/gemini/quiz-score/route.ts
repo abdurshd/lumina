@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyAuth, errorResponse, ErrorCode, safeParseJson, GeminiError } from '@/lib/api-helpers';
+import { verifyAuth, errorResponse, ErrorCode, safeParseJson } from '@/lib/api-helpers';
 import { getGeminiClient } from '@/lib/gemini/client';
 import { GEMINI_MODELS } from '@/lib/gemini/models';
 import { QUIZ_SCORING_PROMPT } from '@/lib/gemini/prompts';
 import { z } from 'zod';
-import type { QuizAnswer, QuizQuestion, QuizScore, QuizDimensionSummary } from '@/types';
+import type { QuizScore, QuizDimensionSummary } from '@/types';
 
 const RequestSchema = z.object({
   answers: z.array(z.object({

@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import { useAuthStore } from '@/stores/auth-store';
 import { ErrorBoundary } from '@/components/shared';
 import { Sidebar } from '@/components/layout/sidebar';
+import { PageTransition } from '@/components/motion/page-transition';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, profile, loading } = useAuthStore();
@@ -28,7 +29,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <div className="flex h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="text-sm text-muted-foreground animate-fade-in">Loading your profile...</p>
+          <p className="text-sm text-muted-foreground">Loading your profile...</p>
         </div>
       </div>
     );
@@ -52,7 +53,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <Sidebar />
       <main className="flex-1 overflow-y-auto">
         <ErrorBoundary>
-          {children}
+          <PageTransition key={pathname}>
+            {children}
+          </PageTransition>
         </ErrorBoundary>
       </main>
     </div>
