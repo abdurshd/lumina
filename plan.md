@@ -836,7 +836,7 @@ BLOCKS: nothing
 ### Task 8.2 — Architecture Diagram
 
 ```
-STATUS: [ ]
+STATUS: [x]
 LOCK: UNLOCKED
 PRIORITY: LOW
 DEPENDS ON: all implementation tasks
