@@ -3,10 +3,11 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { useAuth } from '@/contexts/auth-context';
-import { useAssessment } from '@/contexts/assessment-context';
+import { useAuthStore } from '@/stores/auth-store';
+import { useAssessmentStore } from '@/stores/assessment-store';
 import { saveQuizAnswers } from '@/lib/firebase/firestore';
-import { apiFetch, FetchError } from '@/lib/fetch-client';
+import { FetchError } from '@/lib/fetch-client';
+import { useQuizMutation } from '@/hooks/use-api-mutations';
 import { QuestionCard } from '@/components/quiz/question-card';
 import { PageHeader, LoadingButton, ErrorAlert, EmptyState, QuestionSkeleton } from '@/components/shared';
 import { Progress } from '@/components/ui/progress';
@@ -17,17 +18,18 @@ const TOTAL_QUESTIONS = 10;
 const BATCH_SIZE = 3;
 
 export default function QuizPage() {
-  const { user } = useAuth();
-  const { dataInsights, setQuizAnswers, advanceStage } = useAssessment();
+  const { user } = useAuthStore();
+  const { dataInsights, setQuizAnswers, advanceStage } = useAssessmentStore();
   const router = useRouter();
 
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [answers, setAnswers] = useState<QuizAnswer[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [batchIndex, setBatchIndex] = useState(0);
+
+  const quizMutation = useQuizMutation();
 
   const dataContext = useMemo(
     () => dataInsights.length > 0
@@ -36,32 +38,29 @@ export default function QuizPage() {
     [dataInsights]
   );
 
-  const fetchQuestions = useCallback(async (prevAnswers: QuizAnswer[], batch: number) => {
-    setIsLoading(true);
+  const fetchQuestions = useCallback((prevAnswers: QuizAnswer[], batch: number) => {
     setError(null);
-    try {
-      const result = await apiFetch<{ questions: QuizQuestion[] }>('/api/gemini/quiz', {
-        method: 'POST',
-        body: JSON.stringify({ dataContext, previousAnswers: prevAnswers, batchIndex: batch }),
-      });
-
-      if (!result.questions || result.questions.length === 0) {
-        throw new Error('No questions returned from AI. Please try again.');
-      }
-
-      setQuestions((prev) => [...prev, ...result.questions]);
-    } catch (err) {
-      const message = err instanceof FetchError ? err.message : err instanceof Error ? err.message : 'Failed to load questions';
-      setError(message);
-      toast.error(message);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [dataContext]);
+    quizMutation.mutate({ dataContext, previousAnswers: prevAnswers, batchIndex: batch }, {
+      onSuccess: (result) => {
+        if (!result.questions || result.questions.length === 0) {
+          setError('No questions returned from AI. Please try again.');
+          toast.error('No questions returned from AI. Please try again.');
+          return;
+        }
+        setQuestions((prev) => [...prev, ...result.questions]);
+      },
+      onError: (err) => {
+        const message = err instanceof FetchError ? err.message : 'Failed to load questions';
+        setError(message);
+        toast.error(message);
+      },
+    });
+  }, [dataContext, quizMutation]);
 
   useEffect(() => {
     fetchQuestions([], 0);
-  }, [fetchQuestions]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleAnswer = useCallback(async (answer: string | number) => {
     const currentQ = questions[currentIndex];
@@ -83,7 +82,7 @@ export default function QuizPage() {
         }
         setIsComplete(true);
         toast.success('Quiz complete!');
-      } catch (err) {
+      } catch {
         toast.error('Failed to save quiz answers. Please try again.');
         return;
       }
@@ -94,7 +93,7 @@ export default function QuizPage() {
       if (nextIndex % BATCH_SIZE === 0 && nextIndex >= questions.length) {
         const newBatch = batchIndex + 1;
         setBatchIndex(newBatch);
-        await fetchQuestions(updatedAnswers, newBatch);
+        fetchQuestions(updatedAnswers, newBatch);
       }
     }
   }, [currentIndex, questions, answers, batchIndex, fetchQuestions, user, setQuizAnswers, advanceStage]);
@@ -137,7 +136,7 @@ export default function QuizPage() {
       )}
 
       <div className="animate-fade-in">
-        {isLoading && questions.length <= currentIndex ? (
+        {quizMutation.isPending && questions.length <= currentIndex ? (
           <QuestionSkeleton />
         ) : questions[currentIndex] ? (
           <QuestionCard

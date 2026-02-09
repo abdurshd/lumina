@@ -3,15 +3,15 @@
 import { useState, useCallback, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { useAuth } from '@/contexts/auth-context';
-import { useAssessment } from '@/contexts/assessment-context';
+import { useAuthStore } from '@/stores/auth-store';
+import { useAssessmentStore } from '@/stores/assessment-store';
 import { saveDataInsights } from '@/lib/firebase/firestore';
-import { apiFetch, FetchError } from '@/lib/fetch-client';
+import { FetchError } from '@/lib/fetch-client';
+import { useGmailMutation, useChatGPTMutation, useAnalyzeMutation } from '@/hooks/use-api-mutations';
 import { ConnectorCard } from '@/components/connections/connector-card';
 import { PageHeader, LoadingButton, ErrorAlert } from '@/components/shared';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plug, Mail, Upload, ArrowRight, Sparkles } from 'lucide-react';
-import type { DataInsight } from '@/types';
 
 interface DataSource {
   data: string;
@@ -22,44 +22,42 @@ const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 const ACCEPTED_TYPES = ['application/json'];
 
 export default function ConnectionsPage() {
-  const { user, googleAccessToken } = useAuth();
-  const { setDataInsights, advanceStage } = useAssessment();
+  const { user, googleAccessToken } = useAuthStore();
+  const { setDataInsights, advanceStage } = useAssessmentStore();
   const router = useRouter();
 
   const [dataSources, setDataSources] = useState<Record<string, DataSource>>({});
-  const [loadingSource, setLoadingSource] = useState<string | null>(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisComplete, setAnalysisComplete] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const gmailMutation = useGmailMutation();
+  const chatgptMutation = useChatGPTMutation();
+  const analyzeMutation = useAnalyzeMutation();
 
   const connectedCount = useMemo(
     () => Object.values(dataSources).filter((d) => d.data).length,
     [dataSources]
   );
 
-  const connectGmail = useCallback(async () => {
+  const connectGmail = useCallback(() => {
     if (!googleAccessToken) {
       toast.error('Google access token not available. Please sign out and sign in again.');
       return;
     }
-    setLoadingSource('gmail');
     setError(null);
-    try {
-      const result = await apiFetch<{ data: string; tokenCount: number }>('/api/data/gmail', {
-        method: 'POST',
-        body: JSON.stringify({ accessToken: googleAccessToken }),
-      });
-      setDataSources((prev) => ({ ...prev, gmail: result }));
-      toast.success(`Gmail connected! ~${result.tokenCount.toLocaleString()} tokens collected.`);
-    } catch (err) {
-      const message = err instanceof FetchError ? err.message : 'Failed to connect Gmail';
-      setError(message);
-      toast.error(message);
-    } finally {
-      setLoadingSource(null);
-    }
-  }, [googleAccessToken]);
+    gmailMutation.mutate({ accessToken: googleAccessToken }, {
+      onSuccess: (result) => {
+        setDataSources((prev) => ({ ...prev, gmail: result }));
+        toast.success(`Gmail connected! ~${result.tokenCount.toLocaleString()} tokens collected.`);
+      },
+      onError: (err) => {
+        const message = err instanceof FetchError ? err.message : 'Failed to connect Gmail';
+        setError(message);
+        toast.error(message);
+      },
+    });
+  }, [googleAccessToken, gmailMutation]);
 
   const handleChatGPTUpload = useCallback(() => {
     fileInputRef.current?.click();
@@ -81,7 +79,6 @@ export default function ConnectionsPage() {
       return;
     }
 
-    setLoadingSource('chatgpt');
     setError(null);
     try {
       const content = await file.text();
@@ -93,52 +90,52 @@ export default function ConnectionsPage() {
         throw new Error('File is not valid JSON. Please upload your ChatGPT conversations.json export.');
       }
 
-      const result = await apiFetch<{ data: string; tokenCount: number }>('/api/data/chatgpt', {
-        method: 'POST',
-        body: JSON.stringify({ content }),
+      chatgptMutation.mutate({ content }, {
+        onSuccess: (result) => {
+          setDataSources((prev) => ({ ...prev, chatgpt: result }));
+          toast.success(`ChatGPT data loaded! ~${result.tokenCount.toLocaleString()} tokens collected.`);
+        },
+        onError: (err) => {
+          const message = err instanceof FetchError ? err.message : 'Failed to process file';
+          setError(message);
+          toast.error(message);
+        },
       });
-      setDataSources((prev) => ({ ...prev, chatgpt: result }));
-      toast.success(`ChatGPT data loaded! ~${result.tokenCount.toLocaleString()} tokens collected.`);
     } catch (err) {
-      const message = err instanceof FetchError ? err.message : err instanceof Error ? err.message : 'Failed to process file';
+      const message = err instanceof Error ? err.message : 'Failed to process file';
       setError(message);
       toast.error(message);
     } finally {
-      setLoadingSource(null);
       // Reset file input so same file can be re-selected
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
-  }, []);
+  }, [chatgptMutation]);
 
-  const analyzeData = useCallback(async () => {
+  const analyzeData = useCallback(() => {
     if (connectedCount === 0 || !user) return;
-    setIsAnalyzing(true);
     setError(null);
-    try {
-      const sourceData: Record<string, string> = {};
-      for (const [key, source] of Object.entries(dataSources)) {
-        if (source.data) sourceData[key] = source.data;
-      }
 
-      const analysis = await apiFetch<{ insights: DataInsight[] }>('/api/gemini/analyze', {
-        method: 'POST',
-        body: JSON.stringify({ dataSources: sourceData }),
-      });
-
-      const insights = analysis.insights ?? [];
-      await saveDataInsights(user.uid, insights);
-      setDataInsights(insights);
-      await advanceStage('connections');
-      setAnalysisComplete(true);
-      toast.success('Analysis complete! Your data has been analyzed.');
-    } catch (err) {
-      const message = err instanceof FetchError ? err.message : 'Analysis failed. Please try again.';
-      setError(message);
-      toast.error(message);
-    } finally {
-      setIsAnalyzing(false);
+    const sourceData: Record<string, string> = {};
+    for (const [key, source] of Object.entries(dataSources)) {
+      if (source.data) sourceData[key] = source.data;
     }
-  }, [connectedCount, dataSources, user, setDataInsights, advanceStage]);
+
+    analyzeMutation.mutate({ dataSources: sourceData }, {
+      onSuccess: async (analysis) => {
+        const insights = analysis.insights ?? [];
+        await saveDataInsights(user.uid, insights);
+        setDataInsights(insights);
+        await advanceStage('connections');
+        setAnalysisComplete(true);
+        toast.success('Analysis complete! Your data has been analyzed.');
+      },
+      onError: (err) => {
+        const message = err instanceof FetchError ? err.message : 'Analysis failed. Please try again.';
+        setError(message);
+        toast.error(message);
+      },
+    });
+  }, [connectedCount, dataSources, user, setDataInsights, advanceStage, analyzeMutation]);
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-10">
@@ -156,7 +153,7 @@ export default function ConnectionsPage() {
           description="Analyze your sent emails to understand communication style and interests"
           icon={<Mail className="h-6 w-6" />}
           isConnected={!!dataSources.gmail?.data}
-          isLoading={loadingSource === 'gmail'}
+          isLoading={gmailMutation.isPending}
           onConnect={connectGmail}
           tokenCount={dataSources.gmail?.tokenCount}
           disabled={!googleAccessToken}
@@ -168,7 +165,7 @@ export default function ConnectionsPage() {
           description="Upload your ChatGPT conversations.json export to analyze your thinking patterns"
           icon={<Upload className="h-6 w-6" />}
           isConnected={!!dataSources.chatgpt?.data}
-          isLoading={loadingSource === 'chatgpt'}
+          isLoading={chatgptMutation.isPending}
           onConnect={handleChatGPTUpload}
           tokenCount={dataSources.chatgpt?.tokenCount}
         />
@@ -207,7 +204,7 @@ export default function ConnectionsPage() {
             ) : (
               <LoadingButton
                 onClick={analyzeData}
-                loading={isAnalyzing}
+                loading={analyzeMutation.isPending}
                 loadingText="Analyzing your data with AI..."
                 icon={Sparkles}
                 className="w-full glow-amber-sm"

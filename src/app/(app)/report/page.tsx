@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
-import { useAuth } from '@/contexts/auth-context';
-import { useAssessment } from '@/contexts/assessment-context';
-import { saveTalentReport, getTalentReport, getDataInsights, getQuizAnswers, getSessionInsights } from '@/lib/firebase/firestore';
-import { apiFetch, FetchError } from '@/lib/fetch-client';
+import { useAuthStore } from '@/stores/auth-store';
+import { useAssessmentStore } from '@/stores/assessment-store';
+import { saveTalentReport, getDataInsights, getQuizAnswers, getSessionInsights } from '@/lib/firebase/firestore';
+import { FetchError } from '@/lib/fetch-client';
+import { useReportMutation } from '@/hooks/use-api-mutations';
+import { useTalentReportQuery } from '@/hooks/use-api-queries';
 import { TalentRadarChart } from '@/components/report/talent-radar-chart';
 import { CareerPaths } from '@/components/report/career-paths';
 import { StrengthsGrid } from '@/components/report/strengths-grid';
@@ -13,68 +15,52 @@ import { EmptyState, LoadingButton, ErrorAlert, ReportSkeleton } from '@/compone
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Sparkles, Target, Lightbulb, Rocket, Eye } from 'lucide-react';
-import type { TalentReport } from '@/types';
 
 export default function ReportPage() {
-  const { user } = useAuth();
-  const { dataInsights, quizAnswers, sessionInsights, report, setReport, advanceStage } = useAssessment();
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [isLoadingExisting, setIsLoadingExisting] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { user } = useAuthStore();
+  const { dataInsights, quizAnswers, sessionInsights, report, setReport, advanceStage } = useAssessmentStore();
 
-  // Try loading existing report
+  const reportMutation = useReportMutation();
+  const reportQuery = useTalentReportQuery(user?.uid);
+
+  // Sync fetched report into store
   useEffect(() => {
-    async function loadReport() {
-      if (!user || report) {
-        setIsLoadingExisting(false);
-        return;
-      }
-      try {
-        const existing = await getTalentReport(user.uid);
-        if (existing) setReport(existing);
-      } catch (err) {
-        console.error('Failed to load existing report:', err);
-      } finally {
-        setIsLoadingExisting(false);
-      }
+    if (reportQuery.data && !report) {
+      setReport(reportQuery.data);
     }
-    loadReport();
-  }, [user, report, setReport]);
+  }, [reportQuery.data, report, setReport]);
 
-  const generateReport = useCallback(async () => {
+  const generateReport = useCallback(() => {
     if (!user) return;
-    setIsGenerating(true);
-    setError(null);
 
-    try {
+    const doGenerate = async () => {
       // Fetch data from Firestore if not in context
       const insights = dataInsights.length > 0 ? dataInsights : await getDataInsights(user.uid);
       const quiz = quizAnswers.length > 0 ? quizAnswers : await getQuizAnswers(user.uid);
       const session = sessionInsights.length > 0 ? sessionInsights : await getSessionInsights(user.uid);
 
-      const reportData = await apiFetch<TalentReport>('/api/gemini/report', {
-        method: 'POST',
-        body: JSON.stringify({
-          dataInsights: insights,
-          quizAnswers: quiz,
-          sessionInsights: session,
-        }),
+      reportMutation.mutate({
+        dataInsights: insights,
+        quizAnswers: quiz,
+        sessionInsights: session,
+      }, {
+        onSuccess: async (reportData) => {
+          await saveTalentReport(user.uid, reportData);
+          setReport(reportData);
+          await advanceStage('report');
+          toast.success('Your talent report is ready!');
+        },
+        onError: (err) => {
+          const message = err instanceof FetchError ? err.message : 'Report generation failed. Please try again.';
+          toast.error(message);
+        },
       });
+    };
 
-      await saveTalentReport(user.uid, reportData);
-      setReport(reportData);
-      await advanceStage('report');
-      toast.success('Your talent report is ready!');
-    } catch (err) {
-      const message = err instanceof FetchError ? err.message : 'Report generation failed. Please try again.';
-      setError(message);
-      toast.error(message);
-    } finally {
-      setIsGenerating(false);
-    }
-  }, [user, dataInsights, quizAnswers, sessionInsights, setReport, advanceStage]);
+    doGenerate();
+  }, [user, dataInsights, quizAnswers, sessionInsights, setReport, advanceStage, reportMutation]);
 
-  if (isLoadingExisting) {
+  if (reportQuery.isLoading) {
     return (
       <div className="mx-auto max-w-4xl px-6 py-10">
         <ReportSkeleton />
@@ -85,7 +71,13 @@ export default function ReportPage() {
   if (!report) {
     return (
       <div className="mx-auto max-w-2xl px-6 py-10">
-        {error && <ErrorAlert message={error} onRetry={generateReport} className="mb-6" />}
+        {reportMutation.error && (
+          <ErrorAlert
+            message={reportMutation.error instanceof FetchError ? reportMutation.error.message : 'Report generation failed. Please try again.'}
+            onRetry={generateReport}
+            className="mb-6"
+          />
+        )}
         <EmptyState
           icon={Sparkles}
           title="Generate Your Talent Report"
@@ -93,7 +85,7 @@ export default function ReportPage() {
           action={
             <LoadingButton
               onClick={generateReport}
-              loading={isGenerating}
+              loading={reportMutation.isPending}
               loadingText="Generating your report (this may take a minute)..."
               icon={Sparkles}
               size="lg"

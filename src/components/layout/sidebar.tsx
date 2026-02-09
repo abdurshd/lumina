@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/contexts/auth-context';
+import { useAuthStore } from '@/stores/auth-store';
 import {
   LayoutDashboard,
   Plug,
@@ -26,7 +26,7 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { profile, signOut } = useAuth();
+  const { profile, signOut } = useAuthStore();
 
   return (
     <aside className="flex h-full w-64 flex-col glass border-r border-white/[0.06]">

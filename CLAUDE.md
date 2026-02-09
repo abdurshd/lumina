@@ -33,7 +33,7 @@ No test framework is configured.
 
 ### Route Groups
 
-- `(app)/` — Authenticated pages with sidebar layout. Auth enforced client-side in layout.tsx via `AuthContext`, redirects to `/login` if unauthenticated. Wraps children in `AssessmentProvider` for stage progression.
+- `(app)/` — Authenticated pages with sidebar layout. Auth enforced client-side in layout.tsx via `useAuthStore`, redirects to `/login` if unauthenticated.
 - `(auth)/` — Login page, no sidebar.
 
 ### API Route Pattern
@@ -54,9 +54,13 @@ All routes in `src/app/api/` follow this pattern:
 
 ### State Management
 
-React Context only (no Redux/Zustand):
-- `AuthContext` (`src/contexts/auth-context.tsx`) — User auth, Google OAuth tokens, profile
-- `AssessmentContext` (`src/contexts/assessment-context.tsx`) — Stage progression, assessment data
+Zustand + React Query (TanStack Query v5):
+- `useAuthStore` (`src/stores/auth-store.ts`) — User auth, Google OAuth tokens, profile
+- `useAssessmentStore` (`src/stores/assessment-store.ts`) — Stage progression, assessment data
+- `src/hooks/use-api-mutations.ts` — React Query mutation hooks for all API calls
+- `src/hooks/use-api-queries.ts` — React Query query hooks (e.g. `useTalentReportQuery`)
+- `src/lib/api/client.ts` — Central typed API client wrapping `apiFetch`
+- `src/components/providers/app-providers.tsx` — QueryClientProvider + auth listener init
 
 ### Firestore Structure
 

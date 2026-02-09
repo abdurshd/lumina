@@ -4,10 +4,11 @@ import { useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useLiveSession } from '@/hooks/use-live-session';
-import { useAuth } from '@/contexts/auth-context';
-import { useAssessment } from '@/contexts/assessment-context';
+import { useAuthStore } from '@/stores/auth-store';
+import { useAssessmentStore } from '@/stores/assessment-store';
 import { saveSessionInsights } from '@/lib/firebase/firestore';
-import { apiFetch, FetchError } from '@/lib/fetch-client';
+import { FetchError } from '@/lib/fetch-client';
+import { useEphemeralTokenMutation } from '@/hooks/use-api-mutations';
 import { WebcamPreview } from '@/components/session/webcam-preview';
 import { TranscriptPanel } from '@/components/session/transcript-panel';
 import { SessionControls } from '@/components/session/session-controls';
@@ -35,12 +36,14 @@ export default function SessionPage() {
     sendText,
   } = useLiveSession();
 
-  const { user } = useAuth();
-  const { dataInsights, quizAnswers, setSessionInsights, advanceStage } = useAssessment();
+  const { user } = useAuthStore();
+  const { dataInsights, quizAnswers, setSessionInsights, advanceStage } = useAssessmentStore();
   const router = useRouter();
   const [textInput, setTextInput] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+
+  const ephemeralTokenMutation = useEphemeralTokenMutation();
 
   const dataContext = useMemo(() => {
     const data = dataInsights.length > 0
@@ -54,19 +57,25 @@ export default function SessionPage() {
     return data + quiz;
   }, [dataInsights, quizAnswers]);
 
-  const handleConnect = useCallback(async () => {
+  const handleConnect = useCallback(() => {
     setError(null);
-    try {
-      const { apiKey } = await apiFetch<{ apiKey: string }>('/api/gemini/ephemeral-token', {
-        method: 'POST',
-      });
-      await connect(apiKey, dataContext);
-    } catch (err) {
-      const message = err instanceof FetchError ? err.message : 'Failed to start session';
-      setError(message);
-      toast.error(message);
-    }
-  }, [connect, dataContext]);
+    ephemeralTokenMutation.mutate(undefined, {
+      onSuccess: async ({ apiKey }) => {
+        try {
+          await connect(apiKey, dataContext);
+        } catch (err) {
+          const message = err instanceof Error ? err.message : 'Failed to start session';
+          setError(message);
+          toast.error(message);
+        }
+      },
+      onError: (err) => {
+        const message = err instanceof FetchError ? err.message : 'Failed to start session';
+        setError(message);
+        toast.error(message);
+      },
+    });
+  }, [connect, dataContext, ephemeralTokenMutation]);
 
   const handleDisconnect = useCallback(async () => {
     setIsSaving(true);
@@ -78,7 +87,7 @@ export default function SessionPage() {
         await advanceStage('session');
         toast.success(`Session complete! ${insights.length} insights captured.`);
       }
-    } catch (err) {
+    } catch {
       toast.error('Failed to save session data');
     } finally {
       setIsSaving(false);
