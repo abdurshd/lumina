@@ -3,10 +3,15 @@
  * Uses @google/genai SDK - callback-based LiveConnectParameters
  */
 
-import { GoogleGenAI, Modality, type Session, type LiveServerMessage } from '@google/genai';
-import { LIVE_SESSION_SYSTEM_PROMPT } from './prompts';
-import { SaveInsightFunctionDeclaration } from '@/lib/schemas/session';
-import type { SessionInsight } from '@/types';
+import {
+  GoogleGenAI,
+  Modality,
+  type Session,
+  type LiveServerMessage,
+} from "@google/genai";
+import { LIVE_SESSION_SYSTEM_PROMPT } from "./prompts";
+import { SaveInsightFunctionDeclaration } from "@/lib/schemas/session";
+import type { SessionInsight } from "@/types";
 
 export interface LiveSessionCallbacks {
   onAudioData: (base64Audio: string) => void;
@@ -31,7 +36,7 @@ export class LiveSessionManager {
       const client = new GoogleGenAI({ apiKey });
 
       this.session = await client.live.connect({
-        model: 'gemini-live-2.5-flash-preview',
+        model: "gemini-live-2.5-flash-native-audio",
         callbacks: {
           onopen: () => {
             this.callbacks.onConnectionChange(true);
@@ -40,7 +45,7 @@ export class LiveSessionManager {
             this.handleMessage(message);
           },
           onerror: (e: ErrorEvent) => {
-            this.callbacks.onError(new Error(e.message || 'WebSocket error'));
+            this.callbacks.onError(new Error(e.message || "WebSocket error"));
           },
           onclose: () => {
             this.callbacks.onConnectionChange(false);
@@ -51,7 +56,7 @@ export class LiveSessionManager {
           speechConfig: {
             voiceConfig: {
               prebuiltVoiceConfig: {
-                voiceName: 'Aoede',
+                voiceName: "Aoede",
               },
             },
           },
@@ -66,7 +71,9 @@ export class LiveSessionManager {
         },
       });
     } catch (error) {
-      this.callbacks.onError(error instanceof Error ? error : new Error(String(error)));
+      this.callbacks.onError(
+        error instanceof Error ? error : new Error(String(error)),
+      );
     }
   }
 
@@ -74,12 +81,12 @@ export class LiveSessionManager {
     // Handle tool calls
     if (message.toolCall) {
       for (const fc of message.toolCall.functionCalls ?? []) {
-        if (fc.name === 'saveInsight') {
+        if (fc.name === "saveInsight") {
           const args = fc.args as Record<string, unknown>;
           const insight: SessionInsight = {
             timestamp: Date.now(),
-            observation: String(args.observation ?? ''),
-            category: args.category as SessionInsight['category'],
+            observation: String(args.observation ?? ""),
+            category: args.category as SessionInsight["category"],
             confidence: Number(args.confidence ?? 0.5),
           };
           this.insights.push(insight);
@@ -87,9 +94,7 @@ export class LiveSessionManager {
 
           // Send function response
           this.session?.sendToolResponse({
-            functionResponses: [
-              { id: fc.id!, response: { success: true } },
-            ],
+            functionResponses: [{ id: fc.id!, response: { success: true } }],
           });
         }
       }
@@ -119,11 +124,11 @@ export class LiveSessionManager {
       this.session.sendRealtimeInput({
         media: {
           data: base64Audio,
-          mimeType: 'audio/pcm;rate=16000',
+          mimeType: "audio/pcm;rate=16000",
         },
       });
     } catch (error) {
-      console.error('Error sending audio:', error);
+      console.error("Error sending audio:", error);
     }
   }
 
@@ -133,18 +138,18 @@ export class LiveSessionManager {
       this.session.sendRealtimeInput({
         media: {
           data: base64Image,
-          mimeType: 'image/jpeg',
+          mimeType: "image/jpeg",
         },
       });
     } catch (error) {
-      console.error('Error sending video:', error);
+      console.error("Error sending video:", error);
     }
   }
 
   sendText(text: string): void {
     if (!this.session) return;
     this.session.sendClientContent({
-      turns: [{ role: 'user', parts: [{ text }] }],
+      turns: [{ role: "user", parts: [{ text }] }],
       turnComplete: true,
     });
     this.callbacks.onTranscript(text, true);

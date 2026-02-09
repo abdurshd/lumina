@@ -40,6 +40,7 @@ No test framework is configured.
 ### API Route Pattern
 
 All routes in `src/app/api/` follow this pattern:
+
 1. `verifyAuth(req)` for Firebase ID token verification
 2. Validate request body with Zod
 3. Call Gemini via `getGeminiClient()` with `responseMimeType: 'application/json'`
@@ -49,13 +50,14 @@ All routes in `src/app/api/` follow this pattern:
 
 ### Gemini Models
 
-- `gemini-2.5-flash-preview-05-20` — Quiz generation, data analysis
-- `gemini-2.5-pro-preview-06-05` — Report generation
-- `gemini-live-2.5-flash-preview` — Live video session (WebSocket via `src/lib/gemini/live-session.ts`)
+- `gemini-3-flash-preview` — Quiz generation, data analysis
+- `gemini-3-flash-preview` — Report generation
+- `gemini-live-2.5-flash-native-audio` — Live video session (WebSocket via `src/lib/gemini/live-session.ts`)
 
 ### State Management
 
 Zustand + React Query (TanStack Query v5):
+
 - `useAuthStore` (`src/stores/auth-store.ts`) — User auth, Google OAuth tokens, profile
 - `useAssessmentStore` (`src/stores/assessment-store.ts`) — Stage progression, assessment data
 - `src/hooks/use-api-mutations.ts` — React Query mutation hooks for all API calls
