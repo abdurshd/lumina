@@ -24,6 +24,7 @@ import { TalentRadarChart } from '@/components/report/talent-radar-chart';
 import { CareerPaths } from '@/components/report/career-paths';
 import { StrengthsGrid } from '@/components/report/strengths-grid';
 import { ReportHistory } from '@/components/report/report-history';
+import { ThoughtChain } from '@/components/report/thought-chain';
 import { EmptyState, LoadingButton, ErrorAlert, ReportSkeleton } from '@/components/shared';
 import { ScrollReveal } from '@/components/motion/scroll-reveal';
 import { staggerContainer, staggerItem, fadeInUp, scaleIn, reducedMotionVariants } from '@/lib/motion';
@@ -369,6 +370,15 @@ export default function ReportPage() {
           </CardContent>
         </Card>
       </ScrollReveal>
+
+      {/* Thought Chain — How the Report Was Built */}
+      {report.generationTrace && report.generationTrace.length > 0 && (
+        <ScrollReveal>
+          <div className="mb-8">
+            <ThoughtChain steps={report.generationTrace} />
+          </div>
+        </ScrollReveal>
+      )}
 
       {/* Regenerate with Feedback */}
       <AnimatePresence>

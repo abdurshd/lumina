@@ -96,6 +96,16 @@ export interface SessionInsight {
   dimension?: string;
 }
 
+export interface ReportTraceStep {
+  step: number;
+  name: string;
+  description: string;
+  inputSummary: string;
+  outputSummary: string;
+  confidenceChange: number;
+  durationMs: number;
+}
+
 export interface TalentReport {
   headline: string;
   tagline: string;
@@ -107,6 +117,7 @@ export interface TalentReport {
   personalityInsights: string[];
   confidenceNotes: string[];
   careerRecommendations?: CareerRecommendation[];
+  generationTrace?: ReportTraceStep[];
 }
 
 export interface RadarDimension {

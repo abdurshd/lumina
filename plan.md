@@ -639,7 +639,7 @@ Create `src/components/agent/confidence-dashboard.tsx`:
 ### Task 6.2 — Thought Chain Visualization for Report
 
 ```
-STATUS: [ ]
+STATUS: [x]
 LOCK: UNLOCKED
 PRIORITY: MEDIUM
 DEPENDS ON: 5.1, 6.1

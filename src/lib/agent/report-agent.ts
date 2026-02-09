@@ -9,19 +9,7 @@ import {
   REPORT_REFINEMENT_PROMPT,
   REPORT_VALIDATION_PROMPT,
 } from '@/lib/gemini/prompts';
-import type { TalentReport } from '@/types';
-
-// --- Types ---
-
-export interface ReportAgentStep {
-  step: number;
-  name: string;
-  description: string;
-  inputSummary: string;
-  outputSummary: string;
-  confidenceChange: number;
-  durationMs: number;
-}
+import type { TalentReport, ReportTraceStep } from '@/types';
 
 export interface SectionCritique {
   section: string;
@@ -65,9 +53,9 @@ export async function generateReportWithAgent(params: {
   uid: string;
   context: string;
   reportPrompt: string;
-}): Promise<{ report: TalentReport; trace: ReportAgentStep[] }> {
+}): Promise<{ report: TalentReport; trace: ReportTraceStep[] }> {
   const { uid, context, reportPrompt } = params;
-  const trace: ReportAgentStep[] = [];
+  const trace: ReportTraceStep[] = [];
 
   // --- Step 1: Generate Draft ---
   const step1Start = Date.now();
