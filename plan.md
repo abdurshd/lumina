@@ -506,7 +506,7 @@ Add to session page:
 ### Task 5.1 — Generate → Critique → Refine Loop
 
 ```
-STATUS: [ ]
+STATUS: [x]
 LOCK: UNLOCKED
 PRIORITY: CRITICAL
 DEPENDS ON: 1.1, 1.2, 2.3

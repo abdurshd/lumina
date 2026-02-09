@@ -5,19 +5,14 @@ import {
   verifyAuth,
   errorResponse,
   ErrorCode,
-  safeParseJson,
   GeminiError,
 } from "@/lib/api-helpers";
-import { getGeminiClientForUser } from "@/lib/gemini/client";
-import { GEMINI_MODELS } from "@/lib/gemini/models";
 import { REPORT_GENERATION_PROMPT } from "@/lib/gemini/prompts";
-import { TalentReportSchema } from "@/lib/schemas/report";
 import { UserConstraintsSchema } from "@/lib/schemas/quiz";
 import { buildComputedProfile } from "@/lib/career/profile-builder";
 import { SESSION_INSIGHT_CATEGORIES } from "@/lib/psychometrics/dimension-model";
-import { trackGeminiUsage } from "@/lib/gemini/byok";
+import { generateReportWithAgent } from "@/lib/agent/report-agent";
 import { z } from "zod";
-// types used implicitly via Zod schemas
 
 const RequestSchema = z.object({
   dataInsights: z
@@ -109,10 +104,6 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { client, keySource } = await getGeminiClientForUser({
-      uid: authResult.uid,
-      model: GEMINI_MODELS.DEEP,
-    });
     const resolvedComputedProfile = computedProfile
       ?? (quizScores
         ? buildComputedProfile({
@@ -170,7 +161,7 @@ Education Willingness: ${constraints.educationWillingness}
 Relocation: ${constraints.relocationWillingness}` : ""}
 `;
 
-    const promptText = `${REPORT_GENERATION_PROMPT}\n\n${context}\n\nGenerate the talent report as JSON matching this schema:
+    const reportPrompt = `${REPORT_GENERATION_PROMPT}\n\n${context}\n\nGenerate the talent report as JSON matching this schema:
 {
   "headline": "string - specific surprising headline talent",
   "tagline": "string - short inspiring tagline",
@@ -187,41 +178,14 @@ Include exactly 6 radar dimensions (Creativity, Analysis, Leadership, Empathy, R
 
 Also include "careerRecommendations" array with 4 entries, each having: clusterId, matchScore (0-100), confidence (0-100), whyYou, whatYouDo, howToTest, skillsToBuild (array of 3-5 strings), evidenceChain (array of {type: "quiz"|"session"|"data_source"|"signal", excerpt: string}).` : ''}`;
 
-    const response = await client.models.generateContent({
-      model: GEMINI_MODELS.DEEP,
-      contents: [
-        {
-          role: "user",
-          parts: [
-            {
-              text: promptText,
-            },
-          ],
-        },
-      ],
-      config: {
-        responseMimeType: "application/json",
-      },
-    });
-
-    const text = response.text;
-    if (!text) {
-      throw new GeminiError("Gemini returned an empty response");
-    }
-
-    await trackGeminiUsage({
+    // Use multi-step agent loop instead of single Gemini call
+    const { report, trace } = await generateReportWithAgent({
       uid: authResult.uid,
-      model: GEMINI_MODELS.DEEP,
-      feature: "report_generate",
-      keySource,
-      inputChars: promptText.length,
-      outputChars: text.length,
+      context,
+      reportPrompt,
     });
 
-    const jsonData = safeParseJson(text);
-    const validated = TalentReportSchema.parse(jsonData);
-
-    return NextResponse.json(validated);
+    return NextResponse.json({ ...report, generationTrace: trace });
   } catch (error) {
     if (error instanceof GeminiError) {
       return errorResponse(
