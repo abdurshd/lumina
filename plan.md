@@ -77,7 +77,7 @@ If a task has been locked for >2 hours with no progress, it can be force-unlocke
 ### Task 1.1 — Agent Orchestrator Core
 
 ```
-STATUS: [ ]
+STATUS: [x]
 LOCK: UNLOCKED
 PRIORITY: CRITICAL
 DEPENDS ON: nothing
@@ -126,7 +126,7 @@ Create API route `src/app/api/agent/evaluate/route.ts`:
 ### Task 1.2 — Confidence Scoring System
 
 ```
-STATUS: [ ]
+STATUS: [x]
 LOCK: UNLOCKED
 PRIORITY: CRITICAL
 DEPENDS ON: nothing
@@ -164,7 +164,7 @@ Create `src/lib/agent/confidence.ts`:
 ### Task 1.3 — Agent Decision Log Store
 
 ```
-STATUS: [ ]
+STATUS: [x]
 LOCK: UNLOCKED
 PRIORITY: HIGH
 DEPENDS ON: 1.1
@@ -209,7 +209,7 @@ Add Firestore helpers in `src/lib/firebase/firestore.ts`:
 ### Task 2.1 — Autonomous Data Analysis Agent
 
 ```
-STATUS: [ ]
+STATUS: [x]
 LOCK: UNLOCKED
 PRIORITY: HIGH
 DEPENDS ON: 1.1, 1.2

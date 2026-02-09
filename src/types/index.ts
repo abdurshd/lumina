@@ -263,6 +263,85 @@ export interface CorpusDocument {
   approved: boolean;
 }
 
+// --- Agent Confidence Types ---
+
+export type ConfidenceSourceType = 'quiz' | 'session' | 'data_source';
+
+export interface ConfidenceSource {
+  type: ConfidenceSourceType;
+  dimension: string;
+  score: number;
+  evidence: string;
+  timestamp: number;
+}
+
+export interface DimensionConfidence {
+  dimension: string;
+  confidence: number;
+  sourceCount: number;
+  sourceTypes: ConfidenceSourceType[];
+  sources: ConfidenceSource[];
+}
+
+export interface ConfidenceProfile {
+  dimensions: Record<string, DimensionConfidence>;
+  overallConfidence: number;
+  lastUpdated: number;
+}
+
+export interface DimensionGap {
+  dimension: string;
+  currentConfidence: number;
+  targetConfidence: number;
+  missingSourceTypes: ConfidenceSourceType[];
+  importance: number;
+}
+
+// --- Agent Orchestrator Types ---
+
+export type AgentActionType =
+  | 'analyze_source'
+  | 'run_quiz_module'
+  | 'start_session'
+  | 'generate_report'
+  | 'refine_report_section'
+  | 'request_additional_data'
+  | 'probe_dimension';
+
+export type AgentActionPriority = 'critical' | 'high' | 'medium' | 'low';
+
+export interface AgentAction {
+  type: AgentActionType;
+  priority: AgentActionPriority;
+  reason: string;
+  confidenceImpact: number;
+  blockedBy: string[];
+  metadata?: Record<string, string | number | boolean>;
+}
+
+export interface AgentState {
+  connectedSources: string[];
+  quizCompletedModules: QuizModuleId[];
+  quizInProgressModules: QuizModuleId[];
+  sessionCompleted: boolean;
+  sessionInsightsCount: number;
+  confidenceProfile: ConfidenceProfile;
+  gaps: DimensionGap[];
+  reportGenerated: boolean;
+  overallConfidence: number;
+}
+
+export interface AgentDecision {
+  id: string;
+  timestamp: number;
+  action: AgentActionType;
+  reason: string;
+  confidenceBefore: number;
+  confidenceAfter: number;
+  outcome?: 'success' | 'partial' | 'failed' | 'pending';
+  metadata?: Record<string, string | number | boolean>;
+}
+
 // --- Analytics Types ---
 
 export type AnalyticsEventType =

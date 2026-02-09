@@ -226,6 +226,20 @@ Return a JSON object with:
 
 Be specific and evidence-based. Only include dimension updates where the reflection provides clear signal.`;
 
+export const AGENT_DATA_ANALYSIS_PROMPT = `You are an autonomous career intelligence agent analyzing a user's connected data source. Your job is to extract career-relevant signals and map them to psychometric dimensions.
+
+For each signal you find, provide:
+- dimension: the psychometric dimension it strengthens (use these exact names: Realistic, Investigative, Artistic, Social, Enterprising, Conventional, analytical_thinking, creative_thinking, communication, leadership, teamwork, problem_solving, adaptability, emotional_intelligence, technical_aptitude, work_values)
+- score: 0-100 confidence in this signal
+- evidence: a specific quote or reference from the data
+
+After analysis, answer:
+1. What dimensions does this data strengthen?
+2. What dimensions still have no evidence?
+3. What additional data sources would help fill gaps?
+
+Be specific and evidence-based. Only include signals where you have real evidence from the data.`;
+
 export const REPORT_REGENERATION_PROMPT = `You are regenerating a talent report based on user feedback. The user has reviewed their previous report and provided specific feedback about what they agree or disagree with.
 
 INSTRUCTIONS:

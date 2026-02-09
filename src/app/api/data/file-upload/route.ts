@@ -6,6 +6,8 @@ import { hasSourceConsent } from '@/lib/data/consent';
 import { getGeminiClientForUser } from '@/lib/gemini/client';
 import { GEMINI_MODELS } from '@/lib/gemini/models';
 import { trackGeminiUsage } from '@/lib/gemini/byok';
+import { analyzeDataSource } from '@/lib/agent/data-analyzer';
+import type { ConfidenceProfile } from '@/types';
 
 const MAX_PDF_SIZE = 10 * 1024 * 1024; // 10MB
 const MAX_TEXT_SIZE = 50 * 1024 * 1024; // 50MB
@@ -76,7 +78,32 @@ export async function POST(req: NextRequest) {
       payload = await parseUploadedFile(buffer, mimeType);
     }
 
-    return NextResponse.json(buildIngestionResponse('file_upload', payload));
+    const ingestion = buildIngestionResponse('file_upload', payload);
+
+    let agentAnalysis = null;
+    try {
+      let existingProfile: ConfidenceProfile = {
+        dimensions: {},
+        overallConfidence: 0,
+        lastUpdated: Date.now(),
+      };
+      const profileField = formData.get('confidenceProfile');
+      if (typeof profileField === 'string') {
+        try {
+          existingProfile = JSON.parse(profileField) as ConfidenceProfile;
+        } catch { /* use default */ }
+      }
+      agentAnalysis = await analyzeDataSource({
+        uid: authResult.uid,
+        source: 'file_upload',
+        rawData: ingestion.data,
+        existingProfile,
+      });
+    } catch (err) {
+      console.error('[File Upload Agent Analysis]', err instanceof Error ? err.message : err);
+    }
+
+    return NextResponse.json({ ...ingestion, agentAnalysis });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to process file';
     console.error('[File Upload Error]', message);

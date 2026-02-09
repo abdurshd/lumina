@@ -3,6 +3,8 @@ import { verifyAuth, errorResponse, ErrorCode } from '@/lib/api-helpers';
 import { parseChatGPTExport } from '@/lib/data/chatgpt';
 import { buildIngestionResponse } from '@/lib/data/ingestion';
 import { hasSourceConsent } from '@/lib/data/consent';
+import { analyzeDataSource } from '@/lib/agent/data-analyzer';
+import type { ConfidenceProfile } from '@/types';
 
 const MAX_CONTENT_LENGTH = 50 * 1024 * 1024; // 50MB
 
@@ -21,7 +23,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  let body: { content?: string };
+  let body: { content?: string; confidenceProfile?: ConfidenceProfile };
   try {
     body = await req.json();
   } catch {
@@ -43,7 +45,26 @@ export async function POST(req: NextRequest) {
 
   try {
     const payload = parseChatGPTExport(content);
-    return NextResponse.json(buildIngestionResponse('chatgpt', payload));
+    const ingestion = buildIngestionResponse('chatgpt', payload);
+
+    let agentAnalysis = null;
+    try {
+      const existingProfile: ConfidenceProfile = body.confidenceProfile ?? {
+        dimensions: {},
+        overallConfidence: 0,
+        lastUpdated: Date.now(),
+      };
+      agentAnalysis = await analyzeDataSource({
+        uid: authResult.uid,
+        source: 'chatgpt',
+        rawData: ingestion.data,
+        existingProfile,
+      });
+    } catch (err) {
+      console.error('[ChatGPT Agent Analysis]', err instanceof Error ? err.message : err);
+    }
+
+    return NextResponse.json({ ...ingestion, agentAnalysis });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to parse ChatGPT export';
     return errorResponse(message, ErrorCode.VALIDATION_ERROR, 400);

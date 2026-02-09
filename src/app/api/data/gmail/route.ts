@@ -3,6 +3,8 @@ import { verifyAuth, errorResponse, ErrorCode } from '@/lib/api-helpers';
 import { fetchGmailData } from '@/lib/data/gmail';
 import { buildIngestionResponse } from '@/lib/data/ingestion';
 import { hasSourceConsent } from '@/lib/data/consent';
+import { analyzeDataSource } from '@/lib/agent/data-analyzer';
+import type { ConfidenceProfile } from '@/types';
 
 export async function POST(req: NextRequest) {
   const authResult = await verifyAuth(req);
@@ -19,7 +21,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  let body: { accessToken?: string };
+  let body: { accessToken?: string; confidenceProfile?: ConfidenceProfile };
   try {
     body = await req.json();
   } catch {
@@ -33,7 +35,27 @@ export async function POST(req: NextRequest) {
 
   try {
     const payload = await fetchGmailData(accessToken);
-    return NextResponse.json(buildIngestionResponse('gmail', payload));
+    const ingestion = buildIngestionResponse('gmail', payload);
+
+    // Agent analysis: extract dimension-mapped signals
+    let agentAnalysis = null;
+    try {
+      const existingProfile: ConfidenceProfile = body.confidenceProfile ?? {
+        dimensions: {},
+        overallConfidence: 0,
+        lastUpdated: Date.now(),
+      };
+      agentAnalysis = await analyzeDataSource({
+        uid: authResult.uid,
+        source: 'gmail',
+        rawData: ingestion.data,
+        existingProfile,
+      });
+    } catch (err) {
+      console.error('[Gmail Agent Analysis]', err instanceof Error ? err.message : err);
+    }
+
+    return NextResponse.json({ ...ingestion, agentAnalysis });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     const statusCode = (error as { code?: number }).code;

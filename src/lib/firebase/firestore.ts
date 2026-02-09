@@ -1,6 +1,6 @@
 import { doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs } from 'firebase/firestore';
 import { db } from './config';
-import type { UserProfile, DataInsight, QuizAnswer, SessionInsight, TalentReport, StageStatus, AssessmentStage, QuizScore, QuizDimensionSummary, UserSignal, UserFeedback, QuizModuleProgress, UserConstraints, ComputedProfile, CareerRecommendation, MicroChallenge, Reflection, ProfileSnapshot, IterationState, ActionPlanProgress, CorpusDocument, AnalyticsEvent } from '@/types';
+import type { UserProfile, DataInsight, QuizAnswer, SessionInsight, TalentReport, StageStatus, AssessmentStage, QuizScore, QuizDimensionSummary, UserSignal, UserFeedback, QuizModuleProgress, UserConstraints, ComputedProfile, CareerRecommendation, MicroChallenge, Reflection, ProfileSnapshot, IterationState, ActionPlanProgress, CorpusDocument, AnalyticsEvent, AgentDecision } from '@/types';
 import {
   canUseSessionStorage,
   clearAssessmentSessionCache,
@@ -525,4 +525,18 @@ export async function getAllUserData(uid: string): Promise<Record<string, unknow
     reflections,
     profileSnapshots: snapshots,
   };
+}
+
+// --- Agent Decisions ---
+
+export async function saveAgentDecision(uid: string, decision: AgentDecision): Promise<void> {
+  await setDoc(doc(db, 'users', uid, 'agent_decisions', decision.id), decision);
+}
+
+export async function getAgentDecisions(uid: string): Promise<AgentDecision[]> {
+  const ref = collection(db, 'users', uid, 'agent_decisions');
+  const snap = await getDocs(ref);
+  return snap.docs
+    .map((d) => d.data() as AgentDecision)
+    .sort((a, b) => a.timestamp - b.timestamp);
 }
