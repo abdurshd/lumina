@@ -754,7 +754,7 @@ Modify `src/components/dashboard/pre-completion-dashboard.tsx`:
 ### Task 7.2 — Confidence-Gated Stage Transitions
 
 ```
-STATUS: [ ]
+STATUS: [x]
 LOCK: UNLOCKED
 PRIORITY: MEDIUM
 DEPENDS ON: 1.1, 1.2
