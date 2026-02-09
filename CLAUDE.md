@@ -85,4 +85,4 @@ Firestore helpers are in `src/lib/firebase/firestore.ts`.
 
 ### Styling
 
-Tailwind v4 with CSS variables defined in `globals.css`. Dark cosmic theme with custom utilities: `.glass`, `.glow-amber`, `.text-gradient-gold`, `.text-gradient-violet`. Fonts: Instrument Serif (headings), Outfit (sans), Geist Mono (mono). No animated background effects (floating orbs, grain overlays, pulsing glows) — keep the UI static and clean.
+Tailwind v4 with CSS variables defined in `globals.css`. Neutral dark gray theme (Remotion-inspired) with green primary. Custom utilities: `.glass` (flat dark card with subtle border), `.glass-heavy`, `.text-gradient-gold` (solid green text). Fonts: Outfit (headings + body), Geist Mono (mono). No animated background effects, no glow/blur effects — keep the UI static and clean.

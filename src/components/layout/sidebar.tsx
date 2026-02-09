@@ -32,7 +32,7 @@ export function Sidebar() {
     <aside className="flex h-full w-64 flex-col glass border-r border-white/[0.06]">
       <div className="flex items-center gap-2.5 px-6 py-5">
         <Sparkles className="h-6 w-6 text-primary" />
-        <span className="text-xl font-bold text-gradient-gold font-serif">Lumina</span>
+        <span className="text-xl font-bold text-gradient-gold">Lumina</span>
       </div>
       <div className="h-px bg-white/[0.06]" />
       <nav className="flex-1 space-y-1 px-3 py-4">
@@ -43,7 +43,7 @@ export function Sidebar() {
             className={cn(
               'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 animate-fade-in-up',
               pathname === item.href
-                ? 'bg-primary/10 text-primary glow-amber-sm'
+                ? 'bg-primary/10 text-primary'
                 : 'text-muted-foreground hover:bg-white/[0.05] hover:text-foreground'
             )}
             style={{ animationDelay: `${i * 60}ms` }}

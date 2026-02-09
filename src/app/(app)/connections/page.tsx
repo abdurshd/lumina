@@ -197,7 +197,7 @@ export default function ConnectionsPage() {
               <LoadingButton
                 onClick={() => router.push('/quiz')}
                 icon={ArrowRight}
-                className="w-full glow-amber-sm"
+                className="w-full"
               >
                 Continue to Quiz
               </LoadingButton>
@@ -207,7 +207,7 @@ export default function ConnectionsPage() {
                 loading={analyzeMutation.isPending}
                 loadingText="Analyzing your data with AI..."
                 icon={Sparkles}
-                className="w-full glow-amber-sm"
+                className="w-full"
               >
                 Analyze Data
               </LoadingButton>

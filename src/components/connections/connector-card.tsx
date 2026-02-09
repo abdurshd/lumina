@@ -31,7 +31,7 @@ export const ConnectorCard = memo(function ConnectorCard({
   disabledReason,
 }: ConnectorCardProps) {
   return (
-    <Card className={`glass transition-all duration-300 ${isConnected ? 'border-emerald-500/20' : 'hover:glow-amber-sm'}`}>
+    <Card className={`glass transition-all duration-300 ${isConnected ? 'border-emerald-500/20' : 'hover:border-white/[0.18]'}`}>
       <CardHeader className="flex flex-row items-start gap-4">
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
           {icon}

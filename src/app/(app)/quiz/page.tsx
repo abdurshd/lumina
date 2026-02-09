@@ -106,7 +106,7 @@ export default function QuizPage() {
           title="Quiz Complete!"
           description="Great job! Your answers will help Lumina understand your unique strengths. Now let's have a live conversation."
           action={
-            <LoadingButton onClick={() => router.push('/session')} size="lg" icon={ArrowRight} className="glow-amber-sm">
+            <LoadingButton onClick={() => router.push('/session')} size="lg" icon={ArrowRight}>
               Start Live Session
             </LoadingButton>
           }

@@ -52,16 +52,16 @@ export default function LoginPage() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent glow-amber-sm" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
     );
   }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 relative overflow-hidden">
-      <Card className="w-full max-w-md glass-heavy glow-amber animate-fade-in-up">
+      <Card className="w-full max-w-md glass-heavy animate-fade-in-up">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 glow-amber-sm">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
             <Sparkles className="h-8 w-8 text-primary" />
           </div>
           <CardTitle className="text-2xl text-gradient-gold">Welcome to Lumina</CardTitle>
@@ -76,7 +76,7 @@ export default function LoginPage() {
             onClick={handleLogin}
             loading={isSigningIn}
             loadingText="Signing in..."
-            className="w-full glow-amber-sm"
+            className="w-full"
             size="lg"
           >
             <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">

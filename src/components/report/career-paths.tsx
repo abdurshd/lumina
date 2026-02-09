@@ -19,7 +19,7 @@ export const CareerPaths = memo(function CareerPaths({ paths }: CareerPathsProps
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg font-sans">{path.title}</CardTitle>
-              <Badge variant={path.match >= 85 ? 'default' : 'secondary'} className={path.match >= 85 ? 'glow-amber-sm' : 'bg-white/[0.06]'}>
+              <Badge variant={path.match >= 85 ? 'default' : 'secondary'} className={path.match >= 85 ? '' : 'bg-white/[0.06]'}>
                 {path.match}% match
               </Badge>
             </div>

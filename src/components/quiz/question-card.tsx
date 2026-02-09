@@ -54,7 +54,7 @@ export function QuestionCard({ question, onAnswer, questionNumber, totalQuestion
                 key={i}
                 variant={selectedOption === option ? 'default' : 'outline'}
                 className={`w-full justify-start text-left h-auto py-3 px-4 transition-all duration-200 ${
-                  selectedOption === option ? 'glow-amber-sm' : 'hover:bg-white/[0.06]'
+                  selectedOption === option ? '' : 'hover:bg-white/[0.06]'
                 }`}
                 onClick={() => setSelectedOption(option)}
               >
@@ -93,7 +93,7 @@ export function QuestionCard({ question, onAnswer, questionNumber, totalQuestion
           />
         )}
 
-        <Button onClick={handleSubmit} disabled={!canSubmit} className="w-full glow-amber-sm">
+        <Button onClick={handleSubmit} disabled={!canSubmit} className="w-full">
           {questionNumber === totalQuestions ? 'Finish Quiz' : 'Next Question'}
         </Button>
       </CardContent>

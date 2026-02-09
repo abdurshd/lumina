@@ -37,7 +37,7 @@ export default function DashboardPage() {
         <div className="mt-4 flex items-center gap-2">
           <div className="h-2 flex-1 rounded-full bg-white/[0.06] overflow-hidden">
             <div
-              className="h-2 rounded-full bg-primary transition-all duration-500 ease-out glow-amber-sm"
+              className="h-2 rounded-full bg-primary transition-all duration-500 ease-out"
               style={{ width: `${(completedCount / 4) * 100}%` }}
             />
           </div>
@@ -60,7 +60,7 @@ export default function DashboardPage() {
                 key={stage.key}
                 className={`transition-all duration-300 animate-fade-in-up ${
                   isActive
-                    ? 'glass glow-amber-sm'
+                    ? 'glass border-primary/20'
                     : isCompleted
                     ? 'glass border-emerald-500/20'
                     : 'opacity-50'
@@ -91,7 +91,7 @@ export default function DashboardPage() {
                   </div>
                   {(isActive || isCompleted) && (
                     <Link href={stage.href}>
-                      <Button variant={isActive ? 'default' : 'outline'} size="sm" className={isActive ? 'glow-amber-sm' : ''}>
+                      <Button variant={isActive ? 'default' : 'outline'} size="sm">
                         {isActive ? 'Start' : 'Review'}
                         <ChevronRight className="ml-1 h-4 w-4" />
                       </Button>

@@ -53,10 +53,10 @@ export default function LandingPage() {
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2.5">
             <Sparkles className="h-6 w-6 text-primary" />
-            <span className="text-xl font-bold text-gradient-gold font-serif">Lumina</span>
+            <span className="text-xl font-bold text-gradient-gold">Lumina</span>
           </div>
           <Link href="/login">
-            <Button className="glow-amber-sm">Get Started</Button>
+            <Button>Get Started</Button>
           </Link>
         </div>
       </header>
@@ -80,7 +80,7 @@ export default function LandingPage() {
         </p>
         <div className="mt-10 flex items-center justify-center gap-4 animate-fade-in-up" style={{ animationDelay: '300ms' }}>
           <Link href="/login">
-            <Button size="lg" className="gap-2 glow-amber">
+            <Button size="lg" className="gap-2">
               Start Your Discovery <ArrowRight className="h-4 w-4" />
             </Button>
           </Link>
@@ -97,7 +97,7 @@ export default function LandingPage() {
         </div>
         <div className="grid gap-6 sm:grid-cols-2">
           {features.map((feature, i) => (
-            <Card key={i} className="relative overflow-hidden glass hover:glow-amber-sm transition-shadow duration-500 animate-fade-in-up" style={{ animationDelay: `${400 + i * 100}ms` }}>
+            <Card key={i} className="relative overflow-hidden glass hover:border-white/[0.18] transition-all duration-500 animate-fade-in-up" style={{ animationDelay: `${400 + i * 100}ms` }}>
               <CardContent className="pt-6">
                 <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
                   <feature.icon className="h-6 w-6" />
@@ -112,7 +112,7 @@ export default function LandingPage() {
 
       {/* How it works */}
       <section className="relative py-20">
-        <div className="absolute inset-0 glass -z-10" />
+        <div className="absolute inset-0 bg-[#1a1a1a] -z-10" />
         <div className="mx-auto max-w-4xl px-6">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold">How It Works</h2>
@@ -121,7 +121,7 @@ export default function LandingPage() {
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {howItWorks.map((item, i) => (
               <div key={item.step} className="text-center animate-fade-in-up" style={{ animationDelay: `${i * 100}ms` }}>
-                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold glow-amber-sm font-mono text-sm">
+                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground font-bold font-mono text-sm">
                   {item.step}
                 </div>
                 <h3 className="font-semibold mb-1 font-sans">{item.title}</h3>
@@ -134,14 +134,14 @@ export default function LandingPage() {
 
       {/* CTA */}
       <section className="mx-auto max-w-4xl px-6 py-20 text-center relative">
-        <div className="relative rounded-2xl glass-heavy p-12 glow-amber overflow-hidden">
+        <div className="relative rounded-2xl glass-heavy p-12 overflow-hidden">
           <Target className="mx-auto mb-4 h-10 w-10 text-primary" />
           <h2 className="text-3xl font-bold mb-4">Ready to discover your hidden talents?</h2>
           <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
             Join Lumina and let AI illuminate the potential you didn&apos;t know you had.
           </p>
           <Link href="/login">
-            <Button size="lg" className="gap-2 glow-amber">
+            <Button size="lg" className="gap-2">
               Get Started Free <ArrowRight className="h-4 w-4" />
             </Button>
           </Link>
@@ -153,7 +153,7 @@ export default function LandingPage() {
         <div className="mx-auto max-w-6xl px-6 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium font-serif">Lumina</span>
+            <span className="text-sm font-medium">Lumina</span>
           </div>
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
             <span className="flex items-center gap-1">

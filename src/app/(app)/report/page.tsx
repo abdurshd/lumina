@@ -88,7 +88,7 @@ export default function ReportPage() {
               loadingText="Generating your report (this may take a minute)..."
               icon={Sparkles}
               size="lg"
-              className="glow-amber"
+              className=""
             >
               Generate Report
             </LoadingButton>

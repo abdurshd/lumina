@@ -119,7 +119,7 @@ export default function SessionPage() {
         <div className="flex items-center gap-4">
           {isConnected && <SessionTimer seconds={sessionDuration} />}
           {!isConnected && insights.length > 0 && (
-            <LoadingButton onClick={handleFinish} loading={isSaving} icon={Brain} className="glow-amber-sm">
+            <LoadingButton onClick={handleFinish} loading={isSaving} icon={Brain}>
               View Report
             </LoadingButton>
           )}

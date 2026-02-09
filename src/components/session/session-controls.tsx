@@ -22,7 +22,7 @@ export function SessionControls({
 }: SessionControlsProps) {
   if (!isConnected && !isConnecting) {
     return (
-      <Button onClick={onConnect} size="lg" className="gap-2 glow-amber">
+      <Button onClick={onConnect} size="lg" className="gap-2">
         <Video className="h-5 w-5" />
         Start Session
       </Button>

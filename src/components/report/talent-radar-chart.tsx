@@ -22,14 +22,14 @@ export const TalentRadarChart = memo(function TalentRadarChart({ dimensions }: T
           <PolarGrid stroke="rgba(255,255,255,0.08)" />
           <PolarAngleAxis
             dataKey="subject"
-            tick={{ fill: '#faf5ef', fontSize: 12 }}
+            tick={{ fill: '#a3a3a3', fontSize: 12 }}
           />
           <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
           <Radar
             name="Talent"
             dataKey="value"
-            stroke="#f59e0b"
-            fill="#f59e0b"
+            stroke="#22c55e"
+            fill="#22c55e"
             fillOpacity={0.15}
             strokeWidth={2}
           />

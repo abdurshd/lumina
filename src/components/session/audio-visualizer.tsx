@@ -20,9 +20,9 @@ export function AudioVisualizer({ isActive }: AudioVisualizerProps) {
             animationDelay: `${i * 0.08}s`,
             animationDuration: `${0.4 + Math.random() * 0.4}s`,
             background: isActive
-              ? `linear-gradient(to top, #f59e0b, #8b5cf6)`
+              ? `linear-gradient(to top, #22c55e, #4ade80)`
               : 'rgba(255,255,255,0.15)',
-            boxShadow: isActive ? '0 0 6px rgba(245,158,11,0.3)' : 'none',
+            boxShadow: isActive ? '0 0 6px rgba(34,197,94,0.2)' : 'none',
           }}
         />
       ))}
