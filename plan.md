@@ -595,7 +595,7 @@ Modify report UI components to display confidence gates visually:
 ### Task 6.1 — Agent Decision Log Component
 
 ```
-STATUS: [ ]
+STATUS: [x]
 LOCK: UNLOCKED
 PRIORITY: HIGH
 DEPENDS ON: 1.3
