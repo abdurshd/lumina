@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
@@ -9,6 +9,7 @@ import { useAuthStore } from '@/stores/auth-store';
 import { staggerContainer, staggerItem, smoothTransition, hoverRotateIcon, morphTransition } from '@/lib/motion';
 import {
   LayoutDashboard,
+  UserCircle,
   Plug,
   Brain,
   Video,
@@ -36,6 +37,7 @@ import { ThemeToggle } from '@/components/layout/theme-toggle';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/profile', label: 'Profile', icon: UserCircle },
   { href: '/connections', label: 'Connections', icon: Plug },
   { href: '/quiz', label: 'Quiz', icon: Brain },
   { href: '/session', label: 'Live Session', icon: Video },
@@ -50,7 +52,8 @@ interface SidebarContentProps {
 
 function SidebarContent({ onNavClick }: SidebarContentProps) {
   const pathname = usePathname();
-  const { profile, signOut } = useAuthStore();
+  const profile = useAuthStore((state) => state.profile);
+  const signOut = useAuthStore((state) => state.signOut);
   const shouldReduceMotion = useReducedMotion();
   const [hoveredHref, setHoveredHref] = useState<string | null>(null);
 
@@ -74,6 +77,7 @@ function SidebarContent({ onNavClick }: SidebarContentProps) {
             <motion.div key={item.href} variants={shouldReduceMotion ? undefined : staggerItem}>
               <Link
                 href={item.href}
+                prefetch
                 onClick={onNavClick}
                 className={cn(
                   'relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold transition-colors duration-200',
@@ -117,16 +121,18 @@ function SidebarContent({ onNavClick }: SidebarContentProps) {
       </motion.nav>
       <div className="h-[2px] bg-overlay-subtle" />
       <div className="flex items-center gap-3 px-4 py-4">
-        <motion.div whileHover={shouldReduceMotion ? undefined : { scale: 1.08 }} transition={smoothTransition}>
-          <Avatar className="h-9 w-9 border-2 border-overlay-medium">
-            <AvatarImage src={profile?.photoURL} />
-            <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">{profile?.displayName?.charAt(0) ?? 'U'}</AvatarFallback>
-          </Avatar>
-        </motion.div>
-        <div className="flex-1 min-w-0">
-          <p className="truncate text-sm font-bold">{profile?.displayName}</p>
-          <p className="truncate text-xs text-muted-foreground">{profile?.email}</p>
-        </div>
+        <Link href="/profile" onClick={onNavClick} className="flex items-center gap-3 flex-1 min-w-0">
+          <motion.div whileHover={shouldReduceMotion ? undefined : { scale: 1.08 }} transition={smoothTransition}>
+            <Avatar className="h-9 w-9 border-2 border-overlay-medium">
+              <AvatarImage src={profile?.photoURL} />
+              <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">{profile?.displayName?.charAt(0) ?? 'U'}</AvatarFallback>
+            </Avatar>
+          </motion.div>
+          <div className="flex-1 min-w-0">
+            <p className="truncate text-sm font-bold">{profile?.displayName}</p>
+            <p className="truncate text-xs text-muted-foreground">{profile?.email}</p>
+          </div>
+        </Link>
         <ThemeToggle />
         <AlertDialog>
           <AlertDialogTrigger asChild>
@@ -152,11 +158,13 @@ function SidebarContent({ onNavClick }: SidebarContentProps) {
   );
 }
 
-// Desktop sidebar - static
+const MemoizedSidebarContent = memo(SidebarContent);
+
+// Desktop sidebar — hidden below 1024px, visible on wider screens
 export function Sidebar() {
   return (
-    <aside className="hidden lg:flex h-full w-64 flex-col bg-sidebar border-r-2 border-overlay-subtle">
-      <SidebarContent />
+    <aside className="hidden lg:flex h-full w-64 shrink-0 flex-col bg-sidebar border-r-2 border-overlay-subtle">
+      <MemoizedSidebarContent />
     </aside>
   );
 }
@@ -172,7 +180,7 @@ export function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="left"
-        className="w-64 p-0 border-r-2 border-overlay-subtle bg-sidebar"
+        className="w-64 p-0 border-r-2 border-sidebar-border bg-sidebar"
         showCloseButton={false}
       >
         <SheetHeader className="sr-only">
@@ -182,7 +190,7 @@ export function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
           </SheetDescription>
         </SheetHeader>
         <div className="flex h-full flex-col">
-          <SidebarContent onNavClick={() => onOpenChange(false)} />
+          <MemoizedSidebarContent onNavClick={() => onOpenChange(false)} />
         </div>
       </SheetContent>
     </Sheet>

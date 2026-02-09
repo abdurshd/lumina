@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth, errorResponse, ErrorCode } from '@/lib/api-helpers';
 import { parseUploadedFile, isSupportedMimeType } from '@/lib/data/file-upload';
 import { buildIngestionResponse } from '@/lib/data/ingestion';
-import { hasSourceConsent } from '@/lib/data/consent';
+import { ensureSourceConsent } from '@/lib/data/consent';
 import { getGeminiClientForUser } from '@/lib/gemini/client';
 import { GEMINI_MODELS } from '@/lib/gemini/models';
 import { trackGeminiUsage } from '@/lib/gemini/byok';
@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     return errorResponse('Authentication required', ErrorCode.UNAUTHORIZED, 401);
   }
 
-  const consented = await hasSourceConsent(authResult.uid, 'file_upload');
+  const consented = await ensureSourceConsent(authResult.uid, 'file_upload');
   if (!consented) {
     return errorResponse(
       'File upload consent not granted. Enable this source in onboarding or settings first.',

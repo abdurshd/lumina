@@ -89,7 +89,7 @@ export default function QuizPage() {
     }
 
     return (
-      <div className="mx-auto max-w-4xl px-6 py-12">
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 py-8 sm:py-12">
         <PageHeader
           icon={Brain}
           title="Talent Quiz"
@@ -238,7 +238,7 @@ export default function QuizPage() {
 
   if (isScoring) {
     return (
-      <div className="mx-auto max-w-2xl px-6 py-12">
+      <div className="mx-auto max-w-2xl px-4 sm:px-6 py-8 sm:py-12">
         <EmptyState
           icon={Brain}
           title="Scoring Your Answers..."
@@ -253,7 +253,7 @@ export default function QuizPage() {
 
   if (isComplete) {
     return (
-      <div className="mx-auto max-w-2xl px-6 py-12">
+      <div className="mx-auto max-w-2xl px-4 sm:px-6 py-8 sm:py-12">
         <EmptyState
           icon={Brain}
           title="Quiz Complete!"
@@ -290,7 +290,7 @@ export default function QuizPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-6 py-12">
+    <div className="mx-auto max-w-3xl px-4 sm:px-6 py-8 sm:py-12">
       <PageHeader
         icon={Brain}
         title="Talent Quiz"

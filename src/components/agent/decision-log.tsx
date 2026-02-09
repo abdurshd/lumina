@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import {
   Brain,
   Database,
@@ -55,11 +56,18 @@ const ACTION_LABELS: Record<AgentActionType, string> = {
   probe_dimension: 'Probed Dimension',
 };
 
+const MAX_VISIBLE_DECISIONS = 100;
+
+const TIME_FORMATTER = new Intl.DateTimeFormat(undefined, {
+  hour: '2-digit',
+  minute: '2-digit',
+});
+
 interface DecisionLogProps {
   filter?: AgentActionType;
 }
 
-function DecisionCard({ decision }: { decision: AgentDecision }) {
+const DecisionCard = memo(function DecisionCard({ decision }: { decision: AgentDecision }) {
   const [expanded, setExpanded] = useState(false);
   const Icon = ACTION_ICONS[decision.action] ?? Brain;
   const colorClass = ACTION_COLORS[decision.action] ?? 'text-neutral-400';
@@ -115,15 +123,49 @@ function DecisionCard({ decision }: { decision: AgentDecision }) {
       </Card>
     </motion.div>
   );
+});
+
+function DecisionLogInner({ filtered, visible }: { filtered: AgentDecision[]; visible: AgentDecision[] }) {
+  return (
+    <>
+      {/* Confidence Dashboard */}
+      <div className="px-2 py-2 border-b border-neutral-800">
+        <ConfidenceDashboard profile={null} compact />
+      </div>
+
+      <ScrollArea className="flex-1 px-2 py-2">
+        <div className="space-y-2">
+          <AnimatePresence mode="popLayout">
+            {filtered.length === 0 ? (
+              <p className="text-xs text-neutral-500 text-center py-8">
+                No agent decisions yet.
+              </p>
+            ) : (
+              visible.map((d) => (
+                <DecisionCard key={d.id} decision={d} />
+              ))
+            )}
+          </AnimatePresence>
+        </div>
+      </ScrollArea>
+    </>
+  );
 }
 
+/** Desktop sidebar panel */
 export function DecisionLog({ filter }: DecisionLogProps) {
   const [collapsed, setCollapsed] = useState(false);
   const decisions = useAgentStore((s) => s.decisions);
 
-  const filtered = filter
-    ? decisions.filter((d) => d.action === filter)
-    : decisions;
+  const filtered = useMemo(
+    () => (filter ? decisions.filter((d) => d.action === filter) : decisions),
+    [decisions, filter]
+  );
+
+  const visible = useMemo(
+    () => filtered.slice(-MAX_VISIBLE_DECISIONS).reverse(),
+    [filtered]
+  );
 
   if (collapsed) {
     return (
@@ -159,31 +201,65 @@ export function DecisionLog({ filter }: DecisionLogProps) {
           <PanelRightClose className="w-3.5 h-3.5" />
         </Button>
       </div>
-      {/* Confidence Dashboard */}
-      <div className="px-2 py-2 border-b border-neutral-800">
-        <ConfidenceDashboard profile={null} compact />
-      </div>
-
-      <ScrollArea className="flex-1 px-2 py-2">
-        <div className="space-y-2">
-          <AnimatePresence mode="popLayout">
-            {filtered.length === 0 ? (
-              <p className="text-xs text-neutral-500 text-center py-8">
-                No agent decisions yet.
-              </p>
-            ) : (
-              [...filtered].reverse().map((d) => (
-                <DecisionCard key={d.id} decision={d} />
-              ))
-            )}
-          </AnimatePresence>
-        </div>
-      </ScrollArea>
+      <DecisionLogInner filtered={filtered} visible={visible} />
     </div>
   );
 }
 
+/** Mobile sheet for agent decision log */
+export function MobileDecisionLog({ filter }: DecisionLogProps) {
+  const [open, setOpen] = useState(false);
+  const decisions = useAgentStore((s) => s.decisions);
+
+  const filtered = useMemo(
+    () => (filter ? decisions.filter((d) => d.action === filter) : decisions),
+    [decisions, filter]
+  );
+
+  const visible = useMemo(
+    () => filtered.slice(-MAX_VISIBLE_DECISIONS).reverse(),
+    [filtered]
+  );
+
+  return (
+    <>
+      {/* Floating button — bottom-right, visible only on mobile/tablet */}
+      <button
+        onClick={() => setOpen(true)}
+        className="fixed bottom-5 right-5 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-primary shadow-lg xl:hidden"
+        aria-label="Open agent log"
+      >
+        <Brain className="h-5 w-5 text-primary-foreground" />
+        {filtered.length > 0 && (
+          <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-[10px] font-bold text-white">
+            {filtered.length > 99 ? '99+' : filtered.length}
+          </span>
+        )}
+      </button>
+
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetContent side="right" className="w-80 sm:w-96 p-0 bg-neutral-950/95 border-neutral-800">
+          <SheetHeader className="px-3 py-2 border-b border-neutral-800">
+            <div className="flex items-center gap-2">
+              <Brain className="w-4 h-4 text-green-400" />
+              <SheetTitle className="text-xs font-medium text-neutral-200">Agent Log</SheetTitle>
+              <Badge variant="secondary" className="text-[10px] px-1 py-0">
+                {filtered.length}
+              </Badge>
+            </div>
+            <SheetDescription className="sr-only">
+              Agent decision log and confidence dashboard
+            </SheetDescription>
+          </SheetHeader>
+          <div className="flex flex-col h-[calc(100%-3rem)]">
+            <DecisionLogInner filtered={filtered} visible={visible} />
+          </div>
+        </SheetContent>
+      </Sheet>
+    </>
+  );
+}
+
 function formatTimestamp(ts: number): string {
-  const date = new Date(ts);
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  return TIME_FORMATTER.format(ts);
 }

@@ -4,15 +4,13 @@ import { motion, useReducedMotion } from 'framer-motion';
 import type { HTMLMotionProps } from 'framer-motion';
 
 const pageVariants = {
-  hidden: { opacity: 0, y: 8 },
+  hidden: { opacity: 0.98, y: 2 },
   visible: {
     opacity: 1,
     y: 0,
     transition: {
-      type: 'spring' as const,
-      stiffness: 300,
-      damping: 30,
-      duration: 0.3,
+      duration: 0.14,
+      ease: 'easeOut' as const,
     },
   },
 };

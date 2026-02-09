@@ -110,16 +110,18 @@ export function HeroSection() {
           className="flex flex-col sm:flex-row items-center justify-center gap-6"
         >
           <Link href="/login" className="w-full sm:w-auto">
-            <button className="btn-premium w-full sm:w-auto min-w-[240px]">
+            <Button size="lg" className="w-full sm:w-auto min-w-[240px]">
               Start Discovery Journey
-            </button>
+            </Button>
           </Link>
-          <button
-            className="btn-premium-outline w-full sm:w-auto min-w-[240px] glass-premium"
+          <Button
+            variant="outline"
+            size="lg"
+            className="w-full sm:w-auto min-w-[240px]"
             onClick={scrollToHowItWorks}
           >
             Explore Methodology
-          </button>
+          </Button>
         </motion.div>
       </motion.div>
 

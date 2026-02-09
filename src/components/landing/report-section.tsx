@@ -1,12 +1,9 @@
 'use client';
 
 import { FileCheck, BarChart3, ListTodo } from 'lucide-react';
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { useRef } from 'react';
+import { motion } from 'framer-motion';
 import { ReportConstellationScene } from '@/components/landing/svg/report-constellation-scene';
 import { ReportMockup } from '@/components/landing/mockups/report-mockup';
-import { ScrollReveal } from '@/components/motion/scroll-reveal';
-import { slideInFromBottom } from '@/lib/motion';
 
 const HIGHLIGHTS = [
     { icon: FileCheck, title: "Traceable Origins", text: "Every insight is bound to a specific semantic trace from your digital footprint." },
@@ -15,10 +12,8 @@ const HIGHLIGHTS = [
 ];
 
 export function ReportSection() {
-    const sectionRef = useRef<HTMLDivElement>(null);
-
     return (
-        <section id="report" ref={sectionRef} className="bg-background py-32 relative overflow-hidden">
+        <section id="report" className="bg-background py-32 relative overflow-hidden">
             <div className="container mx-auto px-6 relative z-10">
                 <div className="text-center max-w-3xl mx-auto mb-20">
                     <motion.div

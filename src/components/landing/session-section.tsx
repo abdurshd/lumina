@@ -1,12 +1,9 @@
 'use client';
 
 import { Video, Sparkles, Eye, MessageCircle } from 'lucide-react';
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { useRef } from 'react';
+import { motion } from 'framer-motion';
 import { SessionScene } from '@/components/landing/svg/session-scene';
 import { SessionMockup } from '@/components/landing/mockups/session-mockup';
-import { ScrollReveal } from '@/components/motion/scroll-reveal';
-import { slideInLeft } from '@/lib/motion';
 
 const FEATURES = [
     { icon: Video, title: "Linguistic Calibration", text: "Analyzing vocal harmonics and semantic cadence to decode underlying cognitive states." },
@@ -16,10 +13,8 @@ const FEATURES = [
 ];
 
 export function SessionSection() {
-    const sectionRef = useRef<HTMLDivElement>(null);
-
     return (
-        <section id="session" ref={sectionRef} className="bg-background py-32 relative overflow-hidden">
+        <section id="session" className="bg-background py-32 relative overflow-hidden">
             <div className="container mx-auto px-6 relative z-10">
                 <div className="flex flex-col lg:flex-row items-center gap-24">
 

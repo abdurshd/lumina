@@ -7,11 +7,10 @@ import { slideInLeft } from '@/lib/motion';
 
 const SECTIONS = [
     { id: 'hero', label: 'GENESIS', roman: '01' },
-    { id: 'data', label: 'EXCAVATION', roman: '02' },
-    { id: 'quiz', label: 'SYNTHESIS', roman: '03' },
-    { id: 'session', label: 'RESONANCE', roman: '04' },
-    { id: 'report', label: 'MANIFESTO', roman: '05' },
-    { id: 'how-it-works', label: 'PROTOCOL', roman: '06' },
+    { id: 'quiz', label: 'SYNTHESIS', roman: '02' },
+    { id: 'session', label: 'RESONANCE', roman: '03' },
+    { id: 'report', label: 'MANIFESTO', roman: '04' },
+    { id: 'how-it-works', label: 'PROTOCOL', roman: '05' },
 ];
 
 export function SidebarNav() {

@@ -2,15 +2,29 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { useAuthStore } from '@/stores/auth-store';
 import { ErrorBoundary } from '@/components/shared';
 import { Sidebar, MobileSidebar } from '@/components/layout/sidebar';
 import { MobileHeader } from '@/components/layout/mobile-header';
 import { PageTransition } from '@/components/motion/page-transition';
-import { DecisionLog } from '@/components/agent/decision-log';
+
+const DecisionLog = dynamic(
+  () => import('@/components/agent/decision-log').then((mod) => mod.DecisionLog),
+  { ssr: false }
+);
+
+const MobileDecisionLog = dynamic(
+  () => import('@/components/agent/decision-log').then((mod) => mod.MobileDecisionLog),
+  { ssr: false }
+);
+
+const NAV_ROUTES = ['/dashboard', '/profile', '/connections', '/quiz', '/session', '/report', '/evolution', '/settings'] as const;
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const { user, profile, loading } = useAuthStore();
+  const user = useAuthStore((state) => state.user);
+  const profile = useAuthStore((state) => state.profile);
+  const loading = useAuthStore((state) => state.loading);
   const router = useRouter();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -26,6 +40,21 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       router.push('/onboarding');
     }
   }, [loading, profile, pathname, router]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const prefetchRoutes = () => {
+      for (const route of NAV_ROUTES) {
+        if (route !== pathname) {
+          router.prefetch(route);
+        }
+      }
+    };
+
+    const timeoutId = window.setTimeout(prefetchRoutes, 150);
+    return () => window.clearTimeout(timeoutId);
+  }, [user, pathname, router]);
 
   if (loading) {
     return (
@@ -65,21 +94,24 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Desktop sidebar */}
       <Sidebar />
 
-      {/* Main content - add top padding on mobile for header */}
-      <main className="flex-1 overflow-y-auto overflow-x-hidden pt-14 lg:pt-0">
+      {/* Main content - add top padding below 1024px for mobile header */}
+      <main className="flex-1 overflow-y-auto overflow-x-hidden pt-14 min-[1024px]:pt-0">
         <ErrorBoundary>
-          <PageTransition key={pathname}>
+          <PageTransition>
             {children}
           </PageTransition>
         </ErrorBoundary>
       </main>
 
-      {/* Agent decision log — visible on assessment pages (desktop only) */}
+      {/* Agent decision log — desktop sidebar */}
       {isAssessmentPage && (
         <div className="hidden xl:flex">
           <DecisionLog />
         </div>
       )}
+
+      {/* Agent decision log — mobile floating button + sheet */}
+      {isAssessmentPage && <MobileDecisionLog />}
     </div>
   );
 }

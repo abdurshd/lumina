@@ -1,12 +1,9 @@
 'use client';
 
 import { Compass, Heart, Zap, BookOpen, Target, ArrowRight } from 'lucide-react';
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { useRef } from 'react';
+import { motion } from 'framer-motion';
 import { NeuralBrainScene } from '@/components/landing/svg/neural-brain-scene';
 import { QuizMockup } from '@/components/landing/mockups/quiz-mockup';
-import { ScrollReveal } from '@/components/motion/scroll-reveal';
-import { slideInRight, slideInLeft } from '@/lib/motion';
 
 const MODULES = [
     { icon: Compass, title: "Interest Vectors", desc: "Mapping your curiosity landscape.", color: "text-blue-400" },
@@ -17,10 +14,8 @@ const MODULES = [
 ];
 
 export function QuizSection() {
-    const containerRef = useRef<HTMLDivElement>(null);
-
     return (
-        <section id="quiz" ref={containerRef} className="bg-background py-32 relative overflow-hidden">
+        <section id="quiz" className="bg-background py-32 relative overflow-hidden">
             <div className="container mx-auto px-6 relative z-10">
                 <div className="flex flex-col lg:flex-row items-center gap-20">
 

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth, errorResponse, ErrorCode } from '@/lib/api-helpers';
 import { parseChatGPTExport } from '@/lib/data/chatgpt';
 import { buildIngestionResponse } from '@/lib/data/ingestion';
-import { hasSourceConsent } from '@/lib/data/consent';
+import { ensureSourceConsent } from '@/lib/data/consent';
 import { analyzeDataSource } from '@/lib/agent/data-analyzer';
 import type { ConfidenceProfile } from '@/types';
 
@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     return errorResponse('Authentication required', ErrorCode.UNAUTHORIZED, 401);
   }
 
-  const consented = await hasSourceConsent(authResult.uid, 'chatgpt');
+  const consented = await ensureSourceConsent(authResult.uid, 'chatgpt');
   if (!consented) {
     return errorResponse(
       'ChatGPT export consent not granted. Enable this source in onboarding or settings first.',

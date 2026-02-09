@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth, errorResponse, ErrorCode } from '@/lib/api-helpers';
 import { fetchNotionData } from '@/lib/data/notion';
 import { buildIngestionResponse } from '@/lib/data/ingestion';
-import { hasSourceConsent } from '@/lib/data/consent';
+import { ensureSourceConsent } from '@/lib/data/consent';
 import { analyzeDataSource } from '@/lib/agent/data-analyzer';
 import type { ConfidenceProfile } from '@/types';
 
@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     return errorResponse('Authentication required', ErrorCode.UNAUTHORIZED, 401);
   }
 
-  const consented = await hasSourceConsent(authResult.uid, 'notion');
+  const consented = await ensureSourceConsent(authResult.uid, 'notion');
   if (!consented) {
     return errorResponse(
       'Notion consent not granted. Enable this source in onboarding or settings first.',

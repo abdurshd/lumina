@@ -9,7 +9,7 @@ import {
   type Session,
   type LiveServerMessage,
 } from "@google/genai";
-import { GEMINI_MODELS } from "./models";
+import { GEMINI_MODELS, toLiveApiModelName } from "./models";
 import { LIVE_SESSION_SYSTEM_PROMPT } from "./prompts";
 import { SaveInsightFunctionDeclaration, FetchUserProfileDeclaration, SaveSignalDeclaration, StartQuizModuleDeclaration, ScheduleNextStepDeclaration, EvaluateConfidenceDeclaration, LogAgentReasoningDeclaration } from "@/lib/schemas/session";
 import type { SessionInsight, UserSignal, QuizModuleId, ConfidenceProfile } from "@/types";
@@ -45,7 +45,7 @@ export interface LiveSessionCallbacks {
   onAgentReasoning?: (entry: AgentReasoningEntry) => void;
 }
 
-const MAX_RECONNECT_RETRIES = 5;
+const MAX_RECONNECT_RETRIES = 3;
 const RECONNECT_BASE_DELAY_MS = 1000;
 const CONTEXT_TOKEN_THRESHOLD = 65_000;
 const CHARS_PER_TOKEN = 4;
@@ -59,9 +59,11 @@ export class LiveSessionManager {
   private apiVersion: 'v1alpha' | 'v1' = 'v1alpha';
   private dataContext: string | null = null;
   private confidenceProfile: ConfidenceProfile | null = null;
+  private liveModel: string = GEMINI_MODELS.LIVE;
   private transcriptCharCount = 0;
   private isReconnecting = false;
   private manualDisconnect = false;
+  private autoReconnectDisabled = false;
   private pendingUserTurns: string[] = [];
   private _connected = false;
 
@@ -73,28 +75,32 @@ export class LiveSessionManager {
     authToken: string,
     dataContext: string,
     apiVersion: 'v1alpha' | 'v1' = 'v1alpha',
-    confidenceProfile?: ConfidenceProfile
+    confidenceProfile?: ConfidenceProfile,
+    liveModel?: string
   ): Promise<void> {
     this.apiKey = authToken;
     this.dataContext = dataContext;
     this.apiVersion = apiVersion;
-    this.confidenceProfile = confidenceProfile ?? null;
+    this.confidenceProfile = confidenceProfile ?? this.confidenceProfile ?? null;
+    this.liveModel = liveModel ?? this.liveModel;
     this.manualDisconnect = false;
+    this.autoReconnectDisabled = false;
+    this._connected = false;
 
     // Build confidence-aware system instruction
     let confidenceContext = "";
-    if (confidenceProfile && Object.keys(confidenceProfile.dimensions).length > 0) {
-      const dimLines = Object.entries(confidenceProfile.dimensions)
+    if (this.confidenceProfile && Object.keys(this.confidenceProfile.dimensions).length > 0) {
+      const dimLines = Object.entries(this.confidenceProfile.dimensions)
         .map(([dim, dc]) => `  ${dim}: ${dc.confidence}% (sources: ${dc.sourceTypes.join(", ")})`)
         .join("\n");
-      const highConfDims = Object.entries(confidenceProfile.dimensions)
+      const highConfDims = Object.entries(this.confidenceProfile.dimensions)
         .filter(([, dc]) => dc.confidence >= 70)
         .map(([dim]) => dim);
-      const lowConfDims = Object.entries(confidenceProfile.dimensions)
+      const lowConfDims = Object.entries(this.confidenceProfile.dimensions)
         .filter(([, dc]) => dc.confidence < 40)
         .map(([dim]) => dim);
 
-      confidenceContext = `\n\nDIMENSION CONFIDENCE PROFILE (overall: ${confidenceProfile.overallConfidence}%):\n${dimLines}`;
+      confidenceContext = `\n\nDIMENSION CONFIDENCE PROFILE (overall: ${this.confidenceProfile.overallConfidence}%):\n${dimLines}`;
       if (highConfDims.length > 0) {
         confidenceContext += `\n\nHIGH CONFIDENCE (can skip): ${highConfDims.join(", ")}`;
       }
@@ -103,69 +109,105 @@ export class LiveSessionManager {
       }
     }
 
-    try {
-      const client = new GoogleGenAI({
-        apiKey: authToken,
-        httpOptions: { apiVersion },
-      });
+    const client = new GoogleGenAI({
+      apiKey: authToken,
+      httpOptions: { apiVersion },
+    });
 
-      this.session = await client.live.connect({
-        model: GEMINI_MODELS.LIVE,
-        callbacks: {
-          onopen: () => {
-            this._connected = true;
-            this.callbacks.onConnectionChange(true);
-          },
-          onmessage: (message: LiveServerMessage) => {
-            this.handleMessage(message);
-          },
-          onerror: (e: ErrorEvent) => {
-            this.callbacks.onError(new Error(e.message || "WebSocket error"));
-          },
-          onclose: () => {
-            this._connected = false;
-            if (!this.isReconnecting) {
-              this.callbacks.onConnectionChange(false);
-              if (!this.manualDisconnect && this.apiKey && this.dataContext) {
-                this.reconnect();
-              }
-            }
-          },
-        },
-        config: {
-          responseModalities: [Modality.AUDIO, Modality.TEXT],
-          speechConfig: {
-            voiceConfig: {
-              prebuiltVoiceConfig: {
-                voiceName: "Aoede",
-              },
+    try {
+      const config: Parameters<typeof client.live.connect>[0]["config"] = {
+        responseModalities: [Modality.AUDIO, Modality.TEXT],
+        speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: {
+              voiceName: "Aoede",
             },
           },
-          systemInstruction: {
-            parts: [
-              {
-                text: `${LIVE_SESSION_SYSTEM_PROMPT}${confidenceContext}\n\nCONTEXT ABOUT THIS USER (from their data analysis and quiz):\n${dataContext}`,
-              },
-            ],
-          },
-          tools: [{ functionDeclarations: [SaveInsightFunctionDeclaration, FetchUserProfileDeclaration, SaveSignalDeclaration, StartQuizModuleDeclaration, ScheduleNextStepDeclaration, EvaluateConfidenceDeclaration, LogAgentReasoningDeclaration] }],
-          sessionResumption: {
-            handle: this.sessionHandle ?? undefined,
-          },
         },
-      });
+        systemInstruction: {
+          parts: [
+            {
+              text: `${LIVE_SESSION_SYSTEM_PROMPT}${confidenceContext}\n\nCONTEXT ABOUT THIS USER (from their data analysis and quiz):\n${dataContext}`,
+            },
+          ],
+        },
+        tools: [{ functionDeclarations: [SaveInsightFunctionDeclaration, FetchUserProfileDeclaration, SaveSignalDeclaration, StartQuizModuleDeclaration, ScheduleNextStepDeclaration, EvaluateConfidenceDeclaration, LogAgentReasoningDeclaration] }],
+      };
+
+      if (this.sessionHandle) {
+        config.sessionResumption = { handle: this.sessionHandle };
+      }
+
+      const modelCandidates = this.getModelCandidates(this.liveModel);
+      let lastConnectionError: unknown = null;
+      const callbacks: Parameters<typeof client.live.connect>[0]["callbacks"] = {
+        onopen: () => {
+          this._connected = true;
+          this.callbacks.onConnectionChange(true);
+        },
+        onmessage: (message: LiveServerMessage) => {
+          this.handleMessage(message);
+        },
+        onerror: (e: ErrorEvent) => {
+          this._connected = false;
+          this.callbacks.onError(new Error(e.message || "WebSocket error"));
+        },
+        onclose: () => {
+          const wasConnected = this._connected;
+          this._connected = false;
+          this.session = null;
+
+          if (wasConnected) {
+            this.callbacks.onConnectionChange(false);
+          }
+
+          if (
+            !this.manualDisconnect &&
+            !this.autoReconnectDisabled &&
+            this.apiKey &&
+            this.dataContext &&
+            !this.isReconnecting
+          ) {
+            void this.reconnect();
+          }
+        },
+      };
+
+      for (const model of modelCandidates) {
+        try {
+          this.session = await client.live.connect({
+            model,
+            callbacks,
+            config,
+          });
+          this.liveModel = model;
+          break;
+        } catch (error) {
+          lastConnectionError = error;
+          this._connected = false;
+          this.session = null;
+        }
+      }
+
+      if (!this.session) {
+        throw lastConnectionError instanceof Error
+          ? lastConnectionError
+          : new Error("Failed to open live session");
+      }
+
+      await this.waitForOpen();
       this.flushPendingUserTurns();
     } catch (error) {
-      this.callbacks.onError(
-        error instanceof Error ? error : new Error(String(error)),
-      );
+      this._connected = false;
+      this.session = null;
+      throw error instanceof Error ? error : new Error(String(error));
     }
   }
 
   private handleMessage(message: LiveServerMessage): void {
     // Handle GoAway - server is signaling imminent disconnect
     if (message.goAway) {
-      this.reconnect();
+      void this.reconnect();
       return;
     }
 
@@ -305,8 +347,15 @@ export class LiveSessionManager {
   }
 
   private async reconnect(): Promise<void> {
-    if (this.isReconnecting || !this.apiKey || !this.dataContext) return;
+    if (
+      this.isReconnecting ||
+      this.manualDisconnect ||
+      this.autoReconnectDisabled ||
+      !this.apiKey ||
+      !this.dataContext
+    ) return;
     this.isReconnecting = true;
+    this._connected = false;
 
     // Close existing session quietly
     if (this.session) {
@@ -321,12 +370,22 @@ export class LiveSessionManager {
       await new Promise((resolve) => setTimeout(resolve, delay));
 
       try {
-        await this.connect(this.apiKey, this.dataContext, this.apiVersion);
+        await this.connect(
+          this.apiKey,
+          this.dataContext,
+          this.apiVersion,
+          this.confidenceProfile ?? undefined,
+          this.liveModel,
+        );
+        if (!this._connected) {
+          throw new Error("Live session did not open after reconnect");
+        }
         this.isReconnecting = false;
         return;
       } catch {
         if (attempt === MAX_RECONNECT_RETRIES) {
           this.isReconnecting = false;
+          this.autoReconnectDisabled = true;
           this.callbacks.onConnectionChange(false);
           this.callbacks.onError(
             new Error("Session reconnection failed after maximum retries"),
@@ -364,7 +423,7 @@ export class LiveSessionManager {
         },
       });
     } catch {
-      // WebSocket already closed — suppress
+      this.handleTransportFailure();
     }
   }
 
@@ -378,7 +437,7 @@ export class LiveSessionManager {
         },
       });
     } catch {
-      // WebSocket already closed — suppress
+      this.handleTransportFailure();
     }
   }
 
@@ -387,12 +446,17 @@ export class LiveSessionManager {
       this.pendingUserTurns.push(text);
       return;
     }
-    this.session.sendClientContent({
-      turns: [{ role: "user", parts: [{ text }] }],
-      turnComplete: true,
-    });
-    this.callbacks.onTranscript(text, true);
-    this.transcriptCharCount += text.length;
+    try {
+      this.session.sendClientContent({
+        turns: [{ role: "user", parts: [{ text }] }],
+        turnComplete: true,
+      });
+      this.callbacks.onTranscript(text, true);
+      this.transcriptCharCount += text.length;
+    } catch {
+      this.pendingUserTurns.push(text);
+      this.handleTransportFailure();
+    }
   }
 
   getInsights(): SessionInsight[] {
@@ -401,6 +465,7 @@ export class LiveSessionManager {
 
   disconnect(): void {
     this.manualDisconnect = true;
+    this.isReconnecting = false;
     this._connected = false;
     if (this.session) {
       try {
@@ -409,8 +474,8 @@ export class LiveSessionManager {
         // Ignore close errors
       }
       this.session = null;
-      this.callbacks.onConnectionChange(false);
     }
+    this.callbacks.onConnectionChange(false);
   }
 
   private flushPendingUserTurns(): void {
@@ -427,5 +492,45 @@ export class LiveSessionManager {
       this.callbacks.onTranscript(text, true);
       this.transcriptCharCount += text.length;
     }
+  }
+
+  private async waitForOpen(timeoutMs: number = 5_000): Promise<void> {
+    if (this._connected) return;
+
+    const started = Date.now();
+    while (!this._connected) {
+      if (!this.session) {
+        throw new Error("Live session closed before opening");
+      }
+      if (Date.now() - started >= timeoutMs) {
+        throw new Error("Timed out opening live session");
+      }
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+  }
+
+  private handleTransportFailure(): void {
+    if (this.manualDisconnect || this.autoReconnectDisabled || this.isReconnecting) return;
+    this._connected = false;
+    this.callbacks.onConnectionChange(false);
+
+    if (this.session) {
+      try {
+        this.session.close();
+      } catch {
+        // Ignore close errors
+      }
+      this.session = null;
+    }
+
+    void this.reconnect();
+  }
+
+  private getModelCandidates(model: string): string[] {
+    const liveModelName = toLiveApiModelName(model);
+    if (liveModelName === model) {
+      return [model];
+    }
+    return [liveModelName, model];
   }
 }

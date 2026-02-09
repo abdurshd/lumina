@@ -94,6 +94,16 @@
   --glass-border: rgba(0, 0, 0, 0.1);
   --glass-reflection: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.1) 100%);
 
+  /* Sidebar - Light */
+  --sidebar: #f8f8f8;
+  --sidebar-foreground: #09090b;
+  --sidebar-primary: oklch(60% 0.18 200);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: oklch(60% 0.18 200 / 0.1);
+  --sidebar-accent-foreground: #18181b;
+  --sidebar-border: #e4e4e7;
+  --sidebar-ring: oklch(60% 0.18 200);
+
   /* Custom Overlays - Light */
   --overlay-subtle: rgba(0, 0, 0, 0.05);
   --overlay-strong: rgba(0, 0, 0, 0.8);
@@ -126,6 +136,16 @@
   --glass-bg: rgba(255, 255, 255, 0.03);
   --glass-border: rgba(255, 255, 255, 0.08);
   --glass-reflection: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.05) 100%);
+
+  /* Sidebar - Dark */
+  --sidebar: #0a0a0a;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: oklch(75% 0.18 200);
+  --sidebar-primary-foreground: #000;
+  --sidebar-accent: oklch(75% 0.18 200 / 0.1);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-ring: oklch(75% 0.18 200);
 
   /* Custom Overlays - Dark */
   --overlay-subtle: rgba(255, 255, 255, 0.05);
@@ -267,9 +287,9 @@
   }
 }
 
-/* -- Utility classes ------------------------ */
+/* -- Component classes (lower priority than utilities) -- */
 
-@layer utilities {
+@layer components {
   .glass-premium {
     background: var(--glass-bg);
     backdrop-filter: blur(12px);
@@ -292,35 +312,11 @@
     text-shadow: 0 0 15px var(--accent);
   }
 
-  /* Premium Motion Buttons */
-  .btn-premium {
-    @apply relative px-8 py-4 rounded-xl font-bold transition-all duration-300 overflow-hidden;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-    color: #000;
-    box-shadow: 0 4px 15px var(--accent);
-  }
+}
 
-  .btn-premium:hover {
-    @apply -translate-y-1;
-    box-shadow: 0 8px 25px oklch(75% 0.18 200 / 0.5);
-    filter: brightness(1.1);
-  }
+/* -- Utility classes ------------------------ */
 
-  .btn-premium:active {
-    @apply translate-y-0 scale-95;
-  }
-
-  .btn-premium-outline {
-    @apply relative px-8 py-4 rounded-xl font-bold transition-all duration-300 border-2 border-primary/30;
-    background: transparent;
-    color: var(--primary);
-  }
-
-  .btn-premium-outline:hover {
-    @apply bg-primary/10 border-primary/60 -translate-y-1;
-    box-shadow: 0 8px 25px oklch(75% 0.18 200 / 0.1);
-  }
-
+@layer utilities {
   /* Scroll-reveal masks */
   .mask-radial-edges {
     mask-image: radial-gradient(circle at center, black 0%, transparent 100%);

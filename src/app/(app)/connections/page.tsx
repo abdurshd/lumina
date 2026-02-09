@@ -231,7 +231,7 @@ export default function ConnectionsPage() {
   }, [connectedCount, dataSources, user, setDataInsights, advanceStage, analyzeMutation]);
 
   return (
-    <div className="mx-auto max-w-3xl px-6 py-12">
+    <div className="mx-auto max-w-3xl px-4 sm:px-6 py-8 sm:py-12">
       <PageHeader
         icon={Plug}
         title="Data Connections"

@@ -107,7 +107,7 @@ export default function EvolutionPage() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-4xl px-6 py-10">
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 py-8 sm:py-10">
         <div className="space-y-6">
           <CardSkeleton />
           <CardSkeleton />
@@ -118,7 +118,7 @@ export default function EvolutionPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-6 py-10">
+    <div className="mx-auto max-w-4xl px-4 sm:px-6 py-8 sm:py-10">
       <PageHeader
         icon={TrendingUp}
         title="Evolution"

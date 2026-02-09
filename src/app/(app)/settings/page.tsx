@@ -27,9 +27,9 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Settings, Trash2, Database, Shield, ChevronRight, User, Link2Off, Download, FileSearch, Bell, Sun, Moon, AlertTriangle } from 'lucide-react';
+import { Settings, Trash2, Database, Shield, ChevronRight, Link2Off, Download, FileSearch, Bell, Sun, Moon, AlertTriangle } from 'lucide-react';
 import { StaggerList, StaggerItem } from '@/components/motion/stagger-list';
-import { staggerContainer, staggerItem, reducedMotionVariants, collapseExpand, snappySpring, smoothTransition } from '@/lib/motion';
+import { staggerContainer, staggerItem, reducedMotionVariants, collapseExpand, snappySpring } from '@/lib/motion';
 
 const DATA_SOURCES = [
   { key: 'dataInsights', label: 'Data Analysis', description: 'Gmail, ChatGPT, Drive, Notion analysis results' },
@@ -69,8 +69,6 @@ export default function SettingsPage() {
   const [showDataSection, setShowDataSection] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [confirmText, setConfirmText] = useState('');
-  const [displayName, setDisplayName] = useState(profile?.displayName ?? '');
-  const [isEditingName, setIsEditingName] = useState(false);
   const [consentSources, setConsentSources] = useState<string[]>(profile?.consentSources ?? []);
   const [isExporting, setIsExporting] = useState(false);
   const [isDeletingCorpus, setIsDeletingCorpus] = useState(false);
@@ -127,21 +125,6 @@ export default function SettingsPage() {
       },
     });
   }, [confirmText, deleteDataMutation, resetAssessment, refreshProfile]);
-
-  const handleSaveName = useCallback(() => {
-    if (!displayName.trim()) return;
-    updateProfileMutation.mutate({ displayName: displayName.trim() }, {
-      onSuccess: async () => {
-        await refreshProfile();
-        setIsEditingName(false);
-        toast.success('Display name updated.');
-      },
-      onError: (err) => {
-        const message = err instanceof FetchError ? err.message : 'Failed to update name';
-        toast.error(message);
-      },
-    });
-  }, [displayName, updateProfileMutation, refreshProfile]);
 
   const handleConsentToggle = useCallback((sourceId: string) => {
     setConsentSources((prev) => {
@@ -292,7 +275,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl px-6 py-12">
+    <div className="mx-auto max-w-3xl px-4 sm:px-6 py-8 sm:py-12">
       <PageHeader
         icon={Settings}
         title="Settings"
@@ -316,71 +299,6 @@ export default function SettingsPage() {
               <p className="text-xs text-yellow-500/80">
                 Treat this as a release gate: resolve legal/commercial eligibility before public launch.
               </p>
-            </CardContent>
-          </Card>
-        </StaggerItem>
-
-        {/* Profile */}
-        <StaggerItem>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 font-sans">
-                <User className="h-5 w-5 text-primary" />
-                Profile
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium">Display Name</p>
-                  <AnimatePresence mode="wait">
-                    {isEditingName ? (
-                      <motion.div
-                        key="edit"
-                        className="flex items-center gap-2 mt-1"
-                        initial={shouldReduceMotion ? false : { opacity: 0, y: -4 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -4 }}
-                        transition={smoothTransition}
-                      >
-                        <Input
-                          value={displayName}
-                          onChange={(e) => setDisplayName(e.target.value)}
-                          className="h-8 w-60"
-                        />
-                        <Button size="sm" onClick={handleSaveName} disabled={updateProfileMutation.isPending}>
-                          Save
-                        </Button>
-                        <Button size="sm" variant="ghost" onClick={() => { setIsEditingName(false); setDisplayName(profile?.displayName ?? ''); }}>
-                          Cancel
-                        </Button>
-                      </motion.div>
-                    ) : (
-                      <motion.p
-                        key="display"
-                        className="text-xs text-muted-foreground"
-                        initial={shouldReduceMotion ? false : { opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0 }}
-                        transition={{ duration: 0.15 }}
-                      >
-                        {profile?.displayName}
-                      </motion.p>
-                    )}
-                  </AnimatePresence>
-                </div>
-                {!isEditingName && (
-                  <Button variant="ghost" size="sm" onClick={() => setIsEditingName(true)}>
-                    Edit
-                  </Button>
-                )}
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium">Email</p>
-                  <p className="text-xs text-muted-foreground">{profile?.email}</p>
-                </div>
-              </div>
             </CardContent>
           </Card>
         </StaggerItem>

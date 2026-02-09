@@ -9,3 +9,11 @@ export const GEMINI_MODELS = {
 } as const;
 
 export type GeminiModelId = (typeof GEMINI_MODELS)[keyof typeof GEMINI_MODELS];
+
+/**
+ * Live endpoints are strict about fully-qualified model resource names.
+ * Keep constants canonical (without prefix) and normalize only when needed.
+ */
+export function toLiveApiModelName(model: string): string {
+  return model.startsWith('models/') ? model : `models/${model}`;
+}

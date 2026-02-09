@@ -3,8 +3,6 @@
 export function NeuralBrainScene() {
   return (
     <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none select-none z-0">
-      <div className="absolute inset-0 bg-background" />
-
       <svg
         className="w-full h-full"
         viewBox="0 0 1920 1080"

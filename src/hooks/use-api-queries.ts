@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { getTalentReport, getChallenges, getReflections, getProfileSnapshots, getCorpusDocuments, getActionPlanProgress } from '@/lib/firebase/firestore';
+import { getTalentReport, getChallenges, getReflections, getProfileSnapshots, getCorpusDocuments, getActionPlanProgress, getComputedProfile, getIterationState } from '@/lib/firebase/firestore';
 
 export function useTalentReportQuery(uid: string | undefined) {
   return useQuery({
@@ -50,6 +50,24 @@ export function useActionPlanProgressQuery(uid: string | undefined) {
   return useQuery({
     queryKey: ['actionPlanProgress', uid],
     queryFn: () => getActionPlanProgress(uid!),
+    enabled: !!uid,
+    staleTime: 30_000,
+  });
+}
+
+export function useComputedProfileQuery(uid: string | undefined) {
+  return useQuery({
+    queryKey: ['computedProfile', uid],
+    queryFn: () => getComputedProfile(uid!),
+    enabled: !!uid,
+    staleTime: 30_000,
+  });
+}
+
+export function useIterationStateQuery(uid: string | undefined) {
+  return useQuery({
+    queryKey: ['iterationState', uid],
+    queryFn: () => getIterationState(uid!),
     enabled: !!uid,
     staleTime: 30_000,
   });

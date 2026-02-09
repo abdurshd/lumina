@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth, errorResponse, ErrorCode } from '@/lib/api-helpers';
 import { GoogleGenAI } from '@google/genai';
-import { GEMINI_MODELS } from '@/lib/gemini/models';
+import { GEMINI_MODELS, toLiveApiModelName } from '@/lib/gemini/models';
 import { getAdminDb } from '@/lib/firebase/admin';
 import { resolveGeminiKeyForUser } from '@/lib/gemini/byok';
 
@@ -45,11 +45,12 @@ export async function POST(req: NextRequest) {
       apiKey: resolvedKey.apiKey,
       httpOptions: { apiVersion: 'v1alpha' },
     });
+    const liveModel = toLiveApiModelName(GEMINI_MODELS.LIVE);
 
     const now = Date.now();
     const expireTime = new Date(now + 30 * 60 * 1000).toISOString();
-    const newSessionExpireTime = new Date(now + 10 * 60 * 1000).toISOString();
-    const uses = 5;
+    const newSessionExpireTime = new Date(now + 25 * 60 * 1000).toISOString();
+    const uses = 20;
 
     const token = await ai.authTokens.create({
       config: {
@@ -57,7 +58,7 @@ export async function POST(req: NextRequest) {
         newSessionExpireTime,
         uses,
         liveConnectConstraints: {
-          model: GEMINI_MODELS.LIVE,
+          model: liveModel,
         },
       },
     });
@@ -69,7 +70,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       token: token.name,
       apiVersion: 'v1alpha',
-      model: GEMINI_MODELS.LIVE,
+      model: liveModel,
       expireTime,
       newSessionExpireTime,
       uses,

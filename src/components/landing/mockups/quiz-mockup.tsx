@@ -56,7 +56,7 @@ export function QuizMockup() {
 
                 {/* Footer */}
                 <div className="flex justify-end">
-                    <Button size="lg" className="btn-3d-primary w-full sm:w-auto px-8">
+                    <Button size="lg" className="w-full sm:w-auto px-8">
                         Continue
                     </Button>
                 </div>

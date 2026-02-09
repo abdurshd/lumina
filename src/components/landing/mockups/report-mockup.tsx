@@ -21,12 +21,12 @@ export function ReportMockup() {
 
                 <div className="flex flex-col md:flex-row gap-10">
                     {/* Left: Chart */}
-                    <div className="flex-1 min-h-[300px] relative">
+                    <div className="flex-1 relative" style={{ minHeight: 300 }}>
                         <div className="absolute top-0 left-0 z-10">
                             <Badge variant="outline" className="border-primary/50 text-primary bg-primary/10 mb-2">RIASEC: AIS</Badge>
                             <h3 className="text-xl font-bold">Talent Profile</h3>
                         </div>
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer width="100%" height={300}>
                             <RadarChart cx="50%" cy="50%" outerRadius="80%" data={DATA}>
                                 <PolarGrid stroke="rgba(255,255,255,0.1)" />
                                 <PolarAngleAxis dataKey="subject" tick={{ fill: '#a3a3a3', fontSize: 12 }} />

@@ -48,6 +48,13 @@ export function useLiveSession() {
   }, []);
 
   const microphone = useMicrophone(onSendAudio);
+  const webcamRef = useRef(webcam);
+  const microphoneRef = useRef(microphone);
+
+  const stopFrameCapture = useCallback(() => {
+    capturerRef.current?.stop();
+    capturerRef.current = null;
+  }, []);
 
   useEffect(() => {
     behaviorCaptureEnabledRef.current = behaviorCaptureEnabled;
@@ -78,12 +85,17 @@ export function useLiveSession() {
       setTimelineNarrative(tl.generateNarrative());
     },
     onError: (err: Error) => {
+      setIsConnecting(false);
       setError(err.message);
       console.error('Live session error:', err);
     },
     onConnectionChange: (connected: boolean) => {
       setIsConnected(connected);
       setIsConnecting(false);
+      microphoneRef.current.setEnabled(connected);
+      if (!connected) {
+        stopFrameCapture();
+      }
       if (connected) {
         setIsReconnecting(false);
         setReconnectAttempt(0);
@@ -93,6 +105,9 @@ export function useLiveSession() {
       playbackRef.current?.stop();
     },
     onReconnecting: (attempt: number) => {
+      setIsConnected(false);
+      stopFrameCapture();
+      microphoneRef.current.setEnabled(false);
       setIsReconnecting(true);
       setReconnectAttempt(attempt);
     },
@@ -114,19 +129,10 @@ export function useLiveSession() {
     },
   });
 
-  // Store webcam/microphone refs to avoid dependency issues
-  const webcamRef = useRef(webcam);
-  const microphoneRef = useRef(microphone);
-
   useEffect(() => {
     webcamRef.current = webcam;
     microphoneRef.current = microphone;
   });
-
-  const stopFrameCapture = useCallback(() => {
-    capturerRef.current?.stop();
-    capturerRef.current = null;
-  }, []);
 
   const maybeStartFrameCapture = useCallback(() => {
     if (!isConnected) return;
@@ -149,7 +155,8 @@ export function useLiveSession() {
       authToken: string,
       dataContext: string,
       apiVersion: 'v1alpha' | 'v1' = 'v1alpha',
-      confidenceProfile?: ConfidenceProfile
+      confidenceProfile?: ConfidenceProfile,
+      model?: string
     ) => {
     setIsConnecting(true);
     setError(null);
@@ -157,27 +164,47 @@ export function useLiveSession() {
       confidenceProfileRef.current = confidenceProfile;
     }
 
+    if (managerRef.current) {
+      managerRef.current.disconnect();
+      managerRef.current = null;
+    }
+
     const manager = new LiveSessionManager(callbacksRef.current);
     managerRef.current = manager;
 
-    await webcamRef.current.start();
-    await microphoneRef.current.start();
+    try {
+      await webcamRef.current.start();
+      await microphoneRef.current.start();
 
-    playbackRef.current = new AudioPlaybackManager();
-    await playbackRef.current.resume();
+      playbackRef.current = new AudioPlaybackManager();
+      await playbackRef.current.resume();
 
-    await manager.connect(authToken, dataContext, apiVersion, confidenceProfile);
-    maybeStartFrameCapture();
+      await manager.connect(authToken, dataContext, apiVersion, confidenceProfile, model);
+      maybeStartFrameCapture();
 
-    // Start session timer
-    timerRef.current = setInterval(() => {
-      setSessionDuration((prev) => prev + 1);
-    }, 1000);
+      // Start session timer
+      timerRef.current = setInterval(() => {
+        setSessionDuration((prev) => prev + 1);
+      }, 1000);
+    } catch (error) {
+      stopFrameCapture();
+      microphoneRef.current.stop();
+      webcamRef.current.stop();
+      playbackRef.current?.close();
+      playbackRef.current = null;
+      managerRef.current = null;
+      setIsConnecting(false);
+      setIsConnected(false);
+      throw error;
+    }
     },
-    [maybeStartFrameCapture]
+    [maybeStartFrameCapture, stopFrameCapture]
   );
 
   const disconnect = useCallback(() => {
+    setIsConnecting(false);
+    setIsReconnecting(false);
+    setReconnectAttempt(0);
     stopFrameCapture();
     microphoneRef.current.stop();
     webcamRef.current.stop();
@@ -224,6 +251,8 @@ export function useLiveSession() {
   useEffect(() => {
     return () => {
       capturerRef.current?.stop();
+      microphoneRef.current.stop();
+      webcamRef.current.stop();
       playbackRef.current?.close();
       managerRef.current?.disconnect();
       if (timerRef.current) clearInterval(timerRef.current);

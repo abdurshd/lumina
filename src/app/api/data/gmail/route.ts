@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth, errorResponse, ErrorCode } from '@/lib/api-helpers';
 import { fetchGmailData } from '@/lib/data/gmail';
 import { buildIngestionResponse } from '@/lib/data/ingestion';
-import { hasSourceConsent } from '@/lib/data/consent';
+import { ensureSourceConsent } from '@/lib/data/consent';
 import { analyzeDataSource } from '@/lib/agent/data-analyzer';
 import type { ConfidenceProfile } from '@/types';
 
@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     return errorResponse('Authentication required', ErrorCode.UNAUTHORIZED, 401);
   }
 
-  const consented = await hasSourceConsent(authResult.uid, 'gmail');
+  const consented = await ensureSourceConsent(authResult.uid, 'gmail');
   if (!consented) {
     return errorResponse(
       'Gmail consent not granted. Enable this source in onboarding or settings first.',

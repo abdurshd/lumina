@@ -50,22 +50,14 @@ export function CTASection() {
 
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-6 relative z-20">
                             <Link href="/login" className="w-full sm:w-auto">
-                                <motion.button
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    className="btn-premium w-full flex items-center justify-center gap-3 px-12 py-5 text-xl"
-                                >
+                                <Button size="lg" className="w-full">
                                     Initialize Extraction <ArrowRight className="h-6 w-6" />
-                                </motion.button>
+                                </Button>
                             </Link>
                             <Link href="/about" className="w-full sm:w-auto">
-                                <motion.button
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    className="btn-premium-outline w-full px-12 py-5 text-xl"
-                                >
+                                <Button variant="outline" size="lg" className="w-full">
                                     Visualizer Specs
-                                </motion.button>
+                                </Button>
                             </Link>
                         </div>
 

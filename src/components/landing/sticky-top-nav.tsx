@@ -11,7 +11,6 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { ThemeToggle } from '@/components/layout/theme-toggle';
 
 const NAV_LINKS = [
-    { name: 'DISCOVERY', href: '#data' },
     { name: 'ANALYSIS', href: '#quiz' },
     { name: 'SYNERGY', href: '#session' },
     { name: 'MANIFESTO', href: '#report' },
@@ -57,13 +56,9 @@ export function StickyTopNav() {
                     <div className="flex items-center gap-6 pl-4 border-l border-white/10">
                         <ThemeToggle />
                         <Link href="/login">
-                            <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                className="btn-premium px-6 py-2 text-xs"
-                            >
+                            <Button size="sm">
                                 START EXTRACTION
-                            </motion.button>
+                            </Button>
                         </Link>
                     </div>
                 </nav>
@@ -102,7 +97,7 @@ export function StickyTopNav() {
                                     ))}
                                     <div className="mt-12 pt-12 border-t border-white/10">
                                         <Link href="/login">
-                                            <Button className="w-full btn-premium py-8 text-xl">START EXTRACTION</Button>
+                                            <Button size="lg" className="w-full">START EXTRACTION</Button>
                                         </Link>
                                     </div>
                                 </nav>

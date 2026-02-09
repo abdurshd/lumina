@@ -94,9 +94,9 @@ export default function SessionPage() {
       return;
     }
     ephemeralTokenMutation.mutate(undefined, {
-      onSuccess: async ({ token, apiVersion }) => {
+      onSuccess: async ({ token, apiVersion, model }) => {
         try {
-          await connect(token, dataContext, apiVersion);
+          await connect(token, dataContext, apiVersion, undefined, model);
         } catch (err) {
           const message = err instanceof Error ? err.message : 'Failed to start session';
           setError(message);
@@ -166,7 +166,7 @@ export default function SessionPage() {
       };
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-10">
+    <div className="mx-auto max-w-6xl px-4 sm:px-6 py-6 sm:py-10">
       <PageHeader
         icon={LuminaIcon}
         title="Live Session"
@@ -226,21 +226,21 @@ export default function SessionPage() {
             exit={{ opacity: 0, y: -10, transition: { duration: 0.2 } }}
           >
             <Card className="mb-6 border-primary/30">
-              <CardContent className="flex items-center justify-between py-4">
-                <div className="flex items-center gap-3">
-                  <Brain className="h-5 w-5 text-primary" />
-                  <div>
+              <CardContent className="py-4">
+                <div className="flex items-start gap-3">
+                  <Brain className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium">Lumina suggests: Take the {suggestedModule.moduleId.replace(/_/g, ' ')} quiz</p>
                     <p className="text-xs text-muted-foreground">{suggestedModule.reason}</p>
+                    <div className="flex items-center gap-2 mt-3 sm:mt-2">
+                      <Button size="sm" variant="outline" onClick={dismissSuggestedModule}>
+                        Dismiss
+                      </Button>
+                      <Button size="sm" onClick={() => router.push(`/quiz?module=${suggestedModule.moduleId}`)}>
+                        Take Quiz
+                      </Button>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button size="sm" variant="outline" onClick={dismissSuggestedModule}>
-                    Dismiss
-                  </Button>
-                  <Button size="sm" onClick={() => router.push(`/quiz?module=${suggestedModule.moduleId}`)}>
-                    Take Quiz
-                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -300,7 +300,7 @@ export default function SessionPage() {
               <CardTitle className="text-lg font-sans">Conversation</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="h-[400px]">
+              <div className="h-[280px] sm:h-[400px]">
                 <TranscriptPanel entries={transcript} />
               </div>
               {isConnected && (

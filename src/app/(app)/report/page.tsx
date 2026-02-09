@@ -144,7 +144,7 @@ export default function ReportPage() {
 
   if (reportQuery.isLoading) {
     return (
-      <div className="mx-auto max-w-4xl px-6 py-10">
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 py-8 sm:py-10">
         <ReportSkeleton />
       </div>
     );
@@ -152,7 +152,7 @@ export default function ReportPage() {
 
   if (!report) {
     return (
-      <div className="mx-auto max-w-2xl px-6 py-10">
+      <div className="mx-auto max-w-2xl px-4 sm:px-6 py-8 sm:py-10">
         {reportMutation.error && (
           <ErrorAlert
             message={reportMutation.error instanceof FetchError ? reportMutation.error.message : 'Report generation failed. Please try again.'}
@@ -182,7 +182,7 @@ export default function ReportPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-6 py-12">
+    <div className="mx-auto max-w-4xl px-4 sm:px-6 py-8 sm:py-12">
       {/* Hero */}
       <motion.div
         className="mb-10 text-center"

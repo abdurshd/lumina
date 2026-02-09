@@ -72,32 +72,42 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   initAuthListener: () => {
     if (get()._listenerInitialized) return () => {};
     set({ _listenerInitialized: true });
-    let redirectResultChecked = false;
+    const redirectResultPromise = getRedirectResult(auth)
+      .then((redirectResult: UserCredential | null) => {
+        const redirectCredential = redirectResult
+          ? GoogleAuthProvider.credentialFromResult(redirectResult)
+          : null;
+
+        return {
+          user: redirectResult?.user ?? null,
+          accessToken: redirectCredential?.accessToken ?? null,
+        };
+      })
+      .catch((error) => {
+        console.warn('Failed to resolve redirect result', error);
+        return { user: null, accessToken: null };
+      });
 
     const unsub = onAuthStateChanged(auth, async (u) => {
-      set({ user: u });
-      if (u) {
-        let accessToken: string | null = null;
+      const redirectResult = await redirectResultPromise;
+      const resolvedUser = u ?? redirectResult.user;
+      const accessToken = redirectResult.accessToken;
 
-        if (!redirectResultChecked) {
-          redirectResultChecked = true;
-          try {
-            const redirectResult: UserCredential | null = await getRedirectResult(auth);
-            const redirectCredential = redirectResult
-              ? GoogleAuthProvider.credentialFromResult(redirectResult)
-              : null;
-            accessToken = redirectCredential?.accessToken ?? null;
-          } catch (error) {
-            console.warn('Failed to resolve redirect result', error);
-          }
+      set({ user: resolvedUser });
+
+      if (resolvedUser) {
+        try {
+          const profile = await ensureUserProfile(resolvedUser, accessToken);
+          setCachedRetentionMode(resolvedUser.uid, resolveRetentionMode(profile.dataRetentionMode));
+          set({
+            profile,
+            googleAccessToken: accessToken ?? profile.googleAccessToken ?? null,
+          });
+        } catch (error) {
+          // Preserve signed-in user state even if profile bootstrap fails.
+          console.error('Failed to initialize user profile', error);
+          set({ profile: null, googleAccessToken: accessToken });
         }
-
-        const profile = await ensureUserProfile(u, accessToken);
-        setCachedRetentionMode(u.uid, resolveRetentionMode(profile.dataRetentionMode));
-        set({
-          profile,
-          googleAccessToken: accessToken ?? profile.googleAccessToken ?? null,
-        });
       } else {
         set({ profile: null, googleAccessToken: null });
       }
@@ -151,6 +161,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   requestGmailAccess: async () => {
     const provider = new GoogleAuthProvider();
     provider.addScope('https://www.googleapis.com/auth/gmail.readonly');
+    provider.setCustomParameters({
+      prompt: 'consent select_account',
+      include_granted_scopes: 'true',
+    });
 
     try {
       const result = await signInWithPopup(auth, provider);
@@ -168,6 +182,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   requestDriveAccess: async () => {
     const provider = new GoogleAuthProvider();
     provider.addScope('https://www.googleapis.com/auth/drive.readonly');
+    provider.setCustomParameters({
+      prompt: 'consent select_account',
+      include_granted_scopes: 'true',
+    });
 
     try {
       const result = await signInWithPopup(auth, provider);
