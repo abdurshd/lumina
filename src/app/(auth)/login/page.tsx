@@ -59,16 +59,10 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 relative overflow-hidden">
-      {/* Floating background orbs */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
-        <div className="absolute -top-32 left-1/4 h-96 w-96 rounded-full bg-primary/[0.05] blur-3xl animate-float" />
-        <div className="absolute bottom-1/4 -right-20 h-80 w-80 rounded-full bg-secondary/[0.04] blur-3xl animate-float" style={{ animationDelay: '-3s' }} />
-      </div>
-
       <Card className="w-full max-w-md glass-heavy glow-amber animate-fade-in-up">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 glow-amber-sm">
-            <Sparkles className="h-8 w-8 text-primary animate-pulse-glow" />
+            <Sparkles className="h-8 w-8 text-primary" />
           </div>
           <CardTitle className="text-2xl text-gradient-gold">Welcome to Lumina</CardTitle>
           <CardDescription>

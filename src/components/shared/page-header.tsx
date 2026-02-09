@@ -15,7 +15,7 @@ export function PageHeader({ icon: Icon, title, description, children }: PageHea
       <div className="flex items-center justify-between">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-bold">
-            <Icon className="h-6 w-6 text-primary animate-pulse-glow" />
+            <Icon className="h-6 w-6 text-primary" />
             {title}
           </h1>
           <p className="mt-1 text-muted-foreground">{description}</p>

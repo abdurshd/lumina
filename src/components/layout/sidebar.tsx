@@ -31,7 +31,7 @@ export function Sidebar() {
   return (
     <aside className="flex h-full w-64 flex-col glass border-r border-white/[0.06]">
       <div className="flex items-center gap-2.5 px-6 py-5">
-        <Sparkles className="h-6 w-6 text-primary animate-pulse-glow" />
+        <Sparkles className="h-6 w-6 text-primary" />
         <span className="text-xl font-bold text-gradient-gold font-serif">Lumina</span>
       </div>
       <div className="h-px bg-white/[0.06]" />

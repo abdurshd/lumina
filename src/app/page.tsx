@@ -48,18 +48,11 @@ const howItWorks = [
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Ambient orbs */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
-        <div className="absolute -top-40 left-1/4 h-[500px] w-[500px] rounded-full bg-primary/[0.05] blur-3xl animate-float" />
-        <div className="absolute top-1/3 -right-32 h-96 w-96 rounded-full bg-secondary/[0.04] blur-3xl animate-float" style={{ animationDelay: '-3s' }} />
-        <div className="absolute bottom-0 left-1/3 h-80 w-80 rounded-full bg-primary/[0.03] blur-3xl animate-float" style={{ animationDelay: '-5s' }} />
-      </div>
-
       {/* Header */}
       <header className="sticky top-0 z-40 glass border-b border-white/[0.06]">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2.5">
-            <Sparkles className="h-6 w-6 text-primary animate-pulse-glow" />
+            <Sparkles className="h-6 w-6 text-primary" />
             <span className="text-xl font-bold text-gradient-gold font-serif">Lumina</span>
           </div>
           <Link href="/login">
@@ -142,7 +135,6 @@ export default function LandingPage() {
       {/* CTA */}
       <section className="mx-auto max-w-4xl px-6 py-20 text-center relative">
         <div className="relative rounded-2xl glass-heavy p-12 glow-amber overflow-hidden">
-          <div className="absolute -top-20 -right-20 h-40 w-40 rounded-full bg-primary/[0.06] blur-2xl animate-float" aria-hidden="true" />
           <Target className="mx-auto mb-4 h-10 w-10 text-primary" />
           <h2 className="text-3xl font-bold mb-4">Ready to discover your hidden talents?</h2>
           <p className="text-muted-foreground mb-8 max-w-xl mx-auto">

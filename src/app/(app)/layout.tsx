@@ -31,12 +31,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen relative">
-      {/* Ambient gradient orbs */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10" aria-hidden="true">
-        <div className="absolute -top-40 -right-40 h-96 w-96 rounded-full bg-primary/[0.04] blur-3xl animate-float" />
-        <div className="absolute top-1/2 -left-40 h-80 w-80 rounded-full bg-secondary/[0.04] blur-3xl animate-float" style={{ animationDelay: '-3s' }} />
-        <div className="absolute -bottom-40 right-1/3 h-72 w-72 rounded-full bg-primary/[0.03] blur-3xl animate-float" style={{ animationDelay: '-5s' }} />
-      </div>
       <Sidebar />
       <main className="flex-1 overflow-y-auto">
         <ErrorBoundary>

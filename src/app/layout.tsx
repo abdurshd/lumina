@@ -39,7 +39,6 @@ export default function RootLayout({
           {children}
         </AppProviders>
         <Toaster richColors position="bottom-right" />
-        <div className="grain-overlay" aria-hidden="true" />
       </body>
     </html>
   );

@@ -26,7 +26,7 @@ export default function DashboardPage() {
     <div className="mx-auto max-w-3xl px-6 py-10">
       <div className="mb-8 animate-fade-in-up">
         <div className="flex items-center gap-3 mb-2">
-          <Sparkles className="h-6 w-6 text-primary animate-pulse-glow" />
+          <Sparkles className="h-6 w-6 text-primary" />
           <h1 className="text-3xl font-bold">
             Welcome back{profile?.displayName ? `, ${profile.displayName.split(' ')[0]}` : ''}
           </h1>
