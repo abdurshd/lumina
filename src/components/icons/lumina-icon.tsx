@@ -34,20 +34,23 @@ const LuminaIconBase = forwardRef<SVGSVGElement, LuminaIconProps>(
           className="animate-lumina-beam"
         />
 
-        {/* Refracted rays — dashes flow outward with staggered phase */}
+        {/* Refracted rays — each a different color like dispersed light */}
         <line
           x1="13" y1="9" x2="23" y2="4"
+          stroke="#f97316"
           strokeDasharray="2 4"
           className="animate-lumina-ray"
         />
         <line
           x1="14.5" y1="12" x2="23" y2="12"
+          stroke="#22d3ee"
           strokeDasharray="2 4"
           className="animate-lumina-ray"
           style={{ animationDelay: '0.3s' }}
         />
         <line
           x1="16" y1="16" x2="23" y2="20"
+          stroke="#a78bfa"
           strokeDasharray="2 4"
           className="animate-lumina-ray"
           style={{ animationDelay: '0.6s' }}
