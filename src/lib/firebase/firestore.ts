@@ -1,6 +1,6 @@
 import { doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs } from 'firebase/firestore';
 import { db } from './config';
-import type { UserProfile, DataInsight, QuizAnswer, SessionInsight, TalentReport, StageStatus, AssessmentStage, QuizScore, QuizDimensionSummary, UserSignal, UserFeedback, QuizModuleProgress, UserConstraints, ComputedProfile, CareerRecommendation } from '@/types';
+import type { UserProfile, DataInsight, QuizAnswer, SessionInsight, TalentReport, StageStatus, AssessmentStage, QuizScore, QuizDimensionSummary, UserSignal, UserFeedback, QuizModuleProgress, UserConstraints, ComputedProfile, CareerRecommendation, MicroChallenge, Reflection, ProfileSnapshot, IterationState, ActionPlanProgress, CorpusDocument, AnalyticsEvent } from '@/types';
 
 export async function getUserProfile(uid: string): Promise<UserProfile | null> {
   const snap = await getDoc(doc(db, 'users', uid));
@@ -130,7 +130,20 @@ export async function getCareerRecommendations(uid: string): Promise<CareerRecom
 
 // --- User Profile Updates ---
 
-export async function updateUserProfile(uid: string, updates: Partial<Pick<UserProfile, 'displayName' | 'consentSources' | 'consentVersion'>>): Promise<void> {
+export async function updateUserProfile(
+  uid: string,
+  updates: Partial<
+    Pick<
+      UserProfile,
+      | 'displayName'
+      | 'consentSources'
+      | 'consentVersion'
+      | 'ageGateConfirmed'
+      | 'videoBehaviorConsent'
+      | 'dataRetentionMode'
+    >
+  >
+): Promise<void> {
   await updateDoc(doc(db, 'users', uid), updates);
 }
 
@@ -201,4 +214,136 @@ export async function getReportHistory(uid: string): Promise<{ report: TalentRep
   return snap.docs
     .map((d) => d.data() as { report: TalentReport; timestamp: number; quizScores?: QuizDimensionSummary })
     .sort((a, b) => b.timestamp - a.timestamp);
+}
+
+// --- Challenges ---
+
+export async function getChallenges(uid: string): Promise<MicroChallenge[]> {
+  const ref = collection(db, 'users', uid, 'challenges');
+  const snap = await getDocs(ref);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as MicroChallenge));
+}
+
+export async function saveChallenge(uid: string, challenge: MicroChallenge): Promise<void> {
+  await setDoc(doc(db, 'users', uid, 'challenges', challenge.id), challenge);
+}
+
+export async function saveChallenges(uid: string, challenges: MicroChallenge[]): Promise<void> {
+  for (const challenge of challenges) {
+    await setDoc(doc(db, 'users', uid, 'challenges', challenge.id), challenge);
+  }
+}
+
+export async function updateChallenge(uid: string, challengeId: string, updates: Partial<MicroChallenge>): Promise<void> {
+  await updateDoc(doc(db, 'users', uid, 'challenges', challengeId), updates);
+}
+
+// --- Reflections ---
+
+export async function getReflections(uid: string): Promise<Reflection[]> {
+  const ref = collection(db, 'users', uid, 'reflections');
+  const snap = await getDocs(ref);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Reflection));
+}
+
+export async function saveReflection(uid: string, reflection: Reflection): Promise<void> {
+  await setDoc(doc(db, 'users', uid, 'reflections', reflection.id), reflection);
+}
+
+// --- Profile Snapshots ---
+
+export async function getProfileSnapshots(uid: string): Promise<ProfileSnapshot[]> {
+  const ref = collection(db, 'users', uid, 'profileSnapshots');
+  const snap = await getDocs(ref);
+  return snap.docs
+    .map((d) => d.data() as ProfileSnapshot)
+    .sort((a, b) => a.timestamp - b.timestamp);
+}
+
+export async function saveProfileSnapshot(uid: string, snapshot: ProfileSnapshot): Promise<void> {
+  await setDoc(doc(db, 'users', uid, 'profileSnapshots', `v${snapshot.version}_${snapshot.timestamp}`), snapshot);
+}
+
+// --- Action Plan Progress ---
+
+export async function getActionPlanProgress(uid: string): Promise<ActionPlanProgress | null> {
+  const snap = await getDoc(doc(db, 'users', uid, 'assessment', 'actionPlanProgress'));
+  return snap.exists() ? (snap.data() as ActionPlanProgress) : null;
+}
+
+export async function saveActionPlanProgress(uid: string, progress: ActionPlanProgress): Promise<void> {
+  await setDoc(doc(db, 'users', uid, 'assessment', 'actionPlanProgress'), progress);
+}
+
+// --- Corpus Documents ---
+
+export async function getCorpusDocuments(uid: string): Promise<CorpusDocument[]> {
+  const ref = collection(db, 'users', uid, 'corpusDocuments');
+  const snap = await getDocs(ref);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as CorpusDocument));
+}
+
+export async function saveCorpusDocument(uid: string, document: CorpusDocument): Promise<void> {
+  await setDoc(doc(db, 'users', uid, 'corpusDocuments', document.id), document);
+}
+
+export async function deleteCorpusDocument(uid: string, documentId: string): Promise<void> {
+  await deleteDoc(doc(db, 'users', uid, 'corpusDocuments', documentId));
+}
+
+// --- Iteration State ---
+
+export async function getIterationState(uid: string): Promise<IterationState | null> {
+  const snap = await getDoc(doc(db, 'users', uid, 'assessment', 'iterationState'));
+  return snap.exists() ? (snap.data() as IterationState) : null;
+}
+
+export async function updateIterationState(uid: string, state: Partial<IterationState>): Promise<void> {
+  const ref = doc(db, 'users', uid, 'assessment', 'iterationState');
+  const snap = await getDoc(ref);
+  if (snap.exists()) {
+    await updateDoc(ref, state);
+  } else {
+    await setDoc(ref, {
+      currentChallenges: [],
+      completedChallengeCount: 0,
+      totalReflections: 0,
+      lastProfileUpdate: Date.now(),
+      iterationCount: 0,
+      ...state,
+    });
+  }
+}
+
+// --- Analytics ---
+
+export async function trackEvent(uid: string, event: AnalyticsEvent): Promise<void> {
+  const ref = doc(db, 'users', uid, 'analytics', String(event.timestamp));
+  await setDoc(ref, event);
+}
+
+// --- Export All User Data ---
+
+export async function getAllUserData(uid: string): Promise<Record<string, unknown>> {
+  const userProfile = await getUserProfile(uid);
+  const dataInsights = await getDataInsights(uid);
+  const quizAnswers = await getQuizAnswers(uid);
+  const sessionInsights = await getSessionInsights(uid);
+  const talentReport = await getTalentReport(uid);
+  const feedback = await getFeedback(uid);
+  const challenges = await getChallenges(uid);
+  const reflections = await getReflections(uid);
+  const snapshots = await getProfileSnapshots(uid);
+
+  return {
+    profile: userProfile,
+    dataInsights,
+    quizAnswers,
+    sessionInsights,
+    talentReport,
+    feedback,
+    challenges,
+    reflections,
+    profileSnapshots: snapshots,
+  };
 }

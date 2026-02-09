@@ -1,90 +1,116 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Repository guardrails for building Lumina.
+
+## Mission
+Build a multimodal talent-discovery platform that helps people find their strongest career direction using:
+- connected personal data sources,
+- adaptive psychometric assessment,
+- live multimodal AI conversation,
+- evidence-grounded recommendations.
+
+## Product Scope (Current)
+- Audience: `16+`
+- Geography: global
+- Platform: web-first, fully mobile responsive
+- Live mode: video + voice
+- Behavioral inference: enabled from face/body cues, but only with explicit consent
+- Data sources in scope:
+  - Gmail
+  - Google Drive
+  - Notion
+  - ChatGPT export
+  - local file upload
+- Output depth: role matching + learning roadmap + portfolio tasks
+- Psychometrics: expert-validated framework (not generic personality-only quiz)
+
+## Required Engineering Rules
+- Use `@google/genai` only.
+- Never expose `GEMINI_API_KEY` to browser clients.
+- Live sessions must use server-minted ephemeral tokens.
+- All API routes that require user data must call `verifyAuth(req)`.
+- All structured model outputs must use Zod validation.
+- Keep all system prompts in `src/lib/gemini/prompts.ts`.
+- TypeScript strict mode, no `any`.
+- shadcn/ui components only.
+- Tailwind v4 only.
+- All hooks prefixed with `use-`.
+
+## Gemini Model Policy
+Use centralized constants from `src/lib/gemini/models.ts` only.
+
+Current canonical model mapping:
+- Fast tasks: `gemini-2.5-flash`
+- Deep synthesis: `gemini-2.5-pro`
+- Live sessions: `gemini-2.5-flash-native-audio-preview-12-2025`
+
+## Live Session Security Policy
+- `/api/gemini/ephemeral-token` must mint ephemeral `auth_tokens` server-side.
+- Do not return raw API key.
+- Ephemeral token must constrain live model via `liveConnectConstraints`.
+- Starting a live session requires:
+  - `consentGiven`
+  - `ageGateConfirmed`
+  - `videoBehaviorConsent`
+
+## Consent and Behavioral Inference Rules
+Behavioral inference is allowed only for conversational/career coaching signals, such as:
+- engagement,
+- hesitation,
+- confidence patterns,
+- communication style.
+
+Never claim:
+- identity recognition,
+- medical diagnosis,
+- immutable personality certainty,
+- legally/academically consequential decisions from video alone.
+
+Every strong claim in output should include evidence and confidence.
+
+## Data Governance
+Target privacy mode:
+- raw imported source content is transient,
+- derived assessment data should default to session-only storage,
+- persistent storage should hold minimal profile/consent/settings data unless product explicitly requires otherwise.
+
+Never persist raw long-term copies of:
+- full email content,
+- full document text dumps,
+- raw chat exports,
+- raw video recordings.
+
+## API Route Pattern
+For Gemini-backed API routes:
+1. `verifyAuth(req)`
+2. Parse and validate request (Zod)
+3. Call Gemini model
+4. Parse response (`safeParseJson` where applicable)
+5. Validate response schema (Zod)
+6. Return typed success/error responses
+
+## Update Checklist for New User Fields
+When adding profile/consent fields, update all:
+- `src/types/index.ts`
+- API request schemas
+- Firestore helper typings and writes
+- API client request typings
+- UI onboarding/settings forms
+
+## Quality Bar
+Changes are not done until:
+- lint passes (warnings may exist from unrelated work but no new errors),
+- build passes,
+- no key leakage or consent bypass is introduced,
+- mobile layout remains usable.
 
 ## Commands
-
 ```bash
-npm run dev          # Start dev server (http://localhost:3000)
-npm run build        # Production build
-npm run lint         # ESLint (v9 flat config)
+npm run dev
+npm run lint
+npm run build
 ```
 
-No test framework is configured.
-
-## Project Guidelines
-
-- Use `@google/genai` SDK (NOT deprecated `@google/generative-ai`)
-- All Gemini calls go through API routes (never expose API key in client code, except Live API with ephemeral token)
-- Use Zod schemas for all structured Gemini outputs
-- Firebase Auth: always verify ID token in API routes via `verifyAuth(req)` from `src/lib/api-helpers.ts`
-- Google sign-in only requests basic scopes (email, profile) — sensitive scopes (Gmail, Drive) are requested via incremental authorization when connecting data sources
-- shadcn/ui components only (no custom UI primitives)
-- Tailwind v4 only (no CSS modules or styled-components)
-- All hooks prefixed with `use-`
-- System prompts live in `src/lib/gemini/prompts.ts` only — this is the single source of truth
-- TypeScript strict mode, no `any` types
-- Keep commits short, no Claude attribution in commits
-
-## Architecture
-
-**Stack:** Next.js 16 (App Router), React 19, TypeScript strict, Firebase (Auth + Firestore), Gemini AI, Tailwind v4, shadcn/ui
-
-**What Lumina does:** Multimodal AI talent discovery app. Users authenticate with Google, connect data sources (Gmail, ChatGPT exports, Drive, Notion), take an AI-adaptive quiz, do a live video session with an AI counselor, and receive a talent report.
-
-### Route Groups
-
-- `(app)/` — Authenticated pages with sidebar layout. Auth enforced client-side in layout.tsx via `useAuthStore`, redirects to `/login` if unauthenticated.
-- `(auth)/` — Login page, no sidebar.
-
-### API Route Pattern
-
-All routes in `src/app/api/` follow this pattern:
-
-1. `verifyAuth(req)` for Firebase ID token verification
-2. Validate request body with Zod
-3. Call Gemini via `getGeminiClient()` with `responseMimeType: 'application/json'`
-4. Parse response with `safeParseJson()` (handles markdown code blocks)
-5. Validate response with Zod schema
-6. Return structured JSON or error with code (`GEMINI_ERROR`, `VALIDATION_ERROR`, etc.)
-
-### Gemini Models
-
-- `gemini-3-flash-preview` — Quiz generation, data analysis
-- `gemini-3-flash-preview` — Report generation
-- `gemini-live-2.5-flash-native-audio` — Live video session (WebSocket via `src/lib/gemini/live-session.ts`)
-
-### State Management
-
-Zustand + React Query (TanStack Query v5):
-
-- `useAuthStore` (`src/stores/auth-store.ts`) — User auth, Google OAuth tokens, profile
-- `useAssessmentStore` (`src/stores/assessment-store.ts`) — Stage progression, assessment data
-- `src/hooks/use-api-mutations.ts` — React Query mutation hooks for all API calls
-- `src/hooks/use-api-queries.ts` — React Query query hooks (e.g. `useTalentReportQuery`)
-- `src/lib/api/client.ts` — Central typed API client wrapping `apiFetch`
-- `src/components/providers/app-providers.tsx` — QueryClientProvider + auth listener init
-
-### Firestore Structure
-
-- `users/{uid}` — User profile, Google access tokens
-- `users/{uid}/assessment/dataInsights` — Gemini analysis of connected data
-- `users/{uid}/assessment/quizAnswers` — Quiz responses
-- `users/{uid}/assessment/sessionInsights` — Live session observations
-- `users/{uid}/assessment/talentReport` — Final generated report
-
-Firestore helpers are in `src/lib/firebase/firestore.ts`.
-
-### Key Files
-
-- `src/lib/gemini/prompts.ts` — All AI system prompts (only place to add/edit prompts)
-- `src/lib/api-helpers.ts` — `verifyAuth()`, error response helpers, `safeParseJson()`
-- `src/lib/gemini/client.ts` — `getGeminiClient()` factory
-- `src/lib/gemini/live-session.ts` — WebSocket manager for Gemini Live API
-- `src/lib/schemas/` — Zod schemas for quiz, analysis, report, session
-- `src/lib/env.ts` — Server-side environment variable validation
-- `src/lib/fetch-client.ts` — Authenticated fetch wrapper (attaches Firebase ID token)
-
-### Styling
-
-Tailwind v4 with CSS variables defined in `globals.css`. Neutral dark gray theme (Remotion-inspired) with green primary. Custom utilities: `.glass` (flat dark card with subtle border), `.glass-heavy`, `.text-gradient-gold` (solid green text). Fonts: Outfit (headings + body), Geist Mono (mono). No animated background effects, no glow/blur effects — keep the UI static and clean.
+## Known Launch Constraint
+The public Gemini API terms currently require careful legal validation for `16+` deployment.
+Treat this as a release gate and document product/legal decision before public launch.

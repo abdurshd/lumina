@@ -90,3 +90,40 @@ export function useUpdateProfileMutation() {
     mutationFn: apiClient.user.updateProfile,
   });
 }
+
+export function useGenerateChallengesMutation() {
+  return useMutation({
+    mutationFn: apiClient.iteration.generateChallenges,
+  });
+}
+
+export function useCompleteChallengeMutation() {
+  return useMutation({
+    mutationFn: ({ challengeId, ...req }: { challengeId: string; evidence: string; reflection?: string }) =>
+      apiClient.iteration.completeChallenge(challengeId, req),
+  });
+}
+
+export function useSubmitReflectionMutation() {
+  return useMutation({
+    mutationFn: apiClient.iteration.submitReflection,
+  });
+}
+
+export function useUpdateActionPlanProgressMutation() {
+  return useMutation({
+    mutationFn: apiClient.user.updateActionPlanProgress,
+  });
+}
+
+export function useUploadCorpusDocMutation() {
+  return useMutation({
+    mutationFn: apiClient.corpus.upload,
+  });
+}
+
+export function useDeleteCorpusDocMutation() {
+  return useMutation({
+    mutationFn: apiClient.corpus.deleteDocument,
+  });
+}

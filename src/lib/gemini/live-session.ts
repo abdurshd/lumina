@@ -54,12 +54,19 @@ export class LiveSessionManager {
     this.callbacks = callbacks;
   }
 
-  async connect(apiKey: string, dataContext: string): Promise<void> {
-    this.apiKey = apiKey;
+  async connect(
+    authToken: string,
+    dataContext: string,
+    apiVersion: 'v1alpha' | 'v1' = 'v1alpha'
+  ): Promise<void> {
+    this.apiKey = authToken;
     this.dataContext = dataContext;
 
     try {
-      const client = new GoogleGenAI({ apiKey });
+      const client = new GoogleGenAI({
+        apiKey: authToken,
+        httpOptions: { apiVersion },
+      });
 
       this.session = await client.live.connect({
         model: GEMINI_MODELS.LIVE,

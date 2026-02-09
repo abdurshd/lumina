@@ -29,6 +29,8 @@ export default function OnboardingPage() {
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);
   const [selectedSources, setSelectedSources] = useState<string[]>([]);
+  const [ageGateConfirmed, setAgeGateConfirmed] = useState(false);
+  const [videoBehaviorConsent, setVideoBehaviorConsent] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const shouldReduceMotion = useReducedMotion();
 
@@ -53,7 +55,10 @@ export default function OnboardingPage() {
         consentGiven: true,
         consentTimestamp: Date.now(),
         consentSources: selectedSources,
-        consentVersion: 1,
+        consentVersion: 2,
+        ageGateConfirmed,
+        videoBehaviorConsent,
+        dataRetentionMode: 'session_only',
       });
       await refreshProfile();
       toast.success('Welcome to Lumina!');
@@ -63,7 +68,7 @@ export default function OnboardingPage() {
     } finally {
       setIsSaving(false);
     }
-  }, [user, selectedSources, refreshProfile, router]);
+  }, [user, selectedSources, ageGateConfirmed, videoBehaviorConsent, refreshProfile, router]);
 
   // Slide variants based on direction
   const slideVariants = {
@@ -300,7 +305,7 @@ export default function OnboardingPage() {
                     </p>
                     <p className="text-sm text-muted-foreground flex items-start gap-2">
                       <Shield className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                      No biometric inference, facial recognition, or video recording. Video frames are processed in real-time and never stored.
+                      With your explicit consent, Lumina can infer behavioral signals from facial expressions and posture in real time. No identity-based face recognition or video recording is performed.
                     </p>
                   </CardContent>
                 </Card>
@@ -415,8 +420,34 @@ export default function OnboardingPage() {
               transition={{ delay: 0.1 }}
               className="text-muted-foreground mb-6 max-w-md mx-auto"
             >
-              By continuing, you agree to let Lumina analyze your selected data sources to generate personalized talent insights.
+              By continuing, you agree to let Lumina analyze your selected data sources and use behavioral signals during live video sessions to generate personalized talent insights.
             </motion.p>
+
+            <Card className="mb-6 text-left">
+              <CardHeader>
+                <CardTitle className="text-lg font-sans">Required confirmations</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <Checkbox
+                    checked={ageGateConfirmed}
+                    onCheckedChange={(checked) => setAgeGateConfirmed(Boolean(checked))}
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    I confirm that I am at least 16 years old.
+                  </span>
+                </label>
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <Checkbox
+                    checked={videoBehaviorConsent}
+                    onCheckedChange={(checked) => setVideoBehaviorConsent(Boolean(checked))}
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    I consent to real-time behavioral signal inference from my face/body cues during live sessions.
+                  </span>
+                </label>
+              </CardContent>
+            </Card>
 
             {selectedSources.length > 0 && (
               <motion.div
@@ -470,10 +501,16 @@ export default function OnboardingPage() {
                   Back
                 </motion.button>
               </Button>
-              <Button size="lg" onClick={handleConsent} disabled={isSaving} asChild>
+              <Button
+                size="lg"
+                onClick={handleConsent}
+                disabled={isSaving || !ageGateConfirmed || !videoBehaviorConsent}
+                asChild
+              >
                 <motion.button
-                  whileHover={shouldReduceMotion || isSaving ? {} : { scale: 1.02 }}
-                  whileTap={shouldReduceMotion || isSaving ? {} : { scale: 0.98 }}
+                  disabled={isSaving || !ageGateConfirmed || !videoBehaviorConsent}
+                  whileHover={shouldReduceMotion || isSaving || !ageGateConfirmed || !videoBehaviorConsent ? {} : { scale: 1.02 }}
+                  whileTap={shouldReduceMotion || isSaving || !ageGateConfirmed || !videoBehaviorConsent ? {} : { scale: 0.98 }}
                   transition={smoothTransition}
                 >
                   {isSaving ? 'Saving...' : 'I Agree — Let\'s Go'}

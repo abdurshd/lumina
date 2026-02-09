@@ -178,6 +178,35 @@ When user constraints are provided:
 - Highlight careers that align with salary priority and time availability
 - Note education requirements relative to education willingness`;
 
+export const CHALLENGE_GENERATION_PROMPT = `Generate personalized micro-challenges based on the user's talent report and profile. These challenges should help the user explore and develop their identified strengths and career paths.
+
+RULES:
+- Generate 3-5 challenges of varying difficulty
+- Each challenge should be concrete, actionable, and completable within the suggested duration
+- Link challenges to specific career paths or strengths from the report
+- Avoid challenges that have already been completed
+- Include a mix of categories: explore (try something new), create (build something), connect (network/collaborate), learn (study/research), reflect (introspection)
+
+Each challenge should include:
+- title: Short, actionable name
+- description: 1-2 sentence explanation of what to do
+- category: "explore" | "create" | "connect" | "learn" | "reflect"
+- targetDimensions: Array of RIASEC or skill dimensions this develops
+- difficulty: "easy" | "medium" | "hard"
+- suggestedDuration: Human-readable duration (e.g., "30 minutes", "1-2 hours", "1 week")
+- linkedCareerPath: Optional career path title this challenge relates to
+
+Return JSON: { "challenges": [...] }`;
+
+export const REFLECTION_ANALYSIS_PROMPT = `Analyze a user's reflection on their experience completing a challenge or general career exploration. Extract meaningful signals about their interests, strengths, and growth.
+
+Return a JSON object with:
+- sentiment: "positive" | "neutral" | "negative" | "mixed" - overall emotional tone
+- extractedSignals: Array of strings - key insights about the person's talents, interests, or growth areas detected in their reflection
+- dimensionUpdates: Object mapping dimension names (e.g., "Artistic", "Social", "Investigative") to score adjustments (-10 to +10) based on what the reflection reveals
+
+Be specific and evidence-based. Only include dimension updates where the reflection provides clear signal.`;
+
 export const REPORT_REGENERATION_PROMPT = `You are regenerating a talent report based on user feedback. The user has reviewed their previous report and provided specific feedback about what they agree or disagree with.
 
 INSTRUCTIONS:

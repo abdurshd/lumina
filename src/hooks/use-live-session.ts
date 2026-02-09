@@ -99,7 +99,12 @@ export function useLiveSession() {
     microphoneRef.current = microphone;
   });
 
-  const connect = useCallback(async (apiKey: string, dataContext: string) => {
+  const connect = useCallback(
+    async (
+      authToken: string,
+      dataContext: string,
+      apiVersion: 'v1alpha' | 'v1' = 'v1alpha'
+    ) => {
     setIsConnecting(true);
     setError(null);
 
@@ -112,7 +117,7 @@ export function useLiveSession() {
     playbackRef.current = new AudioPlaybackManager();
     await playbackRef.current.resume();
 
-    await manager.connect(apiKey, dataContext);
+    await manager.connect(authToken, dataContext, apiVersion);
 
     // Start video frame capture
     if (webcamRef.current.videoRef.current) {
@@ -129,7 +134,9 @@ export function useLiveSession() {
     timerRef.current = setInterval(() => {
       setSessionDuration((prev) => prev + 1);
     }, 1000);
-  }, []);
+    },
+    []
+  );
 
   const disconnect = useCallback(() => {
     capturerRef.current?.stop();

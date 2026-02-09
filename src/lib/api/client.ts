@@ -1,5 +1,6 @@
 import { apiFetch } from '@/lib/fetch-client';
-import type { DataInsight, QuizQuestion, QuizAnswer, TalentReport, QuizScore, QuizDimensionSummary, QuizModuleId, ComputedProfile, UserConstraints } from '@/types';
+import type { DataInsight, QuizQuestion, QuizAnswer, TalentReport, QuizScore, QuizDimensionSummary, QuizModuleId, ComputedProfile, UserConstraints, MicroChallenge, Reflection, ActionPlanProgress } from '@/types';
+// Note: MicroChallenge, Reflection, and ActionPlanProgress are used in the iteration/corpus/user API methods
 
 // Request types
 interface GmailRequest {
@@ -55,6 +56,9 @@ interface RegenerateReportRequest {
 interface UpdateProfileRequest {
   displayName?: string;
   consentSources?: string[];
+  ageGateConfirmed?: boolean;
+  videoBehaviorConsent?: boolean;
+  dataRetentionMode?: 'session_only' | 'persistent';
 }
 
 interface FeedbackRequest {
@@ -84,7 +88,12 @@ interface QuizScoreResponse {
 }
 
 interface EphemeralTokenResponse {
-  apiKey: string;
+  token: string;
+  apiVersion: 'v1alpha' | 'v1';
+  model: string;
+  expireTime: string;
+  newSessionExpireTime: string;
+  uses: number;
 }
 
 export const apiClient = {
@@ -182,6 +191,44 @@ export const apiClient = {
       apiFetch<{ success: boolean }>('/api/user/update-profile', {
         method: 'POST',
         body: JSON.stringify(req),
+      }),
+
+    updateActionPlanProgress: (req: { items: ActionPlanProgress['items'] }) =>
+      apiFetch<{ success: boolean }>('/api/user/action-plan-progress', {
+        method: 'POST',
+        body: JSON.stringify(req),
+      }),
+  },
+
+  iteration: {
+    generateChallenges: () =>
+      apiFetch<{ challenges: MicroChallenge[] }>('/api/gemini/challenges/generate', {
+        method: 'POST',
+      }),
+
+    completeChallenge: (challengeId: string, req: { evidence: string; reflection?: string }) =>
+      apiFetch<{ success: boolean }>(`/api/gemini/challenges/${challengeId}/complete`, {
+        method: 'POST',
+        body: JSON.stringify(req),
+      }),
+
+    submitReflection: (req: { content: string; challengeId?: string }) =>
+      apiFetch<Reflection>('/api/gemini/reflections', {
+        method: 'POST',
+        body: JSON.stringify(req),
+      }),
+  },
+
+  corpus: {
+    upload: (formData: FormData) =>
+      apiFetch<{ success: boolean }>('/api/corpus', {
+        method: 'POST',
+        body: formData,
+      }),
+
+    deleteDocument: (docId: string) =>
+      apiFetch<{ success: boolean }>(`/api/corpus/documents/${docId}`, {
+        method: 'DELETE',
       }),
   },
 };

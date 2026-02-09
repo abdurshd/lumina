@@ -51,7 +51,7 @@ export default function SessionPage() {
     sendText,
   } = useLiveSession();
 
-  const { user } = useAuthStore();
+  const { user, profile } = useAuthStore();
   const { dataInsights, quizAnswers, setSessionInsights, advanceStage } = useAssessmentStore();
   const router = useRouter();
   const [textInput, setTextInput] = useState('');
@@ -75,10 +75,17 @@ export default function SessionPage() {
 
   const handleConnect = useCallback(() => {
     setError(null);
+    if (!profile?.ageGateConfirmed || !profile?.videoBehaviorConsent) {
+      const message = 'Please complete onboarding consent (age + behavioral video consent) before starting a live session.';
+      setError(message);
+      toast.error(message);
+      router.push('/onboarding');
+      return;
+    }
     ephemeralTokenMutation.mutate(undefined, {
-      onSuccess: async ({ apiKey }) => {
+      onSuccess: async ({ token, apiVersion }) => {
         try {
-          await connect(apiKey, dataContext);
+          await connect(token, dataContext, apiVersion);
         } catch (err) {
           const message = err instanceof Error ? err.message : 'Failed to start session';
           setError(message);
@@ -91,7 +98,7 @@ export default function SessionPage() {
         toast.error(message);
       },
     });
-  }, [connect, dataContext, ephemeralTokenMutation]);
+  }, [connect, dataContext, ephemeralTokenMutation, profile, router]);
 
   const handleDisconnect = useCallback(async () => {
     setIsSaving(true);

@@ -13,6 +13,7 @@ import {
   Brain,
   Video,
   FileText,
+  TrendingUp,
   Settings,
   LogOut,
 } from 'lucide-react';
@@ -38,6 +39,7 @@ const navItems = [
   { href: '/quiz', label: 'Quiz', icon: Brain },
   { href: '/session', label: 'Live Session', icon: Video },
   { href: '/report', label: 'Report', icon: FileText },
+  { href: '/evolution', label: 'Evolution', icon: TrendingUp },
   { href: '/settings', label: 'Settings', icon: Settings },
 ];
 

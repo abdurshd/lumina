@@ -31,6 +31,10 @@ export interface UserProfile {
   consentTimestamp?: number;
   consentSources?: string[];
   consentVersion?: number;
+  ageGateConfirmed?: boolean;
+  videoBehaviorConsent?: boolean;
+  dataRetentionMode?: 'session_only' | 'persistent';
+  corpusName?: string;
 }
 
 export interface DataInsight {
@@ -174,4 +178,99 @@ export interface ProfileVersion {
   timestamp: number;
   report: TalentReport;
   quizScores?: QuizDimensionSummary;
+}
+
+// --- Iteration Loop Types ---
+
+export type ChallengeCategory = 'explore' | 'create' | 'connect' | 'learn' | 'reflect';
+export type ChallengeStatus = 'suggested' | 'accepted' | 'in_progress' | 'completed' | 'skipped';
+export type ProfileSnapshotTrigger = 'initial' | 'quiz_retake' | 'challenge_complete' | 'reflection' | 'feedback';
+
+export interface MicroChallenge {
+  id: string;
+  title: string;
+  description: string;
+  category: ChallengeCategory;
+  targetDimensions: string[];
+  difficulty: 'easy' | 'medium' | 'hard';
+  suggestedDuration: string;
+  status: ChallengeStatus;
+  linkedCareerPath?: string;
+  evidence?: string;
+  reflection?: string;
+  createdAt: number;
+  completedAt?: number;
+}
+
+export interface Reflection {
+  id: string;
+  challengeId?: string;
+  content: string;
+  sentiment: 'positive' | 'neutral' | 'negative' | 'mixed';
+  extractedSignals: string[];
+  dimensionUpdates: Record<string, number>;
+  createdAt: number;
+}
+
+export interface ProfileSnapshot {
+  version: number;
+  timestamp: number;
+  computedProfile: ComputedProfile;
+  dimensionScores: Record<string, number>;
+  reportHeadline?: string;
+  riasecCode: string;
+  trigger: ProfileSnapshotTrigger;
+  deltas?: Record<string, number>;
+}
+
+export interface IterationState {
+  currentChallenges: string[];
+  completedChallengeCount: number;
+  totalReflections: number;
+  lastProfileUpdate: number;
+  iterationCount: number;
+}
+
+export interface ActionPlanProgress {
+  items: Record<string, { status: 'pending' | 'in_progress' | 'completed'; completedAt?: number; notes?: string }>;
+  updatedAt: number;
+}
+
+export interface CorpusDocument {
+  id: string;
+  documentName: string;
+  source: string;
+  title: string;
+  uploadedAt: number;
+  sizeBytes: number;
+  approved: boolean;
+}
+
+// --- Analytics Types ---
+
+export type AnalyticsEventType =
+  | 'stage_started'
+  | 'stage_completed'
+  | 'session_started'
+  | 'session_ended'
+  | 'session_reconnected'
+  | 'quiz_module_completed'
+  | 'report_generated'
+  | 'report_feedback'
+  | 'report_regenerated'
+  | 'data_source_connected'
+  | 'satisfaction_rating'
+  | 'challenge_completed'
+  | 'reflection_submitted';
+
+export interface AnalyticsEvent {
+  type: AnalyticsEventType;
+  timestamp: number;
+  metadata?: Record<string, string | number | boolean>;
+}
+
+export interface SatisfactionRating {
+  rating: number;
+  comment?: string;
+  timestamp: number;
 }

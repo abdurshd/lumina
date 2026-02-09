@@ -6,6 +6,9 @@ import { z } from "zod";
 const RequestSchema = z.object({
   displayName: z.string().min(1).max(100).optional(),
   consentSources: z.array(z.string()).optional(),
+  ageGateConfirmed: z.boolean().optional(),
+  videoBehaviorConsent: z.boolean().optional(),
+  dataRetentionMode: z.enum(['session_only', 'persistent']).optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -36,6 +39,15 @@ export async function POST(req: NextRequest) {
   }
   if (parsed.data.consentSources !== undefined) {
     updates.consentSources = parsed.data.consentSources;
+  }
+  if (parsed.data.ageGateConfirmed !== undefined) {
+    updates.ageGateConfirmed = parsed.data.ageGateConfirmed;
+  }
+  if (parsed.data.videoBehaviorConsent !== undefined) {
+    updates.videoBehaviorConsent = parsed.data.videoBehaviorConsent;
+  }
+  if (parsed.data.dataRetentionMode !== undefined) {
+    updates.dataRetentionMode = parsed.data.dataRetentionMode;
   }
 
   if (Object.keys(updates).length === 0) {
