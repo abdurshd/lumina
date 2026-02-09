@@ -9,6 +9,7 @@ import {
 import { auth } from '@/lib/firebase/config';
 import { getUserProfile, createUserProfile } from '@/lib/firebase/firestore';
 import type { UserProfile } from '@/types';
+import { useAssessmentStore } from './assessment-store';
 
 interface AuthState {
   user: User | null;
@@ -83,8 +84,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signOut: async () => {
     await firebaseSignOut(auth);
     set({ user: null, profile: null, googleAccessToken: null });
-    // Clear assessment data on sign-out
-    const { useAssessmentStore } = await import('./assessment-store');
     useAssessmentStore.getState().reset();
   },
 

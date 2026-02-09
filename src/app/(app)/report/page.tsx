@@ -30,11 +30,10 @@ export default function ReportPage() {
     }
   }, [reportQuery.data, report, setReport]);
 
-  const generateReport = useCallback(() => {
+  const generateReport = useCallback(async () => {
     if (!user) return;
 
-    const doGenerate = async () => {
-      // Fetch data from Firestore if not in context
+    try {
       const insights = dataInsights.length > 0 ? dataInsights : await getDataInsights(user.uid);
       const quiz = quizAnswers.length > 0 ? quizAnswers : await getQuizAnswers(user.uid);
       const session = sessionInsights.length > 0 ? sessionInsights : await getSessionInsights(user.uid);
@@ -55,9 +54,9 @@ export default function ReportPage() {
           toast.error(message);
         },
       });
-    };
-
-    doGenerate();
+    } catch {
+      toast.error('Failed to load assessment data.');
+    }
   }, [user, dataInsights, quizAnswers, sessionInsights, setReport, advanceStage, reportMutation]);
 
   if (reportQuery.isLoading) {

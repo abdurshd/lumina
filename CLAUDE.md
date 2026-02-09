@@ -18,6 +18,7 @@ No test framework is configured.
 - All Gemini calls go through API routes (never expose API key in client code, except Live API with ephemeral token)
 - Use Zod schemas for all structured Gemini outputs
 - Firebase Auth: always verify ID token in API routes via `verifyAuth(req)` from `src/lib/api-helpers.ts`
+- Google sign-in only requests basic scopes (email, profile) — sensitive scopes (Gmail, Drive) are requested via incremental authorization when connecting data sources
 - shadcn/ui components only (no custom UI primitives)
 - Tailwind v4 only (no CSS modules or styled-components)
 - All hooks prefixed with `use-`
@@ -84,4 +85,4 @@ Firestore helpers are in `src/lib/firebase/firestore.ts`.
 
 ### Styling
 
-Tailwind v4 with CSS variables defined in `globals.css`. Dark cosmic theme with custom utilities: `.glass`, `.glow-amber`, `.text-gradient-gold`, `.text-gradient-violet`, `.grain-overlay`. Fonts: Instrument Serif (headings), Outfit (sans), Geist Mono (mono).
+Tailwind v4 with CSS variables defined in `globals.css`. Dark cosmic theme with custom utilities: `.glass`, `.glow-amber`, `.text-gradient-gold`, `.text-gradient-violet`. Fonts: Instrument Serif (headings), Outfit (sans), Geist Mono (mono). No animated background effects (floating orbs, grain overlays, pulsing glows) — keep the UI static and clean.

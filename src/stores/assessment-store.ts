@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { updateStage } from '@/lib/firebase/firestore';
+import { useAuthStore } from './auth-store';
 import type { AssessmentStage, DataInsight, QuizAnswer, SessionInsight, TalentReport } from '@/types';
 
 const STAGE_ORDER: AssessmentStage[] = ['connections', 'quiz', 'session', 'report'];
@@ -29,7 +30,6 @@ export const useAssessmentStore = create<AssessmentState>((set) => ({
   setReport: (report) => set({ report }),
 
   advanceStage: async (current) => {
-    const { useAuthStore } = await import('./auth-store');
     const { user, refreshProfile } = useAuthStore.getState();
     if (!user) return;
     const idx = STAGE_ORDER.indexOf(current);
