@@ -61,8 +61,8 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4 relative overflow-hidden">
       <Card className="w-full max-w-md glass-heavy animate-fade-in-up">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
-            <Sparkles className="h-8 w-8 text-primary" />
+          <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/10 border-2 border-primary/20">
+            <Sparkles className="h-10 w-10 text-primary" />
           </div>
           <CardTitle className="text-2xl text-gradient-gold">Welcome to Lumina</CardTitle>
           <CardDescription>

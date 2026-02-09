@@ -52,37 +52,39 @@
 
 :root {
   --radius: 0.75rem;
-  --background: #0b0b0b;
+  --background: #111111;
   --foreground: #ededed;
-  --card: #181818;
+  --card: #1b1b1b;
   --card-foreground: #ededed;
-  --popover: #181818;
+  --popover: #1b1b1b;
   --popover-foreground: #ededed;
-  --primary: #22c55e;
-  --primary-foreground: #052e16;
-  --secondary: #1a1a1a;
+  --primary: #58cc02;
+  --primary-foreground: #fff;
+  --primary-dark: #46a302;
+  --secondary: #1e1e1e;
   --secondary-foreground: #a3a3a3;
-  --muted: #1a1a1a;
+  --muted: #1e1e1e;
   --muted-foreground: #a3a3a3;
-  --accent: #1a1a1a;
+  --accent: #1e1e1e;
   --accent-foreground: #ededed;
-  --destructive: #ef4444;
-  --border: rgba(255,255,255,0.1);
-  --input: rgba(255,255,255,0.1);
-  --ring: #22c55e;
-  --chart-1: #22c55e;
-  --chart-2: #16a34a;
-  --chart-3: #4ade80;
-  --chart-4: #86efac;
-  --chart-5: #15803d;
-  --sidebar: #0e0e0e;
+  --destructive: #ff4b4b;
+  --destructive-dark: #cc3c3c;
+  --border: rgba(255,255,255,0.08);
+  --input: rgba(255,255,255,0.08);
+  --ring: #58cc02;
+  --chart-1: #58cc02;
+  --chart-2: #46a302;
+  --chart-3: #7ac70c;
+  --chart-4: #8ee000;
+  --chart-5: #3d8b00;
+  --sidebar: #131313;
   --sidebar-foreground: #ededed;
-  --sidebar-primary: #22c55e;
-  --sidebar-primary-foreground: #052e16;
-  --sidebar-accent: rgba(34,197,94,0.1);
-  --sidebar-accent-foreground: #22c55e;
-  --sidebar-border: rgba(255,255,255,0.08);
-  --sidebar-ring: #22c55e;
+  --sidebar-primary: #58cc02;
+  --sidebar-primary-foreground: #fff;
+  --sidebar-accent: rgba(88,204,2,0.08);
+  --sidebar-accent-foreground: #58cc02;
+  --sidebar-border: rgba(255,255,255,0.06);
+  --sidebar-ring: #58cc02;
 }
 
 /* -- Keyframes ------------------------------ */
@@ -119,19 +121,149 @@
   }
   h1, h2, h3 {
     font-family: var(--font-outfit), ui-sans-serif, sans-serif;
+    @apply font-bold;
   }
 }
 
 /* -- Utility classes ------------------------ */
 
 @layer utilities {
+  /* Remotion-style flat dark card */
   .glass {
-    @apply bg-[#181818] border border-white/[0.08] rounded-xl;
+    background: var(--card);
+    border: 2px solid rgba(255,255,255,0.06);
+    border-radius: 16px;
   }
   .glass-heavy {
-    @apply bg-[#1e1e1e] border border-white/[0.1] rounded-xl;
+    background: #222;
+    border: 2px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
   }
   .text-gradient-gold {
-    @apply text-[#22c55e];
+    color: var(--primary);
+  }
+
+  /* Duolingo-style 3D push button */
+  .btn-3d {
+    position: relative;
+    border: none;
+    border-radius: 16px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.1s;
+  }
+  .btn-3d-primary {
+    background-color: var(--primary);
+    color: #fff;
+    box-shadow: 0 4px 0 var(--primary-dark);
+  }
+  .btn-3d-primary:hover {
+    filter: brightness(1.1);
+  }
+  .btn-3d-primary:active:not(:disabled) {
+    box-shadow: none;
+    transform: translateY(4px);
+  }
+  .btn-3d-primary:disabled {
+    background-color: #37464f;
+    color: #52656d;
+    box-shadow: none;
+    transform: translateY(4px);
+    cursor: not-allowed;
+    filter: none;
+  }
+
+  .btn-3d-outline {
+    background-color: var(--card);
+    color: var(--foreground);
+    border: 2px solid rgba(255,255,255,0.12);
+    box-shadow: 0 3px 0 rgba(255,255,255,0.06);
+  }
+  .btn-3d-outline:hover {
+    background-color: rgba(255,255,255,0.04);
+    border-color: rgba(255,255,255,0.18);
+  }
+  .btn-3d-outline:active:not(:disabled) {
+    box-shadow: none;
+    transform: translateY(3px);
+  }
+
+  .btn-3d-destructive {
+    background-color: var(--destructive);
+    color: #fff;
+    box-shadow: 0 4px 0 var(--destructive-dark);
+  }
+  .btn-3d-destructive:hover {
+    filter: brightness(1.1);
+  }
+  .btn-3d-destructive:active:not(:disabled) {
+    box-shadow: none;
+    transform: translateY(4px);
+  }
+
+  /* Duolingo-style raised card */
+  .card-raised {
+    background: var(--card);
+    border: 2px solid rgba(255,255,255,0.06);
+    border-radius: 16px;
+    box-shadow: 0 2px 0 rgba(255,255,255,0.04);
+    transition: all 0.15s;
+  }
+  .card-raised:hover {
+    border-color: rgba(255,255,255,0.12);
+  }
+
+  /* Duolingo-style option card (quiz) */
+  .option-card {
+    background: var(--card);
+    border: 2px solid rgba(255,255,255,0.08);
+    border-bottom: 4px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all 0.1s;
+    user-select: none;
+  }
+  .option-card:hover {
+    background: rgba(88,204,2,0.05);
+    border-color: var(--primary);
+    border-bottom-color: var(--primary);
+  }
+  .option-card.selected {
+    background: rgba(88,204,2,0.08);
+    border-color: var(--primary);
+    border-bottom-width: 2px;
+    transform: translateY(2px);
+    color: var(--primary);
+  }
+
+  /* Duolingo-style input */
+  .input-duo {
+    background: var(--card);
+    border: 2px solid rgba(255,255,255,0.08);
+    border-bottom: 4px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    transition: border-color 0.15s;
+  }
+  .input-duo:focus {
+    border-color: var(--primary);
+    border-bottom-color: var(--primary);
+  }
+
+  /* Duolingo progress bar */
+  .progress-duo {
+    height: 16px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .progress-duo-fill {
+    height: 100%;
+    background: var(--primary);
+    border-radius: 8px;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }

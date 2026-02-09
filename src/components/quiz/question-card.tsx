@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import type { QuizQuestion } from '@/types';
 
 interface QuestionCardProps {
@@ -36,34 +37,43 @@ export function QuestionCard({ question, onAnswer, questionNumber, totalQuestion
     (question.type === 'freetext' && textValue.trim().length > 0);
 
   return (
-    <Card className="w-full max-w-2xl mx-auto glass animate-fade-in-up">
+    <Card className="w-full max-w-2xl mx-auto animate-fade-in-up">
       <CardHeader>
-        <div className="flex items-center justify-between mb-2">
-          <Badge variant="secondary" className="bg-white/[0.06]">{question.category}</Badge>
-          <span className="text-sm text-muted-foreground font-mono">
+        <div className="flex items-center justify-between mb-3">
+          <Badge variant="secondary">{question.category}</Badge>
+          <span className="text-sm text-muted-foreground font-mono font-bold">
             {questionNumber} of {totalQuestions}
           </span>
         </div>
         <CardTitle className="text-xl">{question.question}</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-3">
         {question.type === 'multiple_choice' && question.options && (
           <div className="space-y-2">
-            {question.options.map((option, i) => (
-              <Button
-                key={i}
-                variant={selectedOption === option ? 'default' : 'outline'}
-                className={`w-full justify-start text-left h-auto py-3 px-4 transition-all duration-200 ${
-                  selectedOption === option ? '' : 'hover:bg-white/[0.06]'
-                }`}
-                onClick={() => setSelectedOption(option)}
-              >
-                <span className="mr-3 flex h-6 w-6 items-center justify-center rounded-full border border-white/[0.15] text-xs font-mono">
-                  {String.fromCharCode(65 + i)}
-                </span>
-                {option}
-              </Button>
-            ))}
+            {question.options.map((option, i) => {
+              const isSelected = selectedOption === option;
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  className={cn(
+                    'option-card w-full flex items-center text-left',
+                    isSelected && 'selected'
+                  )}
+                  onClick={() => setSelectedOption(option)}
+                >
+                  <span className={cn(
+                    'mr-3 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold font-mono',
+                    isSelected
+                      ? 'border-primary bg-primary/10 text-primary'
+                      : 'border-white/[0.12] text-muted-foreground'
+                  )}>
+                    {String.fromCharCode(65 + i)}
+                  </span>
+                  <span className="font-medium text-sm">{option}</span>
+                </button>
+              );
+            })}
           </div>
         )}
 
@@ -78,7 +88,7 @@ export function QuestionCard({ question, onAnswer, questionNumber, totalQuestion
             />
             <div className="flex justify-between text-sm text-muted-foreground">
               <span>{question.sliderLabels?.min ?? 'Low'}</span>
-              <span className="font-medium text-foreground font-mono">{sliderValue}</span>
+              <span className="font-bold text-foreground font-mono">{sliderValue}</span>
               <span>{question.sliderLabels?.max ?? 'High'}</span>
             </div>
           </div>

@@ -26,22 +26,24 @@ export default function DashboardPage() {
     <div className="mx-auto max-w-3xl px-6 py-12">
       <div className="mb-8 animate-fade-in-up">
         <div className="flex items-center gap-3 mb-2">
-          <Sparkles className="h-6 w-6 text-primary" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 border-2 border-primary/20">
+            <Sparkles className="h-5 w-5 text-primary" />
+          </div>
           <h1 className="text-3xl font-bold">
             Welcome back{profile?.displayName ? `, ${profile.displayName.split(' ')[0]}` : ''}
           </h1>
         </div>
-        <p className="text-muted-foreground">
+        <p className="text-muted-foreground ml-[52px]">
           Complete all four stages to unlock your personalized talent report.
         </p>
-        <div className="mt-4 flex items-center gap-2">
-          <div className="h-2 flex-1 rounded-full bg-white/[0.06] overflow-hidden">
+        <div className="mt-5 flex items-center gap-3">
+          <div className="h-4 flex-1 rounded-full bg-white/[0.06] overflow-hidden">
             <div
-              className="h-2 rounded-full bg-primary transition-all duration-500 ease-out"
+              className="h-4 rounded-full bg-primary transition-all duration-500 ease-out"
               style={{ width: `${(completedCount / 4) * 100}%` }}
             />
           </div>
-          <span className="text-sm font-medium text-muted-foreground font-mono">{completedCount}/4</span>
+          <span className="text-sm font-bold text-muted-foreground font-mono">{completedCount}/4</span>
         </div>
       </div>
 
@@ -60,21 +62,21 @@ export default function DashboardPage() {
                 key={stage.key}
                 className={`transition-all duration-300 animate-fade-in-up ${
                   isActive
-                    ? 'glass border-primary/20'
+                    ? 'border-primary/30 bg-primary/[0.03]'
                     : isCompleted
-                    ? 'glass border-emerald-500/20'
+                    ? 'border-primary/20'
                     : 'opacity-50'
                 }`}
                 style={{ animationDelay: `${i * 80}ms` }}
               >
                 <CardHeader className="flex flex-row items-center gap-4 py-4">
                   <div
-                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl transition-colors ${
+                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl transition-colors border-2 ${
                       isActive
-                        ? 'bg-primary/10 text-primary'
+                        ? 'bg-primary/10 text-primary border-primary/20'
                         : isCompleted
-                        ? 'bg-emerald-500/10 text-emerald-400'
-                        : 'bg-white/[0.04] text-muted-foreground'
+                        ? 'bg-primary/10 text-primary border-primary/20'
+                        : 'bg-white/[0.03] text-muted-foreground border-white/[0.06]'
                     }`}
                   >
                     <Icon className="h-6 w-6" />

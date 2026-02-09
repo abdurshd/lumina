@@ -151,13 +151,13 @@ export default function SessionPage() {
           {isConnected && (
             <div className="text-center">
               <AudioVisualizer isActive={isConnected} />
-              <p className="mt-1 text-xs text-muted-foreground">Lumina is listening...</p>
+              <p className="mt-1 text-xs text-muted-foreground font-medium">Lumina is listening...</p>
             </div>
           )}
         </div>
 
         {/* Transcript */}
-        <Card className="lg:col-span-2 glass">
+        <Card className="lg:col-span-2">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg font-sans">Conversation</CardTitle>
           </CardHeader>
@@ -166,7 +166,7 @@ export default function SessionPage() {
               <TranscriptPanel entries={transcript} />
             </div>
             {isConnected && (
-              <div className="border-t border-white/[0.04] p-3">
+              <div className="border-t-2 border-white/[0.04] p-3">
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
@@ -192,7 +192,7 @@ export default function SessionPage() {
 
       {/* Insights */}
       {insights.length > 0 && (
-        <Card className="mt-6 glass animate-fade-in-up">
+        <Card className="mt-6 animate-fade-in-up">
           <CardHeader>
             <CardTitle className="text-lg font-sans">
               <Brain className="mr-2 inline h-5 w-5" />
@@ -202,8 +202,8 @@ export default function SessionPage() {
           <CardContent>
             <div className="flex flex-wrap gap-2">
               {insights.map((insight, i) => (
-                <Badge key={i} variant="secondary" className="py-1 bg-white/[0.06]">
-                  <span className="font-medium mr-1">{insight.category}:</span>
+                <Badge key={i} variant="secondary" className="py-1.5">
+                  <span className="font-bold mr-1">{insight.category}:</span>
                   {insight.observation.length > 60
                     ? `${insight.observation.slice(0, 60)}...`
                     : insight.observation}

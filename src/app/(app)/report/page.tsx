@@ -102,7 +102,7 @@ export default function ReportPage() {
     <div className="mx-auto max-w-4xl px-6 py-12">
       {/* Hero */}
       <div className="mb-10 text-center animate-fade-in-up">
-        <Badge className="mb-4 bg-white/[0.06]" variant="secondary">Your Talent Report</Badge>
+        <Badge className="mb-4" variant="secondary">Your Talent Report</Badge>
         <h1 className="text-4xl font-bold mb-2 text-gradient-gold">
           {report.headline}
         </h1>
@@ -110,7 +110,7 @@ export default function ReportPage() {
       </div>
 
       {/* Radar Chart */}
-      <Card className="mb-8 glass animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+      <Card className="mb-8 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 font-sans">
             <Target className="h-5 w-5 text-primary" />
@@ -122,7 +122,7 @@ export default function ReportPage() {
           <div className="grid grid-cols-2 gap-3 mt-4 sm:grid-cols-3">
             {report.radarDimensions.map((dim, i) => (
               <div key={i} className="text-center">
-                <p className="text-sm font-medium font-sans">{dim.label}: {dim.value}</p>
+                <p className="text-sm font-bold font-sans">{dim.label}: {dim.value}</p>
                 <p className="text-xs text-muted-foreground">{dim.description}</p>
               </div>
             ))}
@@ -140,7 +140,7 @@ export default function ReportPage() {
       </div>
 
       {/* Hidden Talents */}
-      <Card className="mb-8 glass animate-fade-in-up" style={{ animationDelay: '300ms' }}>
+      <Card className="mb-8 animate-fade-in-up" style={{ animationDelay: '300ms' }}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 font-sans">
             <Eye className="h-5 w-5 text-primary" />
@@ -150,7 +150,7 @@ export default function ReportPage() {
         <CardContent>
           <div className="space-y-3">
             {report.hiddenTalents.map((talent, i) => (
-              <div key={i} className="flex items-start gap-3">
+              <div key={i} className="flex items-start gap-3 rounded-xl bg-primary/[0.03] border-2 border-primary/10 p-3">
                 <Lightbulb className="h-5 w-5 mt-0.5 text-primary shrink-0" />
                 <p className="text-sm">{talent}</p>
               </div>
@@ -160,14 +160,14 @@ export default function ReportPage() {
       </Card>
 
       {/* Personality Insights */}
-      <Card className="mb-8 glass animate-fade-in-up" style={{ animationDelay: '400ms' }}>
+      <Card className="mb-8 animate-fade-in-up" style={{ animationDelay: '400ms' }}>
         <CardHeader>
           <CardTitle className="font-sans">Personality Insights</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 sm:grid-cols-2">
             {report.personalityInsights.map((insight, i) => (
-              <div key={i} className="rounded-lg bg-white/[0.04] border border-white/[0.06] p-3 text-sm">
+              <div key={i} className="rounded-xl bg-white/[0.03] border-2 border-white/[0.06] p-4 text-sm">
                 {insight}
               </div>
             ))}
@@ -175,7 +175,7 @@ export default function ReportPage() {
         </CardContent>
       </Card>
 
-      <div className="h-px bg-white/[0.06] my-12" />
+      <div className="h-[2px] bg-white/[0.06] my-12" />
 
       {/* Career Paths */}
       <div className="mb-8 animate-fade-in-up" style={{ animationDelay: '500ms' }}>
@@ -187,23 +187,23 @@ export default function ReportPage() {
       </div>
 
       {/* Action Plan */}
-      <Card className="mb-8 glass animate-fade-in-up" style={{ animationDelay: '600ms' }}>
+      <Card className="mb-8 animate-fade-in-up" style={{ animationDelay: '600ms' }}>
         <CardHeader>
           <CardTitle className="font-sans">Your Action Plan</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {report.actionPlan.map((item, i) => (
-              <div key={i} className="flex items-start gap-3 rounded-lg border border-white/[0.06] bg-white/[0.02] p-4">
-                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white font-mono ${
-                  item.priority === 'high' ? 'bg-red-500/80' : item.priority === 'medium' ? 'bg-primary/80' : 'bg-emerald-500/80'
+              <div key={i} className="flex items-start gap-3 rounded-xl border-2 border-white/[0.06] bg-white/[0.02] p-4">
+                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white font-mono border-2 ${
+                  item.priority === 'high' ? 'bg-destructive/80 border-destructive/30' : item.priority === 'medium' ? 'bg-primary/80 border-primary/30' : 'bg-primary/60 border-primary/20'
                 }`}>
                   {i + 1}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h4 className="font-medium font-sans">{item.title}</h4>
-                    <Badge variant="outline" className="text-xs border-white/[0.1]">{item.timeframe}</Badge>
+                    <h4 className="font-bold font-sans">{item.title}</h4>
+                    <Badge variant="outline">{item.timeframe}</Badge>
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
                 </div>

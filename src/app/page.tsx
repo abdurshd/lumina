@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import {
   Sparkles,
   ArrowRight,
@@ -10,9 +9,7 @@ import {
   Brain,
   Video,
   FileText,
-  Zap,
   Shield,
-  Target,
 } from 'lucide-react';
 
 const features = [
@@ -48,24 +45,24 @@ const howItWorks = [
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-md">
+      {/* Header - Remotion style clean nav */}
+      <header className="sticky top-0 z-40 bg-background/90 backdrop-blur-sm border-b-2 border-white/[0.04]">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2.5">
             <Sparkles className="h-6 w-6 text-primary" />
             <span className="text-xl font-bold text-gradient-gold">Lumina</span>
           </div>
           <Link href="/login">
-            <Button>Get Started</Button>
+            <Button size="sm">Get Started</Button>
           </Link>
         </div>
       </header>
 
-      {/* Hero */}
-      <section className="relative mx-auto max-w-5xl px-6 py-32 text-center">
-        <div className="mb-6 inline-flex items-center gap-2 rounded-full glass px-4 py-1.5 text-sm text-primary animate-fade-in-up">
-          <Zap className="h-4 w-4" />
-          Powered by Gemini Multimodal AI
+      {/* Hero - Remotion-style centered with bold type */}
+      <section className="relative mx-auto max-w-5xl px-6 py-28 text-center">
+        <div className="mb-8 inline-flex items-center gap-2 rounded-full bg-primary/10 border-2 border-primary/20 px-5 py-2 text-sm font-bold text-primary uppercase tracking-wide animate-fade-in-up">
+          <Sparkles className="h-4 w-4" />
+          Powered by Gemini AI
         </div>
         <h1 className="text-5xl font-bold tracking-tight sm:text-7xl animate-fade-in-up" style={{ animationDelay: '100ms' }}>
           Discover talents you{' '}
@@ -87,44 +84,50 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Features */}
-      <section className="relative mx-auto max-w-6xl px-6 py-24">
-        <div className="text-center mb-12 animate-fade-in-up">
-          <h2 className="text-3xl font-bold"><span className="text-primary">Four Dimensions</span> of Discovery</h2>
-          <p className="mt-2 text-muted-foreground">
+      {/* Features - Remotion card grid with Duolingo raised cards */}
+      <section className="relative mx-auto max-w-6xl px-6 py-20">
+        <div className="text-center mb-14 animate-fade-in-up">
+          <h2 className="text-3xl font-bold sm:text-4xl">
+            <span className="text-primary">Four Dimensions</span> of Discovery
+          </h2>
+          <p className="mt-3 text-muted-foreground text-lg">
             A multimodal AI pipeline that analyzes you from every angle
           </p>
         </div>
-        <div className="grid gap-8 sm:grid-cols-2">
+        <div className="grid gap-6 sm:grid-cols-2">
           {features.map((feature, i) => (
-            <Card key={i} className="relative overflow-hidden glass hover:border-white/[0.18] transition-all duration-500 animate-fade-in-up" style={{ animationDelay: `${400 + i * 100}ms` }}>
-              <CardContent className="pt-6">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                  <feature.icon className="h-6 w-6" />
-                </div>
-                <h3 className="text-lg font-semibold mb-2 font-sans">{feature.title}</h3>
-                <p className="text-sm text-muted-foreground">{feature.description}</p>
-              </CardContent>
-            </Card>
+            <div
+              key={i}
+              className="card-raised p-6 animate-fade-in-up"
+              style={{ animationDelay: `${400 + i * 100}ms` }}
+            >
+              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary border-2 border-primary/20">
+                <feature.icon className="h-7 w-7" />
+              </div>
+              <h3 className="text-lg font-bold mb-2">{feature.title}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
+            </div>
           ))}
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="relative py-24">
-        <div className="absolute inset-0 bg-[#111111] -z-10" />
+      {/* How it works - Remotion-style section */}
+      <section className="relative py-20">
+        <div className="absolute inset-0 bg-[#0d0d0d] -z-10" />
         <div className="mx-auto max-w-4xl px-6">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold"><span className="text-primary">How</span> It Works</h2>
-            <p className="mt-2 text-muted-foreground">Four simple steps to illuminate your potential</p>
+          <div className="text-center mb-14">
+            <h2 className="text-3xl font-bold sm:text-4xl">
+              <span className="text-primary">How</span> It Works
+            </h2>
+            <p className="mt-3 text-muted-foreground text-lg">Four simple steps to illuminate your potential</p>
           </div>
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {howItWorks.map((item, i) => (
               <div key={item.step} className="text-center animate-fade-in-up" style={{ animationDelay: `${i * 100}ms` }}>
-                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-primary/30 text-primary font-bold font-mono text-sm">
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 border-2 border-primary/20 text-primary font-bold font-mono text-sm">
                   {item.step}
                 </div>
-                <h3 className="font-semibold mb-1 font-sans">{item.title}</h3>
+                <h3 className="font-bold mb-1">{item.title}</h3>
                 <p className="text-sm text-muted-foreground">{item.description}</p>
               </div>
             ))}
@@ -132,12 +135,16 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="mx-auto max-w-4xl px-6 py-24 text-center relative">
-        <div className="relative rounded-2xl glass-heavy p-12 overflow-hidden">
-          <Target className="mx-auto mb-4 h-10 w-10 text-primary" />
-          <h2 className="text-3xl font-bold mb-4">Ready to <span className="text-primary">discover</span> your hidden talents?</h2>
-          <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
+      {/* CTA - Duolingo-style big push */}
+      <section className="mx-auto max-w-4xl px-6 py-20 text-center relative">
+        <div className="relative glass-heavy p-14 overflow-hidden">
+          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 border-2 border-primary/20">
+            <Sparkles className="h-8 w-8 text-primary" />
+          </div>
+          <h2 className="text-3xl font-bold mb-4">
+            Ready to <span className="text-primary">discover</span> your hidden talents?
+          </h2>
+          <p className="text-muted-foreground mb-8 max-w-xl mx-auto text-lg">
             Join Lumina and let AI illuminate the potential you didn&apos;t know you had.
           </p>
           <Link href="/login">
@@ -148,12 +155,12 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-white/[0.04] py-10">
+      {/* Footer - Remotion-style clean */}
+      <footer className="border-t-2 border-white/[0.04] py-10">
         <div className="mx-auto max-w-6xl px-6 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium">Lumina</span>
+            <span className="text-sm font-bold">Lumina</span>
           </div>
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
             <span className="flex items-center gap-1">

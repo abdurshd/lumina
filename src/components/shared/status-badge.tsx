@@ -9,9 +9,9 @@ interface StatusBadgeProps {
 }
 
 const config: Record<StageStatus, { label: string; icon: typeof CheckCircle2; variant: 'default' | 'secondary'; className?: string }> = {
-  completed: { label: 'Done', icon: CheckCircle2, variant: 'default', className: 'bg-emerald-500/80 hover:bg-emerald-500/90 border-emerald-500/30' },
+  completed: { label: 'Done', icon: CheckCircle2, variant: 'default' },
   active: { label: 'Active', icon: Circle, variant: 'default' },
-  locked: { label: 'Locked', icon: Lock, variant: 'secondary', className: 'bg-white/[0.06]' },
+  locked: { label: 'Locked', icon: Lock, variant: 'secondary' },
 };
 
 export function StatusBadge({ status }: StatusBadgeProps) {
