@@ -111,6 +111,34 @@ npm run lint
 npm run build
 ```
 
+## Agentic Transformation (Active — Gemini 3 Hackathon)
+
+Lumina is undergoing an agentic transformation for the Gemini 3 Hackathon submission.
+All implementation details, task statuses, and locks are tracked in **`plan.md`** at the project root.
+Agent coordination rules are in **`agents.md`** at the project root.
+
+### Key Architecture Additions
+- **Agent orchestrator** at `src/lib/agent/orchestrator.ts` — evaluates state, recommends actions, drives autonomous decisions
+- **Confidence scoring** at `src/lib/agent/confidence.ts` — tracks per-dimension confidence, identifies gaps, gates stage transitions
+- **Report agent loop** at `src/lib/agent/report-agent.ts` — generate → critique → refine → validate (NOT single-shot)
+- **Agent decision log** at `src/stores/agent-store.ts` — persists all agent reasoning for UI display
+- **Behavioral timeline** at `src/lib/agent/behavioral-timeline.ts` — temporal tracking during live sessions
+
+### Rules for Agentic Code
+- All agent logic lives in `src/lib/agent/`
+- Agent API routes live in `src/app/api/agent/`
+- Agent UI components live in `src/components/agent/`
+- Every autonomous action MUST log to the agent decision store with: action, reason, confidence before/after
+- Report generation MUST go through the multi-step agent loop, never a single prompt call
+- Confidence thresholds must gate stage transitions (user can override, but agent recommends)
+- The orchestrator recommends actions but does NOT auto-execute — human-in-the-loop always
+
+### What NOT to Build
+- Do NOT make it look like a generic chatbot or personality quiz
+- Do NOT generate reports in a single prompt call
+- Do NOT skip the self-correction loop
+- Do NOT remove the agent decision log — it's the primary differentiator for judges
+
 ## Known Launch Constraint
 The public Gemini API terms currently require careful legal validation for `16+` deployment.
 Treat this as a release gate and document product/legal decision before public launch.
