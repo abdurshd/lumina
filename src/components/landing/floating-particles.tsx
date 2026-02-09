@@ -22,30 +22,30 @@ interface FloatingParticlesProps {
 
 export function FloatingParticles({
     count = 5,
-    images = ['/lumina-shard.png'],
+    images = ['/lumina-shard.png', '/lumina-spark.png', '/lumina-orb-blue.png'],
     className
 }: FloatingParticlesProps) {
     const particles: Particle[] = useMemo(
-      () =>
-        Array.from({ length: count }).map((_, i) => {
-          const xRand = pseudoRandom(i + 11, count);
-          const yRand = pseudoRandom(i + 37, count);
-          const sizeRand = pseudoRandom(i + 73, count);
-          const durationRand = pseudoRandom(i + 109, count);
-          const delayRand = pseudoRandom(i + 151, count);
-          const imageRand = pseudoRandom(i + 197, count);
+        () =>
+            Array.from({ length: count }).map((_, i) => {
+                const xRand = pseudoRandom(i + 11, count);
+                const yRand = pseudoRandom(i + 37, count);
+                const sizeRand = pseudoRandom(i + 73, count);
+                const durationRand = pseudoRandom(i + 109, count);
+                const delayRand = pseudoRandom(i + 151, count);
+                const imageRand = pseudoRandom(i + 197, count);
 
-          return {
-            id: i,
-            x: xRand * 100, // percentage
-            y: yRand * 100, // percentage
-            size: sizeRand * 25 + 12, // px
-            duration: durationRand * 20 + 10, // seconds
-            delay: delayRand * 5,
-            image: images[Math.floor(imageRand * images.length) % images.length],
-          };
-        }),
-      [count, images],
+                return {
+                    id: i,
+                    x: xRand * 100, // percentage
+                    y: yRand * 100, // percentage
+                    size: sizeRand * 25 + 12, // px
+                    duration: durationRand * 20 + 10, // seconds
+                    delay: delayRand * 5,
+                    image: images[Math.floor(imageRand * images.length) % images.length],
+                };
+            }),
+        [count, images],
     );
 
     return (

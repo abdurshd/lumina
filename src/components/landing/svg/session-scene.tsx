@@ -3,7 +3,7 @@
 export function SessionScene() {
   return (
     <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none select-none z-0">
-      <div className="absolute inset-0 bg-gradient-to-r from-[#0d0d0d] via-[#111111] to-[#0d0d0d]" />
+      <div className="absolute inset-0 bg-background" />
 
       <svg
         className="w-full h-full"
@@ -53,38 +53,38 @@ export function SessionScene() {
         <rect width="100%" height="100%" fill="url(#sess-nebula-purple)" />
 
         {/* Background star particles (20+) */}
-        <circle cx="80" cy="60" r="1" fill="#fff" className="svg-twinkle" style={{ animationDelay: '0s' }} />
-        <circle cx="200" cy="180" r="1.5" fill="#fff" className="svg-twinkle" style={{ animationDelay: '0.4s' }} />
-        <circle cx="350" cy="100" r="1" fill="#fff" className="svg-twinkle" style={{ animationDelay: '0.9s' }} />
-        <circle cx="550" cy="150" r="1.5" fill="#fff" className="svg-twinkle" style={{ animationDelay: '1.3s' }} />
-        <circle cx="750" cy="80" r="1" fill="#fff" className="svg-twinkle" style={{ animationDelay: '0.2s' }} />
-        <circle cx="1150" cy="100" r="1.5" fill="#fff" className="svg-twinkle" style={{ animationDelay: '1.7s' }} />
-        <circle cx="1350" cy="70" r="1" fill="#fff" className="svg-twinkle" style={{ animationDelay: '0.6s' }} />
-        <circle cx="1550" cy="150" r="1.5" fill="#fff" className="svg-twinkle" style={{ animationDelay: '2.0s' }} />
-        <circle cx="1750" cy="90" r="1" fill="#fff" className="svg-twinkle" style={{ animationDelay: '1.1s' }} />
-        <circle cx="1870" cy="200" r="1.5" fill="#fff" className="svg-twinkle" style={{ animationDelay: '0.8s' }} />
-        <circle cx="100" cy="900" r="1" fill="#fff" className="svg-twinkle" style={{ animationDelay: '1.5s' }} />
-        <circle cx="300" cy="980" r="1.5" fill="#fff" className="svg-twinkle" style={{ animationDelay: '0.3s' }} />
-        <circle cx="600" cy="950" r="1" fill="#fff" className="svg-twinkle" style={{ animationDelay: '2.2s' }} />
-        <circle cx="850" cy="990" r="1.5" fill="#fff" className="svg-twinkle" style={{ animationDelay: '0.7s' }} />
-        <circle cx="1100" cy="970" r="1" fill="#fff" className="svg-twinkle" style={{ animationDelay: '1.9s' }} />
-        <circle cx="1400" cy="950" r="1.5" fill="#fff" className="svg-twinkle" style={{ animationDelay: '0.5s' }} />
-        <circle cx="1650" cy="980" r="1" fill="#fff" className="svg-twinkle" style={{ animationDelay: '1.4s' }} />
-        <circle cx="1850" cy="920" r="1.5" fill="#fff" className="svg-twinkle" style={{ animationDelay: '2.4s' }} />
-        <circle cx="50" cy="500" r="1" fill="#fff" className="svg-twinkle" style={{ animationDelay: '1.0s' }} />
-        <circle cx="1890" cy="600" r="1" fill="#fff" className="svg-twinkle" style={{ animationDelay: '1.6s' }} />
-        <circle cx="960" cy="40" r="1.5" fill="#fff" className="svg-twinkle" style={{ animationDelay: '2.1s' }} />
-        <circle cx="960" cy="1050" r="1" fill="#fff" className="svg-twinkle" style={{ animationDelay: '0.1s' }} />
+        <circle cx="80" cy="60" r="1" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '0s' }} />
+        <circle cx="200" cy="180" r="1.5" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '0.4s' }} />
+        <circle cx="350" cy="100" r="1" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '0.9s' }} />
+        <circle cx="550" cy="150" r="1.5" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '1.3s' }} />
+        <circle cx="750" cy="80" r="1" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '0.2s' }} />
+        <circle cx="1150" cy="100" r="1.5" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '1.7s' }} />
+        <circle cx="1350" cy="70" r="1" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '0.6s' }} />
+        <circle cx="1550" cy="150" r="1.5" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '2.0s' }} />
+        <circle cx="1750" cy="90" r="1" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '1.1s' }} />
+        <circle cx="1870" cy="200" r="1.5" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '0.8s' }} />
+        <circle cx="100" cy="900" r="1" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '1.5s' }} />
+        <circle cx="300" cy="980" r="1.5" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '0.3s' }} />
+        <circle cx="600" cy="950" r="1" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '2.2s' }} />
+        <circle cx="850" cy="990" r="1.5" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '0.7s' }} />
+        <circle cx="1100" cy="970" r="1" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '1.9s' }} />
+        <circle cx="1400" cy="950" r="1.5" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '0.5s' }} />
+        <circle cx="1650" cy="980" r="1" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '1.4s' }} />
+        <circle cx="1850" cy="920" r="1.5" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '2.4s' }} />
+        <circle cx="50" cy="500" r="1" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '1.0s' }} />
+        <circle cx="1890" cy="600" r="1" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '1.6s' }} />
+        <circle cx="960" cy="40" r="1.5" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '2.1s' }} />
+        <circle cx="960" cy="1050" r="1" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '0.1s' }} />
 
         {/* --- Left Side: Human Silhouette (detailed head/shoulders) --- */}
         <g transform="translate(480, 500)">
           {/* Head */}
-          <ellipse cx="0" cy="-40" rx="42" ry="48" fill="#1b1b1b" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" />
+          <ellipse cx="0" cy="-40" rx="42" ry="48" fill="var(--svg-fill-card)" stroke="var(--svg-stroke-subtle)" strokeWidth="1.5" />
           {/* Neck */}
-          <rect x="-14" y="6" width="28" height="20" fill="#1b1b1b" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+          <rect x="-14" y="6" width="28" height="20" fill="var(--svg-fill-card)" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
           {/* Shoulders */}
           <path d="M-14 26 Q-14 26 -80 60 Q-90 65 -90 80 L-90 140 L90 140 L90 80 Q90 65 80 60 Q14 26 14 26"
-            fill="#1b1b1b" stroke="rgba(255,255,255,0.12)" strokeWidth="1.5" />
+            fill="var(--svg-fill-card)" stroke="rgba(255,255,255,0.12)" strokeWidth="1.5" />
           {/* Subtle face features */}
           <circle cx="-12" cy="-45" r="3" fill="rgba(255,255,255,0.06)" />
           <circle cx="12" cy="-45" r="3" fill="rgba(255,255,255,0.06)" />

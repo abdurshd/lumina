@@ -3,7 +3,7 @@
 export function ReportConstellationScene() {
   return (
     <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none select-none z-0">
-      <div className="absolute inset-0 bg-[#0d0d0d]" />
+      <div className="absolute inset-0 bg-background" />
 
       <svg
         className="w-full h-full"

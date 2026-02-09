@@ -21,7 +21,7 @@ export function DarkSectionHero({ id, title, subtitle, visual, children }: DarkS
             {/* Background Visual */}
             <div className="absolute inset-0 z-0">
                 {visual}
-                <FloatingParticles count={3} images={['/lumina-shard.png']} className="z-0 opacity-30" />
+                <FloatingParticles count={4} className="z-0 opacity-40" />
             </div>
 
             {/* Content Overlay */}

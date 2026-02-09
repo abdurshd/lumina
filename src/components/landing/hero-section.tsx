@@ -21,7 +21,7 @@ export function HeroSection() {
     <section id="discovery" className="relative min-h-screen w-full flex items-center justify-center overflow-hidden">
       {/* Background Visual */}
       <HeroPrismScene />
-      <FloatingParticles count={3} images={['/lumina-shard.png']} className="z-0" />
+      <FloatingParticles count={6} className="z-0" />
 
       {/* Content Overlay */}
       <div className="relative z-10 container mx-auto px-6 text-center">

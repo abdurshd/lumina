@@ -3,7 +3,7 @@
 export function DataNetworkScene() {
   return (
     <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none select-none z-0">
-      <div className="absolute inset-0 bg-gradient-to-b from-[#0d0d0d] via-[#111111] to-[#0d0d0d] opacity-90" />
+      <div className="absolute inset-0 bg-background opacity-90" />
 
       <svg
         className="w-full h-full"
@@ -43,7 +43,7 @@ export function DataNetworkScene() {
 
           {/* Hexagonal grid pattern */}
           <pattern id="data-hex-grid" width="60" height="52" patternUnits="userSpaceOnUse" patternTransform="translate(0,0)">
-            <path d="M30 0 L60 15 L60 37 L30 52 L0 37 L0 15 Z" fill="none" stroke="rgba(255,255,255,0.02)" strokeWidth="0.5" />
+            <path d="M30 0 L60 15 L60 37 L30 52 L0 37 L0 15 Z" fill="none" stroke="var(--svg-stroke-faint)" strokeWidth="0.5" />
           </pattern>
         </defs>
 
@@ -54,21 +54,21 @@ export function DataNetworkScene() {
         <circle cx="960" cy="540" r="450" fill="url(#data-center-glow)" />
 
         {/* Background star particles */}
-        <circle cx="120" cy="100" r="1" fill="#fff" className="svg-twinkle" style={{ animationDelay: '0s' }} />
-        <circle cx="300" cy="180" r="1.5" fill="#fff" className="svg-twinkle" style={{ animationDelay: '0.5s' }} />
-        <circle cx="500" cy="80" r="1" fill="#fff" className="svg-twinkle" style={{ animationDelay: '1.2s' }} />
-        <circle cx="700" cy="150" r="1.5" fill="#fff" className="svg-twinkle" style={{ animationDelay: '0.8s' }} />
-        <circle cx="1200" cy="100" r="1" fill="#fff" className="svg-twinkle" style={{ animationDelay: '1.5s' }} />
-        <circle cx="1500" cy="160" r="1.5" fill="#fff" className="svg-twinkle" style={{ animationDelay: '0.3s' }} />
-        <circle cx="1800" cy="120" r="1" fill="#fff" className="svg-twinkle" style={{ animationDelay: '2.0s' }} />
-        <circle cx="150" cy="900" r="1.5" fill="#fff" className="svg-twinkle" style={{ animationDelay: '1.0s' }} />
-        <circle cx="400" cy="980" r="1" fill="#fff" className="svg-twinkle" style={{ animationDelay: '0.7s' }} />
-        <circle cx="700" cy="950" r="1.5" fill="#fff" className="svg-twinkle" style={{ animationDelay: '1.8s' }} />
-        <circle cx="1200" cy="980" r="1" fill="#fff" className="svg-twinkle" style={{ animationDelay: '0.2s' }} />
-        <circle cx="1550" cy="920" r="1.5" fill="#fff" className="svg-twinkle" style={{ animationDelay: '1.3s' }} />
-        <circle cx="1800" cy="960" r="1" fill="#fff" className="svg-twinkle" style={{ animationDelay: '2.2s' }} />
-        <circle cx="80" cy="540" r="1" fill="#fff" className="svg-twinkle" style={{ animationDelay: '0.6s' }} />
-        <circle cx="1860" cy="540" r="1" fill="#fff" className="svg-twinkle" style={{ animationDelay: '1.6s' }} />
+        <circle cx="120" cy="100" r="1" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '0s' }} />
+        <circle cx="300" cy="180" r="1.5" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '0.5s' }} />
+        <circle cx="500" cy="80" r="1" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '1.2s' }} />
+        <circle cx="700" cy="150" r="1.5" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '0.8s' }} />
+        <circle cx="1200" cy="100" r="1" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '1.5s' }} />
+        <circle cx="1500" cy="160" r="1.5" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '0.3s' }} />
+        <circle cx="1800" cy="120" r="1" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '2.0s' }} />
+        <circle cx="150" cy="900" r="1.5" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '1.0s' }} />
+        <circle cx="400" cy="980" r="1" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '0.7s' }} />
+        <circle cx="700" cy="950" r="1.5" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '1.8s' }} />
+        <circle cx="1200" cy="980" r="1" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '0.2s' }} />
+        <circle cx="1550" cy="920" r="1.5" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '1.3s' }} />
+        <circle cx="1800" cy="960" r="1" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '2.2s' }} />
+        <circle cx="80" cy="540" r="1" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '0.6s' }} />
+        <circle cx="1860" cy="540" r="1" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '1.6s' }} />
 
         {/* --- Primary connections: center ↔ outer nodes --- */}
         <g stroke="rgba(34,211,238,0.2)" strokeWidth="1" strokeDasharray="5 5" className="svg-dash-flow">
@@ -163,7 +163,7 @@ export function DataNetworkScene() {
 
         {/* --- Outer Node: Top (Gmail) --- */}
         <g transform="translate(960, 200)" className="svg-float" style={{ animationDuration: '6s' }}>
-          <circle r="45" fill="#1b1b1b" stroke="#f97316" strokeWidth="2" filter="url(#data-glow)" />
+          <circle r="45" fill="var(--svg-fill-card)" stroke="#f97316" strokeWidth="2" filter="url(#data-glow)" />
           <circle r="45" fill="rgba(249,115,22,0.05)" />
           {/* Mail icon */}
           <rect x="-16" y="-11" width="32" height="22" rx="3" fill="none" stroke="#f97316" strokeWidth="1.5" />
@@ -173,7 +173,7 @@ export function DataNetworkScene() {
 
         {/* --- Outer Node: Left (Drive) --- */}
         <g transform="translate(400, 540)" className="svg-float" style={{ animationDuration: '7s', animationDelay: '1s' }}>
-          <circle r="45" fill="#1b1b1b" stroke="#22d3ee" strokeWidth="2" filter="url(#data-glow)" />
+          <circle r="45" fill="var(--svg-fill-card)" stroke="#22d3ee" strokeWidth="2" filter="url(#data-glow)" />
           <circle r="45" fill="rgba(34,211,238,0.05)" />
           {/* Drive triangle icon */}
           <path d="M-12 12 L0 -12 L12 12 Z" fill="none" stroke="#22d3ee" strokeWidth="1.5" />
@@ -183,7 +183,7 @@ export function DataNetworkScene() {
 
         {/* --- Outer Node: Right (Notion) --- */}
         <g transform="translate(1520, 540)" className="svg-float" style={{ animationDuration: '6.5s', animationDelay: '2s' }}>
-          <circle r="45" fill="#1b1b1b" stroke="#a78bfa" strokeWidth="2" filter="url(#data-glow)" />
+          <circle r="45" fill="var(--svg-fill-card)" stroke="#a78bfa" strokeWidth="2" filter="url(#data-glow)" />
           <circle r="45" fill="rgba(167,139,250,0.05)" />
           {/* N icon */}
           <text x="0" y="8" textAnchor="middle" fill="#a78bfa" fontSize="22" fontWeight="bold" fontFamily="serif">N</text>
@@ -192,7 +192,7 @@ export function DataNetworkScene() {
 
         {/* --- Outer Node: Bottom (ChatGPT) --- */}
         <g transform="translate(960, 880)" className="svg-float" style={{ animationDuration: '7.5s', animationDelay: '3s' }}>
-          <circle r="45" fill="#1b1b1b" stroke="#10a37f" strokeWidth="2" filter="url(#data-glow)" />
+          <circle r="45" fill="var(--svg-fill-card)" stroke="#10a37f" strokeWidth="2" filter="url(#data-glow)" />
           <circle r="45" fill="rgba(16,163,127,0.05)" />
           {/* Spiral icon */}
           <circle r="12" fill="none" stroke="#10a37f" strokeWidth="1.5" />

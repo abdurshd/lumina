@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { LuminaIcon } from '@/components/icons/lumina-icon';
 import { ScrollReveal } from '@/components/motion/scroll-reveal';
 import { fadeInScale } from '@/lib/motion';
+import { FloatingParticles } from './floating-particles';
 
 export function CTASection() {
     return (
@@ -14,6 +15,7 @@ export function CTASection() {
             <div className="absolute inset-0 z-0 bg-background">
                 <div className="absolute inset-0 bg-[url('/lumina-abstract-bg.png')] bg-cover bg-center opacity-20 mix-blend-screen" />
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/20 blur-[120px] rounded-full opacity-50" />
+                <FloatingParticles count={3} className="z-0 opacity-20" />
             </div>
 
             <div className="container mx-auto px-6 relative z-10">

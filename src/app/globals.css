@@ -105,6 +105,16 @@
   --section-alt-bg: #0d0d0d;
   --disabled-bg: #37464f;
   --disabled-text: #52656d;
+  --svg-scene-bg: #0d0d0d;
+  --svg-scene-bg-mid: #111111;
+  --svg-dot: #ffffff;
+  --svg-stroke-faint: rgba(255,255,255,0.03);
+  --svg-stroke-dim: rgba(255,255,255,0.06);
+  --svg-stroke-subtle: rgba(255,255,255,0.1);
+  --svg-fill-card: #1b1b1b;
+  --svg-fill-faint: rgba(255,255,255,0.05);
+  --svg-fill-dim: rgba(255,255,255,0.04);
+  --svg-text-faint: rgba(255,255,255,0.4);
 }
 
 .light {
@@ -152,6 +162,16 @@
   --section-alt-bg: #f0f0f0;
   --disabled-bg: #d4d4d8;
   --disabled-text: #a1a1aa;
+  --svg-scene-bg: #f0f0f0;
+  --svg-scene-bg-mid: #f5f5f5;
+  --svg-dot: #1a1a1a;
+  --svg-stroke-faint: rgba(0,0,0,0.04);
+  --svg-stroke-dim: rgba(0,0,0,0.07);
+  --svg-stroke-subtle: rgba(0,0,0,0.12);
+  --svg-fill-card: #ffffff;
+  --svg-fill-faint: rgba(0,0,0,0.04);
+  --svg-fill-dim: rgba(0,0,0,0.03);
+  --svg-text-faint: rgba(0,0,0,0.35);
 }
 
 /* -- Keyframes ------------------------------ */

@@ -5,7 +5,6 @@ import { useReducedMotion } from 'framer-motion';
 import { useAuthStore } from '@/stores/auth-store';
 import { useQueryClient } from '@tanstack/react-query';
 import {
-  useTalentReportQuery,
   useChallengesQuery,
   useProfileEvolutionQuery,
   useActionPlanProgressQuery,

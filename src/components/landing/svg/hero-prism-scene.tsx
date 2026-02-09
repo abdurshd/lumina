@@ -3,7 +3,7 @@
 export function HeroPrismScene() {
   return (
     <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none select-none z-0">
-      <div className="absolute inset-0 bg-gradient-to-b from-[#0d0d0d] via-[#111111] to-[#0d0d0d] opacity-80" />
+      <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-background opacity-80" />
 
       <svg
         className="w-full h-full"
@@ -21,7 +21,7 @@ export function HeroPrismScene() {
 
           {/* Grid pattern */}
           <pattern id="hero-grid" width="40" height="40" patternUnits="userSpaceOnUse">
-            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="0.5" />
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="var(--svg-stroke-faint)" strokeWidth="0.5" />
           </pattern>
 
           {/* Glow filters */}
@@ -207,58 +207,58 @@ export function HeroPrismScene() {
 
         {/* L7: Scattered star particles (30+) with individual twinkle delays */}
         <g>
-          <circle cx="120" cy="80" r="1.5" fill="#fff" className="svg-twinkle" style={{ animationDelay: '0s' }} />
-          <circle cx="250" cy="150" r="1" fill="#fff" className="svg-twinkle" style={{ animationDelay: '0.3s' }} />
-          <circle cx="380" cy="90" r="2" fill="#fff" className="svg-twinkle" style={{ animationDelay: '0.7s' }} />
-          <circle cx="500" cy="200" r="1" fill="#fff" className="svg-twinkle" style={{ animationDelay: '1.1s' }} />
-          <circle cx="650" cy="120" r="1.5" fill="#fff" className="svg-twinkle" style={{ animationDelay: '0.5s' }} />
-          <circle cx="100" cy="400" r="1" fill="#fff" className="svg-twinkle" style={{ animationDelay: '1.4s' }} />
-          <circle cx="200" cy="700" r="1.5" fill="#fff" className="svg-twinkle" style={{ animationDelay: '2.0s' }} />
-          <circle cx="350" cy="950" r="1" fill="#fff" className="svg-twinkle" style={{ animationDelay: '0.9s' }} />
-          <circle cx="500" cy="850" r="2" fill="#fff" className="svg-twinkle" style={{ animationDelay: '1.7s' }} />
-          <circle cx="700" cy="980" r="1" fill="#fff" className="svg-twinkle" style={{ animationDelay: '2.3s' }} />
-          <circle cx="800" cy="100" r="1.5" fill="#fff" className="svg-twinkle" style={{ animationDelay: '0.2s' }} />
-          <circle cx="1050" cy="60" r="1" fill="#fff" className="svg-twinkle" style={{ animationDelay: '1.5s' }} />
-          <circle cx="1150" cy="150" r="2" fill="#fff" className="svg-twinkle" style={{ animationDelay: '0.8s' }} />
-          <circle cx="1300" cy="80" r="1" fill="#fff" className="svg-twinkle" style={{ animationDelay: '2.1s' }} />
-          <circle cx="1450" cy="180" r="1.5" fill="#fff" className="svg-twinkle" style={{ animationDelay: '0.4s' }} />
-          <circle cx="1600" cy="100" r="1" fill="#fff" className="svg-twinkle" style={{ animationDelay: '1.9s' }} />
-          <circle cx="1750" cy="150" r="2" fill="#fff" className="svg-twinkle" style={{ animationDelay: '0.6s' }} />
-          <circle cx="1850" cy="250" r="1" fill="#fff" className="svg-twinkle" style={{ animationDelay: '2.5s' }} />
-          <circle cx="1800" cy="500" r="1.5" fill="#fff" className="svg-twinkle" style={{ animationDelay: '1.2s' }} />
-          <circle cx="1880" cy="700" r="1" fill="#fff" className="svg-twinkle" style={{ animationDelay: '0.1s' }} />
-          <circle cx="1750" cy="850" r="2" fill="#fff" className="svg-twinkle" style={{ animationDelay: '1.8s' }} />
-          <circle cx="1600" cy="950" r="1" fill="#fff" className="svg-twinkle" style={{ animationDelay: '2.4s' }} />
-          <circle cx="1400" cy="980" r="1.5" fill="#fff" className="svg-twinkle" style={{ animationDelay: '0.3s' }} />
-          <circle cx="1200" cy="950" r="1" fill="#fff" className="svg-twinkle" style={{ animationDelay: '1.6s' }} />
-          <circle cx="1000" cy="1000" r="2" fill="#fff" className="svg-twinkle" style={{ animationDelay: '2.2s' }} />
-          <circle cx="900" cy="950" r="1" fill="#fff" className="svg-twinkle" style={{ animationDelay: '0.7s' }} />
-          <circle cx="60" cy="540" r="1.5" fill="#fff" className="svg-twinkle" style={{ animationDelay: '1.3s' }} />
-          <circle cx="80" cy="900" r="1" fill="#fff" className="svg-twinkle" style={{ animationDelay: '2.6s' }} />
-          <circle cx="1900" cy="400" r="1.5" fill="#fff" className="svg-twinkle" style={{ animationDelay: '0.9s' }} />
-          <circle cx="1850" cy="950" r="1" fill="#fff" className="svg-twinkle" style={{ animationDelay: '1.1s' }} />
-          <circle cx="960" cy="50" r="1.5" fill="#fff" className="svg-twinkle" style={{ animationDelay: '2.0s' }} />
-          <circle cx="960" cy="1030" r="1" fill="#fff" className="svg-twinkle" style={{ animationDelay: '0.5s' }} />
+          <circle cx="120" cy="80" r="1.5" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '0s' }} />
+          <circle cx="250" cy="150" r="1" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '0.3s' }} />
+          <circle cx="380" cy="90" r="2" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '0.7s' }} />
+          <circle cx="500" cy="200" r="1" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '1.1s' }} />
+          <circle cx="650" cy="120" r="1.5" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '0.5s' }} />
+          <circle cx="100" cy="400" r="1" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '1.4s' }} />
+          <circle cx="200" cy="700" r="1.5" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '2.0s' }} />
+          <circle cx="350" cy="950" r="1" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '0.9s' }} />
+          <circle cx="500" cy="850" r="2" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '1.7s' }} />
+          <circle cx="700" cy="980" r="1" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '2.3s' }} />
+          <circle cx="800" cy="100" r="1.5" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '0.2s' }} />
+          <circle cx="1050" cy="60" r="1" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '1.5s' }} />
+          <circle cx="1150" cy="150" r="2" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '0.8s' }} />
+          <circle cx="1300" cy="80" r="1" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '2.1s' }} />
+          <circle cx="1450" cy="180" r="1.5" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '0.4s' }} />
+          <circle cx="1600" cy="100" r="1" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '1.9s' }} />
+          <circle cx="1750" cy="150" r="2" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '0.6s' }} />
+          <circle cx="1850" cy="250" r="1" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '2.5s' }} />
+          <circle cx="1800" cy="500" r="1.5" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '1.2s' }} />
+          <circle cx="1880" cy="700" r="1" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '0.1s' }} />
+          <circle cx="1750" cy="850" r="2" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '1.8s' }} />
+          <circle cx="1600" cy="950" r="1" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '2.4s' }} />
+          <circle cx="1400" cy="980" r="1.5" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '0.3s' }} />
+          <circle cx="1200" cy="950" r="1" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '1.6s' }} />
+          <circle cx="1000" cy="1000" r="2" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '2.2s' }} />
+          <circle cx="900" cy="950" r="1" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '0.7s' }} />
+          <circle cx="60" cy="540" r="1.5" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '1.3s' }} />
+          <circle cx="80" cy="900" r="1" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '2.6s' }} />
+          <circle cx="1900" cy="400" r="1.5" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '0.9s' }} />
+          <circle cx="1850" cy="950" r="1" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '1.1s' }} />
+          <circle cx="960" cy="50" r="1.5" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '2.0s' }} />
+          <circle cx="960" cy="1030" r="1" fill="var(--svg-dot)" className="svg-twinkle" style={{ animationDelay: '0.5s' }} />
         </g>
 
         {/* L9: Floating abstract shapes that drift slowly */}
         <g className="svg-drift" style={{ animationDuration: '18s' }}>
           {/* Small triangle */}
-          <polygon points="180,300 195,275 210,300" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="0.5" />
+          <polygon points="180,300 195,275 210,300" fill="none" stroke="var(--svg-stroke-dim)" strokeWidth="0.5" />
           {/* Small circle */}
-          <circle cx="1750" cy="450" r="8" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="0.5" />
+          <circle cx="1750" cy="450" r="8" fill="none" stroke="var(--svg-stroke-faint)" strokeWidth="0.5" />
           {/* Small square */}
-          <rect x="140" y="650" width="15" height="15" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="0.5" transform="rotate(20 147 657)" />
+          <rect x="140" y="650" width="15" height="15" fill="none" stroke="var(--svg-stroke-dim)" strokeWidth="0.5" transform="rotate(20 147 657)" />
         </g>
         <g className="svg-drift" style={{ animationDuration: '22s', animationDelay: '5s' }}>
-          <polygon points="1700,700 1715,675 1730,700" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="0.5" />
-          <circle cx="300" cy="500" r="6" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="0.5" />
-          <rect x="1600" y="250" width="12" height="12" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="0.5" transform="rotate(45 1606 256)" />
+          <polygon points="1700,700 1715,675 1730,700" fill="none" stroke="var(--svg-stroke-dim)" strokeWidth="0.5" />
+          <circle cx="300" cy="500" r="6" fill="none" stroke="var(--svg-stroke-faint)" strokeWidth="0.5" />
+          <rect x="1600" y="250" width="12" height="12" fill="none" stroke="var(--svg-stroke-faint)" strokeWidth="0.5" transform="rotate(45 1606 256)" />
         </g>
         <g className="svg-drift" style={{ animationDuration: '25s', animationDelay: '10s' }}>
-          <polygon points="500,600 515,575 530,600" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="0.5" />
+          <polygon points="500,600 515,575 530,600" fill="none" stroke="var(--svg-stroke-dim)" strokeWidth="0.5" />
           <circle cx="1400" cy="150" r="10" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="0.5" />
-          <rect x="800" y="900" width="10" height="10" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="0.5" transform="rotate(30 805 905)" />
+          <rect x="800" y="900" width="10" height="10" fill="none" stroke="var(--svg-stroke-faint)" strokeWidth="0.5" transform="rotate(30 805 905)" />
         </g>
       </svg>
     </div>
