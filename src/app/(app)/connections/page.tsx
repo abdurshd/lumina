@@ -7,11 +7,18 @@ import { useAuthStore } from '@/stores/auth-store';
 import { useAssessmentStore } from '@/stores/assessment-store';
 import { saveDataInsights } from '@/lib/firebase/firestore';
 import { FetchError } from '@/lib/fetch-client';
-import { useGmailMutation, useChatGPTMutation, useAnalyzeMutation } from '@/hooks/use-api-mutations';
+import {
+  useGmailMutation,
+  useChatGPTMutation,
+  useFileUploadMutation,
+  useDriveMutation,
+  useNotionMutation,
+  useAnalyzeMutation,
+} from '@/hooks/use-api-mutations';
 import { ConnectorCard } from '@/components/connections/connector-card';
 import { PageHeader, LoadingButton, ErrorAlert } from '@/components/shared';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plug, Mail, Upload, ArrowRight } from 'lucide-react';
+import { Plug, Mail, Upload, FileUp, HardDrive, BookOpen, ArrowRight } from 'lucide-react';
 import { LuminaIcon } from '@/components/icons/lumina-icon';
 
 interface DataSource {
@@ -19,21 +26,26 @@ interface DataSource {
   tokenCount: number;
 }
 
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
-const ACCEPTED_TYPES = ['application/json'];
+const MAX_CHATGPT_SIZE = 50 * 1024 * 1024; // 50MB
+const CHATGPT_TYPES = ['application/json'];
+const FILE_UPLOAD_TYPES = ['.pdf', '.txt', '.md', '.html'];
 
 export default function ConnectionsPage() {
-  const { user, googleAccessToken } = useAuthStore();
+  const { user, googleAccessToken, profile, requestDriveAccess, connectNotion } = useAuthStore();
   const { setDataInsights, advanceStage } = useAssessmentStore();
   const router = useRouter();
 
   const [dataSources, setDataSources] = useState<Record<string, DataSource>>({});
   const [analysisComplete, setAnalysisComplete] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const chatgptInputRef = useRef<HTMLInputElement>(null);
+  const fileUploadInputRef = useRef<HTMLInputElement>(null);
 
   const gmailMutation = useGmailMutation();
   const chatgptMutation = useChatGPTMutation();
+  const fileUploadMutation = useFileUploadMutation();
+  const driveMutation = useDriveMutation();
+  const notionMutation = useNotionMutation();
   const analyzeMutation = useAnalyzeMutation();
 
   const connectedCount = useMemo(
@@ -61,21 +73,18 @@ export default function ConnectionsPage() {
   }, [googleAccessToken, gmailMutation]);
 
   const handleChatGPTUpload = useCallback(() => {
-    fileInputRef.current?.click();
+    chatgptInputRef.current?.click();
   }, []);
 
-  const onFileSelected = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onChatGPTFileSelected = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
-    if (!ACCEPTED_TYPES.includes(file.type) && !file.name.endsWith('.json')) {
+    if (!CHATGPT_TYPES.includes(file.type) && !file.name.endsWith('.json')) {
       toast.error('Please upload a .json file (ChatGPT conversations export).');
       return;
     }
-
-    // Validate file size
-    if (file.size > MAX_FILE_SIZE) {
+    if (file.size > MAX_CHATGPT_SIZE) {
       toast.error(`File too large (${Math.round(file.size / 1024 / 1024)}MB). Maximum is 50MB.`);
       return;
     }
@@ -83,11 +92,7 @@ export default function ConnectionsPage() {
     setError(null);
     try {
       const content = await file.text();
-
-      // Quick validate it's valid JSON
-      try {
-        JSON.parse(content);
-      } catch {
+      try { JSON.parse(content); } catch {
         throw new Error('File is not valid JSON. Please upload your ChatGPT conversations.json export.');
       }
 
@@ -107,10 +112,99 @@ export default function ConnectionsPage() {
       setError(message);
       toast.error(message);
     } finally {
-      // Reset file input so same file can be re-selected
-      if (fileInputRef.current) fileInputRef.current.value = '';
+      if (chatgptInputRef.current) chatgptInputRef.current.value = '';
     }
   }, [chatgptMutation]);
+
+  const handleFileUpload = useCallback(() => {
+    fileUploadInputRef.current?.click();
+  }, []);
+
+  const onFileUploadSelected = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setError(null);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    fileUploadMutation.mutate(formData, {
+      onSuccess: (result) => {
+        setDataSources((prev) => ({ ...prev, file_upload: result }));
+        toast.success(`File uploaded! ~${result.tokenCount.toLocaleString()} tokens collected.`);
+      },
+      onError: (err) => {
+        const message = err instanceof FetchError ? err.message : 'Failed to upload file';
+        setError(message);
+        toast.error(message);
+      },
+    });
+
+    if (fileUploadInputRef.current) fileUploadInputRef.current.value = '';
+  }, [fileUploadMutation]);
+
+  const connectDrive = useCallback(async () => {
+    setError(null);
+    let token = googleAccessToken;
+
+    if (!token) {
+      token = await requestDriveAccess();
+      if (!token) {
+        toast.error('Failed to get Drive access. Please try again.');
+        return;
+      }
+    }
+
+    driveMutation.mutate({ accessToken: token }, {
+      onSuccess: (result) => {
+        setDataSources((prev) => ({ ...prev, drive: result }));
+        toast.success(`Google Drive connected! ~${result.tokenCount.toLocaleString()} tokens collected.`);
+      },
+      onError: (err) => {
+        const message = err instanceof FetchError ? err.message : 'Failed to connect Drive';
+        if (message.includes('403') || message.includes('Drive access')) {
+          // Need drive scope - request it
+          requestDriveAccess().then((newToken) => {
+            if (newToken) {
+              driveMutation.mutate({ accessToken: newToken }, {
+                onSuccess: (result) => {
+                  setDataSources((prev) => ({ ...prev, drive: result }));
+                  toast.success(`Google Drive connected! ~${result.tokenCount.toLocaleString()} tokens collected.`);
+                },
+                onError: (retryErr) => {
+                  const retryMsg = retryErr instanceof FetchError ? retryErr.message : 'Failed to connect Drive';
+                  setError(retryMsg);
+                  toast.error(retryMsg);
+                },
+              });
+            }
+          });
+          return;
+        }
+        setError(message);
+        toast.error(message);
+      },
+    });
+  }, [googleAccessToken, requestDriveAccess, driveMutation]);
+
+  const handleConnectNotion = useCallback(() => {
+    if (profile?.notionAccessToken) {
+      setError(null);
+      notionMutation.mutate({ accessToken: profile.notionAccessToken }, {
+        onSuccess: (result) => {
+          setDataSources((prev) => ({ ...prev, notion: result }));
+          toast.success(`Notion connected! ~${result.tokenCount.toLocaleString()} tokens collected.`);
+        },
+        onError: (err) => {
+          const message = err instanceof FetchError ? err.message : 'Failed to connect Notion';
+          setError(message);
+          toast.error(message);
+        },
+      });
+    } else {
+      connectNotion();
+    }
+  }, [profile?.notionAccessToken, connectNotion, notionMutation]);
 
   const analyzeData = useCallback(() => {
     if (connectedCount === 0 || !user) return;
@@ -171,13 +265,51 @@ export default function ConnectionsPage() {
           tokenCount={dataSources.chatgpt?.tokenCount}
         />
 
+        <ConnectorCard
+          title="File Upload"
+          description="Upload a resume, portfolio, or writing samples (PDF, TXT, Markdown, HTML)"
+          icon={<FileUp className="h-6 w-6" />}
+          isConnected={!!dataSources.file_upload?.data}
+          isLoading={fileUploadMutation.isPending}
+          onConnect={handleFileUpload}
+          tokenCount={dataSources.file_upload?.tokenCount}
+        />
+
+        <ConnectorCard
+          title="Google Drive"
+          description="Analyze your Google Docs to uncover writing and work patterns"
+          icon={<HardDrive className="h-6 w-6" />}
+          isConnected={!!dataSources.drive?.data}
+          isLoading={driveMutation.isPending}
+          onConnect={connectDrive}
+          tokenCount={dataSources.drive?.tokenCount}
+        />
+
+        <ConnectorCard
+          title="Notion"
+          description="Connect your Notion workspace to analyze notes, journals, and documentation"
+          icon={<BookOpen className="h-6 w-6" />}
+          isConnected={!!dataSources.notion?.data}
+          isLoading={notionMutation.isPending}
+          onConnect={handleConnectNotion}
+          tokenCount={dataSources.notion?.tokenCount}
+        />
+
         <input
-          ref={fileInputRef}
+          ref={chatgptInputRef}
           type="file"
           accept=".json,application/json"
-          onChange={onFileSelected}
+          onChange={onChatGPTFileSelected}
           className="hidden"
           aria-label="Upload ChatGPT export file"
+        />
+        <input
+          ref={fileUploadInputRef}
+          type="file"
+          accept={FILE_UPLOAD_TYPES.join(',')}
+          onChange={onFileUploadSelected}
+          className="hidden"
+          aria-label="Upload file"
         />
       </div>
 

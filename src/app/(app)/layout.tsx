@@ -1,20 +1,27 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 import { useAuthStore } from '@/stores/auth-store';
 import { ErrorBoundary } from '@/components/shared';
 import { Sidebar } from '@/components/layout/sidebar';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuthStore();
+  const { user, profile, loading } = useAuthStore();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (!loading && !user) {
       router.push('/login');
     }
   }, [user, loading, router]);
+
+  useEffect(() => {
+    if (!loading && profile && !profile.consentGiven && pathname !== '/onboarding') {
+      router.push('/onboarding');
+    }
+  }, [loading, profile, pathname, router]);
 
   if (loading) {
     return (
@@ -28,6 +35,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) return null;
+
+  // Don't show sidebar on onboarding
+  if (pathname === '/onboarding') {
+    return (
+      <div className="min-h-screen">
+        <ErrorBoundary>
+          {children}
+        </ErrorBoundary>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen relative">

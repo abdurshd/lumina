@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { updateStage } from '@/lib/firebase/firestore';
+import { updateStage, resetForRetake as resetForRetakeFirestore } from '@/lib/firebase/firestore';
 import { useAuthStore } from './auth-store';
 import type { AssessmentStage, DataInsight, QuizAnswer, SessionInsight, TalentReport } from '@/types';
 
@@ -15,6 +15,7 @@ interface AssessmentState {
   setSessionInsights: (insights: SessionInsight[]) => void;
   setReport: (report: TalentReport) => void;
   advanceStage: (current: AssessmentStage) => Promise<void>;
+  resetForRetake: () => Promise<void>;
   reset: () => void;
 }
 
@@ -37,6 +38,14 @@ export const useAssessmentStore = create<AssessmentState>((set) => ({
     if (idx < STAGE_ORDER.length - 1) {
       await updateStage(user.uid, STAGE_ORDER[idx + 1], 'active');
     }
+    await refreshProfile();
+  },
+
+  resetForRetake: async () => {
+    const { user, refreshProfile } = useAuthStore.getState();
+    if (!user) return;
+    await resetForRetakeFirestore(user.uid);
+    set({ quizAnswers: [], sessionInsights: [], report: null });
     await refreshProfile();
   },
 

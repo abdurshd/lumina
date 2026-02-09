@@ -40,6 +40,7 @@ const RequestSchema = z.object({
       }),
     )
     .default([]),
+  quizScores: z.record(z.string(), z.number()).optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -68,7 +69,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { dataInsights, quizAnswers, sessionInsights } = parsed.data;
+  const { dataInsights, quizAnswers, sessionInsights, quizScores } = parsed.data;
 
   // Ensure there's at least some data to generate a report from
   if (
@@ -108,6 +109,9 @@ ${
     )
     .join("\n") || "No session insights available."
 }
+
+=== QUIZ DIMENSION SCORES ===
+${quizScores ? Object.entries(quizScores).map(([dim, score]) => `${dim}: ${score}/100`).join("\n") : "No dimension scores available."}
 `;
 
     const response = await client.models.generateContent({
@@ -122,9 +126,9 @@ ${
   "headline": "string - specific surprising headline talent",
   "tagline": "string - short inspiring tagline",
   "radarDimensions": [{"label": "string", "value": 0-100, "description": "string"}],
-  "topStrengths": [{"name": "string", "score": 0-100, "evidence": "string"}],
+  "topStrengths": [{"name": "string", "score": 0-100, "evidence": "string", "evidenceSources": [{"source": "string", "excerpt": "string"}], "confidenceLevel": "high|medium|low"}],
   "hiddenTalents": ["string"],
-  "careerPaths": [{"title": "string", "match": 0-100, "description": "string", "nextSteps": ["string"]}],
+  "careerPaths": [{"title": "string", "match": 0-100, "description": "string", "nextSteps": ["string"], "riasecCodes": "string", "onetCluster": "string", "evidenceSources": ["string"], "confidence": 0-100, "whyYou": "string"}],
   "actionPlan": [{"title": "string", "description": "string", "timeframe": "string", "priority": "high|medium|low"}],
   "personalityInsights": ["string"]
 }

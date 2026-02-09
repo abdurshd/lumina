@@ -10,10 +10,13 @@ export interface UserProfile {
   stages: Record<AssessmentStage, StageStatus>;
   googleAccessToken?: string;
   notionAccessToken?: string;
+  consentGiven?: boolean;
+  consentTimestamp?: number;
+  consentSources?: string[];
 }
 
 export interface DataInsight {
-  source: 'gmail' | 'drive' | 'notion' | 'chatgpt';
+  source: 'gmail' | 'drive' | 'notion' | 'chatgpt' | 'file_upload';
   summary: string;
   themes: string[];
   skills: string[];
@@ -30,12 +33,21 @@ export interface QuizQuestion {
   sliderMax?: number;
   sliderLabels?: { min: string; max: string };
   category: string;
+  dimension?: string;
+  scoringRubric?: Record<string, number>;
 }
 
 export interface QuizAnswer {
   questionId: string;
   answer: string | number;
 }
+
+export interface QuizScore {
+  questionId: string;
+  dimensionScores: { dimension: string; score: number; rationale: string }[];
+}
+
+export type QuizDimensionSummary = Record<string, number>;
 
 export interface SessionInsight {
   timestamp: number;
@@ -61,10 +73,17 @@ export interface RadarDimension {
   description: string;
 }
 
+export interface EvidenceSource {
+  source: string;
+  excerpt: string;
+}
+
 export interface Strength {
   name: string;
   score: number;
   evidence: string;
+  evidenceSources?: EvidenceSource[];
+  confidenceLevel?: 'high' | 'medium' | 'low';
 }
 
 export interface CareerPath {
@@ -72,6 +91,11 @@ export interface CareerPath {
   match: number;
   description: string;
   nextSteps: string[];
+  riasecCodes?: string;
+  onetCluster?: string;
+  evidenceSources?: string[];
+  confidence?: number;
+  whyYou?: string;
 }
 
 export interface ActionItem {
@@ -79,4 +103,28 @@ export interface ActionItem {
   description: string;
   timeframe: string;
   priority: 'high' | 'medium' | 'low';
+}
+
+export interface UserSignal {
+  id: string;
+  signal: string;
+  source: string;
+  evidence: string;
+  confidence: number;
+  timestamp: number;
+}
+
+export interface UserFeedback {
+  itemType: 'career' | 'strength';
+  itemId: string;
+  feedback: 'agree' | 'disagree';
+  reason?: string;
+  timestamp: number;
+}
+
+export interface ProfileVersion {
+  version: number;
+  timestamp: number;
+  report: TalentReport;
+  quizScores?: QuizDimensionSummary;
 }

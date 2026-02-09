@@ -10,6 +10,7 @@ import {
   Brain,
   Video,
   FileText,
+  Settings,
   LogOut,
 } from 'lucide-react';
 import { LuminaIcon } from '@/components/icons/lumina-icon';
@@ -23,6 +24,7 @@ const navItems = [
   { href: '/quiz', label: 'Quiz', icon: Brain },
   { href: '/session', label: 'Live Session', icon: Video },
   { href: '/report', label: 'Report', icon: FileText },
+  { href: '/settings', label: 'Settings', icon: Settings },
 ];
 
 export function Sidebar() {

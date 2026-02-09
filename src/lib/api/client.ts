@@ -1,5 +1,5 @@
 import { apiFetch } from '@/lib/fetch-client';
-import type { DataInsight, QuizQuestion, QuizAnswer, TalentReport } from '@/types';
+import type { DataInsight, QuizQuestion, QuizAnswer, TalentReport, QuizScore, QuizDimensionSummary, UserFeedback } from '@/types';
 
 // Request types
 interface GmailRequest {
@@ -8,6 +8,19 @@ interface GmailRequest {
 
 interface ChatGPTRequest {
   content: string;
+}
+
+interface DriveRequest {
+  accessToken: string;
+}
+
+interface NotionRequest {
+  accessToken: string;
+}
+
+interface NotionAuthRequest {
+  code: string;
+  redirectUri: string;
 }
 
 interface AnalyzeRequest {
@@ -20,10 +33,23 @@ interface QuizRequest {
   batchIndex: number;
 }
 
+interface QuizScoreRequest {
+  answers: QuizAnswer[];
+  questions: QuizQuestion[];
+}
+
 interface ReportRequest {
   dataInsights: DataInsight[];
   quizAnswers: QuizAnswer[];
   sessionInsights: { timestamp: number; observation: string; category: string; confidence: number }[];
+  quizScores?: QuizDimensionSummary;
+}
+
+interface FeedbackRequest {
+  itemType: 'career' | 'strength';
+  itemId: string;
+  feedback: 'agree' | 'disagree';
+  reason?: string;
 }
 
 // Response types
@@ -38,6 +64,11 @@ interface AnalyzeResponse {
 
 interface QuizResponse {
   questions: QuizQuestion[];
+}
+
+interface QuizScoreResponse {
+  scores: QuizScore[];
+  dimensionSummary: QuizDimensionSummary;
 }
 
 interface EphemeralTokenResponse {
@@ -57,6 +88,32 @@ export const apiClient = {
         method: 'POST',
         body: JSON.stringify(req),
       }),
+
+    fileUpload: (formData: FormData) =>
+      apiFetch<DataSourceResponse>('/api/data/file-upload', {
+        method: 'POST',
+        body: formData,
+      }),
+
+    drive: (req: DriveRequest) =>
+      apiFetch<DataSourceResponse>('/api/data/drive', {
+        method: 'POST',
+        body: JSON.stringify(req),
+      }),
+
+    notion: (req: NotionRequest) =>
+      apiFetch<DataSourceResponse>('/api/data/notion', {
+        method: 'POST',
+        body: JSON.stringify(req),
+      }),
+  },
+
+  auth: {
+    notionCallback: (req: NotionAuthRequest) =>
+      apiFetch<{ success: boolean }>('/api/auth/notion', {
+        method: 'POST',
+        body: JSON.stringify(req),
+      }),
   },
 
   gemini: {
@@ -72,6 +129,12 @@ export const apiClient = {
         body: JSON.stringify(req),
       }),
 
+    quizScore: (req: QuizScoreRequest) =>
+      apiFetch<QuizScoreResponse>('/api/gemini/quiz-score', {
+        method: 'POST',
+        body: JSON.stringify(req),
+      }),
+
     report: (req: ReportRequest) =>
       apiFetch<TalentReport>('/api/gemini/report', {
         method: 'POST',
@@ -81,6 +144,20 @@ export const apiClient = {
     ephemeralToken: () =>
       apiFetch<EphemeralTokenResponse>('/api/gemini/ephemeral-token', {
         method: 'POST',
+      }),
+
+    feedback: (req: FeedbackRequest) =>
+      apiFetch<{ success: boolean }>('/api/gemini/feedback', {
+        method: 'POST',
+        body: JSON.stringify(req),
+      }),
+  },
+
+  user: {
+    deleteData: (req: { sources?: string[] }) =>
+      apiFetch<{ success: boolean }>('/api/user/delete-data', {
+        method: 'POST',
+        body: JSON.stringify(req),
       }),
   },
 };

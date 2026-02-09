@@ -10,8 +10,8 @@ import {
   type LiveServerMessage,
 } from "@google/genai";
 import { LIVE_SESSION_SYSTEM_PROMPT } from "./prompts";
-import { SaveInsightFunctionDeclaration } from "@/lib/schemas/session";
-import type { SessionInsight } from "@/types";
+import { SaveInsightFunctionDeclaration, FetchUserProfileDeclaration, SaveSignalDeclaration } from "@/lib/schemas/session";
+import type { SessionInsight, UserSignal } from "@/types";
 
 export interface LiveSessionCallbacks {
   onAudioData: (base64Audio: string) => void;
@@ -20,18 +20,34 @@ export interface LiveSessionCallbacks {
   onError: (error: Error) => void;
   onConnectionChange: (connected: boolean) => void;
   onInterrupted: () => void;
+  onReconnecting?: (attempt: number) => void;
+  onSignal?: (signal: UserSignal) => void;
+  onProfileRequested?: () => Promise<string>;
 }
+
+const MAX_RECONNECT_RETRIES = 3;
+const RECONNECT_BASE_DELAY_MS = 1000;
+const CONTEXT_TOKEN_THRESHOLD = 80_000;
+const CHARS_PER_TOKEN = 4;
 
 export class LiveSessionManager {
   private session: Session | null = null;
   private callbacks: LiveSessionCallbacks;
   private insights: SessionInsight[] = [];
+  private sessionHandle: string | null = null;
+  private apiKey: string | null = null;
+  private dataContext: string | null = null;
+  private transcriptCharCount = 0;
+  private isReconnecting = false;
 
   constructor(callbacks: LiveSessionCallbacks) {
     this.callbacks = callbacks;
   }
 
   async connect(apiKey: string, dataContext: string): Promise<void> {
+    this.apiKey = apiKey;
+    this.dataContext = dataContext;
+
     try {
       const client = new GoogleGenAI({ apiKey });
 
@@ -48,7 +64,9 @@ export class LiveSessionManager {
             this.callbacks.onError(new Error(e.message || "WebSocket error"));
           },
           onclose: () => {
-            this.callbacks.onConnectionChange(false);
+            if (!this.isReconnecting) {
+              this.callbacks.onConnectionChange(false);
+            }
           },
         },
         config: {
@@ -67,7 +85,10 @@ export class LiveSessionManager {
               },
             ],
           },
-          tools: [{ functionDeclarations: [SaveInsightFunctionDeclaration] }],
+          tools: [{ functionDeclarations: [SaveInsightFunctionDeclaration, FetchUserProfileDeclaration, SaveSignalDeclaration] }],
+          sessionResumption: {
+            handle: this.sessionHandle ?? undefined,
+          },
         },
       });
     } catch (error) {
@@ -78,11 +99,23 @@ export class LiveSessionManager {
   }
 
   private handleMessage(message: LiveServerMessage): void {
+    // Handle GoAway - server is signaling imminent disconnect
+    if (message.goAway) {
+      this.reconnect();
+      return;
+    }
+
+    // Handle session resumption updates
+    if (message.sessionResumptionUpdate?.newHandle) {
+      this.sessionHandle = message.sessionResumptionUpdate.newHandle;
+    }
+
     // Handle tool calls
     if (message.toolCall) {
       for (const fc of message.toolCall.functionCalls ?? []) {
+        const args = fc.args as Record<string, unknown>;
+
         if (fc.name === "saveInsight") {
-          const args = fc.args as Record<string, unknown>;
           const insight: SessionInsight = {
             timestamp: Date.now(),
             observation: String(args.observation ?? ""),
@@ -91,8 +124,35 @@ export class LiveSessionManager {
           };
           this.insights.push(insight);
           this.callbacks.onInsight(insight);
-
-          // Send function response
+          this.session?.sendToolResponse({
+            functionResponses: [{ id: fc.id!, response: { success: true } }],
+          });
+        } else if (fc.name === "fetchUserProfile") {
+          if (this.callbacks.onProfileRequested) {
+            this.callbacks.onProfileRequested().then((profileData) => {
+              this.session?.sendToolResponse({
+                functionResponses: [{ id: fc.id!, response: { profile: profileData } }],
+              });
+            }).catch(() => {
+              this.session?.sendToolResponse({
+                functionResponses: [{ id: fc.id!, response: { error: "Failed to fetch profile" } }],
+              });
+            });
+          } else {
+            this.session?.sendToolResponse({
+              functionResponses: [{ id: fc.id!, response: { error: "Profile not available" } }],
+            });
+          }
+        } else if (fc.name === "saveSignal") {
+          const signal: UserSignal = {
+            id: `signal_${Date.now()}`,
+            signal: String(args.signal ?? ""),
+            source: "live_session",
+            evidence: String(args.evidence ?? ""),
+            confidence: Number(args.confidence ?? 0.5),
+            timestamp: Date.now(),
+          };
+          this.callbacks.onSignal?.(signal);
           this.session?.sendToolResponse({
             functionResponses: [{ id: fc.id!, response: { success: true } }],
           });
@@ -109,11 +169,58 @@ export class LiveSessionManager {
         }
         if (part.text) {
           this.callbacks.onTranscript(part.text, false);
+          this.transcriptCharCount += part.text.length;
+          this.maybeCompressContext();
         }
       }
 
       if (message.serverContent.interrupted) {
         this.callbacks.onInterrupted();
+      }
+    }
+  }
+
+  private async reconnect(): Promise<void> {
+    if (this.isReconnecting || !this.apiKey || !this.dataContext) return;
+    this.isReconnecting = true;
+
+    // Close existing session quietly
+    if (this.session) {
+      try { this.session.close(); } catch { /* ignore */ }
+      this.session = null;
+    }
+
+    for (let attempt = 1; attempt <= MAX_RECONNECT_RETRIES; attempt++) {
+      this.callbacks.onReconnecting?.(attempt);
+      const delay = RECONNECT_BASE_DELAY_MS * Math.pow(2, attempt - 1);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+
+      try {
+        await this.connect(this.apiKey, this.dataContext);
+        this.isReconnecting = false;
+        return;
+      } catch {
+        if (attempt === MAX_RECONNECT_RETRIES) {
+          this.isReconnecting = false;
+          this.callbacks.onConnectionChange(false);
+          this.callbacks.onError(
+            new Error("Session reconnection failed after maximum retries"),
+          );
+        }
+      }
+    }
+  }
+
+  private maybeCompressContext(): void {
+    const approxTokens = this.transcriptCharCount / CHARS_PER_TOKEN;
+    if (approxTokens >= CONTEXT_TOKEN_THRESHOLD && this.session) {
+      try {
+        this.session.sendClientContent({
+          contextWindowCompression: { slidingWindow: {} },
+        } as Parameters<Session['sendClientContent']>[0]);
+        this.transcriptCharCount = 0;
+      } catch (error) {
+        console.error("Context compression failed:", error);
       }
     }
   }
@@ -153,6 +260,7 @@ export class LiveSessionManager {
       turnComplete: true,
     });
     this.callbacks.onTranscript(text, true);
+    this.transcriptCharCount += text.length;
   }
 
   getInsights(): SessionInsight[] {

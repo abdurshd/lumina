@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const DataInsightSchema = z.object({
-  source: z.enum(['gmail', 'drive', 'notion', 'chatgpt']),
+  source: z.enum(['gmail', 'drive', 'notion', 'chatgpt', 'file_upload']),
   summary: z.string(),
   themes: z.array(z.string()),
   skills: z.array(z.string()),

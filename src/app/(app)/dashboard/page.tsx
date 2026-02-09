@@ -1,10 +1,13 @@
 'use client';
 
+import { useState, useCallback } from 'react';
+import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/auth-store';
+import { useAssessmentStore } from '@/stores/assessment-store';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { StatusBadge, StageCardSkeleton } from '@/components/shared';
-import { Plug, Brain, Video, FileText, ChevronRight } from 'lucide-react';
+import { StatusBadge, StageCardSkeleton, LoadingButton } from '@/components/shared';
+import { Plug, Brain, Video, FileText, ChevronRight, RotateCcw } from 'lucide-react';
 import { LuminaIcon } from '@/components/icons/lumina-icon';
 import Link from 'next/link';
 import type { AssessmentStage } from '@/types';
@@ -18,10 +21,26 @@ const stages: { key: AssessmentStage; label: string; description: string; icon: 
 
 export default function DashboardPage() {
   const { profile, loading } = useAuthStore();
+  const { resetForRetake } = useAssessmentStore();
+  const [isRetaking, setIsRetaking] = useState(false);
 
   const completedCount = profile
     ? Object.values(profile.stages).filter((s) => s === 'completed').length
     : 0;
+
+  const allCompleted = completedCount === 4;
+
+  const handleRetake = useCallback(async () => {
+    setIsRetaking(true);
+    try {
+      await resetForRetake();
+      toast.success('Assessment reset! You can now retake the quiz and session.');
+    } catch {
+      toast.error('Failed to reset assessment.');
+    } finally {
+      setIsRetaking(false);
+    }
+  }, [resetForRetake]);
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-12">
@@ -106,6 +125,33 @@ export default function DashboardPage() {
           })
         )}
       </div>
+
+      {allCompleted && (
+        <div className="mt-8 animate-fade-in-up" style={{ animationDelay: '400ms' }}>
+          <Card className="border-primary/20">
+            <CardHeader className="flex flex-row items-center gap-4 py-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary border-2 border-primary/20">
+                <RotateCcw className="h-6 w-6" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <CardTitle className="text-lg font-sans">Retake Assessment</CardTitle>
+                <CardDescription>
+                  Reset quiz, session, and report to generate a fresh talent analysis. Your data connections will be preserved.
+                </CardDescription>
+              </div>
+              <LoadingButton
+                variant="outline"
+                onClick={handleRetake}
+                loading={isRetaking}
+                loadingText="Resetting..."
+              >
+                <RotateCcw className="mr-2 h-4 w-4" />
+                Retake
+              </LoadingButton>
+            </CardHeader>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

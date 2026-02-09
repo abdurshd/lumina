@@ -5,17 +5,19 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/auth-store';
 import { useAssessmentStore } from '@/stores/assessment-store';
-import { saveQuizAnswers } from '@/lib/firebase/firestore';
+import { saveQuizAnswers, saveQuizScores } from '@/lib/firebase/firestore';
 import { FetchError } from '@/lib/fetch-client';
-import { useQuizMutation } from '@/hooks/use-api-mutations';
+import { useQuizMutation, useQuizScoreMutation } from '@/hooks/use-api-mutations';
 import { QuestionCard } from '@/components/quiz/question-card';
 import { PageHeader, LoadingButton, ErrorAlert, EmptyState, QuestionSkeleton } from '@/components/shared';
 import { Progress } from '@/components/ui/progress';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Brain, ArrowRight } from 'lucide-react';
-import type { QuizQuestion, QuizAnswer } from '@/types';
+import type { QuizQuestion, QuizAnswer, QuizDimensionSummary } from '@/types';
 
-const TOTAL_QUESTIONS = 10;
-const BATCH_SIZE = 3;
+const TOTAL_QUESTIONS = 15;
+const BATCH_SIZE = 5;
 
 export default function QuizPage() {
   const { user } = useAuthStore();
@@ -26,10 +28,13 @@ export default function QuizPage() {
   const [answers, setAnswers] = useState<QuizAnswer[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
+  const [isScoring, setIsScoring] = useState(false);
+  const [dimensionSummary, setDimensionSummary] = useState<QuizDimensionSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [batchIndex, setBatchIndex] = useState(0);
 
   const quizMutation = useQuizMutation();
+  const quizScoreMutation = useQuizScoreMutation();
 
   const dataContext = useMemo(
     () => dataInsights.length > 0
@@ -74,16 +79,39 @@ export default function QuizPage() {
 
     // Check if quiz is complete
     if (nextIndex >= TOTAL_QUESTIONS) {
+      setIsScoring(true);
       try {
         if (user) {
           await saveQuizAnswers(user.uid, updatedAnswers);
           setQuizAnswers(updatedAnswers);
-          await advanceStage('quiz');
+
+          // Score the quiz
+          quizScoreMutation.mutate({ answers: updatedAnswers, questions }, {
+            onSuccess: async (result) => {
+              try {
+                await saveQuizScores(user.uid, result.scores, result.dimensionSummary);
+                setDimensionSummary(result.dimensionSummary);
+                await advanceStage('quiz');
+                setIsComplete(true);
+                toast.success('Quiz complete! Your answers have been scored.');
+              } catch {
+                toast.error('Failed to save quiz scores.');
+              } finally {
+                setIsScoring(false);
+              }
+            },
+            onError: () => {
+              // Still mark complete even if scoring fails
+              advanceStage('quiz');
+              setIsComplete(true);
+              setIsScoring(false);
+              toast.success('Quiz complete!');
+            },
+          });
         }
-        setIsComplete(true);
-        toast.success('Quiz complete!');
       } catch {
         toast.error('Failed to save quiz answers. Please try again.');
+        setIsScoring(false);
         return;
       }
     } else {
@@ -96,7 +124,22 @@ export default function QuizPage() {
         fetchQuestions(updatedAnswers, newBatch);
       }
     }
-  }, [currentIndex, questions, answers, batchIndex, fetchQuestions, user, setQuizAnswers, advanceStage]);
+  }, [currentIndex, questions, answers, batchIndex, fetchQuestions, user, setQuizAnswers, advanceStage, quizScoreMutation]);
+
+  if (isScoring) {
+    return (
+      <div className="mx-auto max-w-2xl px-6 py-12">
+        <EmptyState
+          icon={Brain}
+          title="Scoring Your Answers..."
+          description="Lumina is analyzing your responses across multiple talent dimensions."
+          action={
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          }
+        />
+      </div>
+    );
+  }
 
   if (isComplete) {
     return (
@@ -106,9 +149,30 @@ export default function QuizPage() {
           title="Quiz Complete!"
           description="Great job! Your answers will help Lumina understand your unique strengths. Now let's have a live conversation."
           action={
-            <LoadingButton onClick={() => router.push('/session')} size="lg" icon={ArrowRight}>
-              Start Live Session
-            </LoadingButton>
+            <div className="space-y-6 w-full max-w-md">
+              {dimensionSummary && (
+                <Card className="animate-fade-in">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-sans">Your Dimension Scores</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-wrap gap-2">
+                      {Object.entries(dimensionSummary)
+                        .sort(([, a], [, b]) => b - a)
+                        .slice(0, 6)
+                        .map(([dim, score]) => (
+                          <Badge key={dim} variant={score >= 70 ? 'default' : 'secondary'}>
+                            {dim.replace(/_/g, ' ')}: {score}
+                          </Badge>
+                        ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+              <LoadingButton onClick={() => router.push('/session')} size="lg" icon={ArrowRight} className="w-full">
+                Start Live Session
+              </LoadingButton>
+            </div>
           }
         />
       </div>

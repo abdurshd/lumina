@@ -4,13 +4,14 @@ import { useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/auth-store';
 import { useAssessmentStore } from '@/stores/assessment-store';
-import { saveTalentReport, getDataInsights, getQuizAnswers, getSessionInsights } from '@/lib/firebase/firestore';
+import { saveTalentReport, saveReportVersion, getDataInsights, getQuizAnswers, getSessionInsights, getQuizScores } from '@/lib/firebase/firestore';
 import { FetchError } from '@/lib/fetch-client';
-import { useReportMutation } from '@/hooks/use-api-mutations';
+import { useReportMutation, useFeedbackMutation } from '@/hooks/use-api-mutations';
 import { useTalentReportQuery } from '@/hooks/use-api-queries';
 import { TalentRadarChart } from '@/components/report/talent-radar-chart';
 import { CareerPaths } from '@/components/report/career-paths';
 import { StrengthsGrid } from '@/components/report/strengths-grid';
+import { ReportHistory } from '@/components/report/report-history';
 import { EmptyState, LoadingButton, ErrorAlert, ReportSkeleton } from '@/components/shared';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -22,6 +23,7 @@ export default function ReportPage() {
   const { dataInsights, quizAnswers, sessionInsights, report, setReport, advanceStage } = useAssessmentStore();
 
   const reportMutation = useReportMutation();
+  const feedbackMutation = useFeedbackMutation();
   const reportQuery = useTalentReportQuery(user?.uid);
 
   // Sync fetched report into store
@@ -38,14 +40,17 @@ export default function ReportPage() {
       const insights = dataInsights.length > 0 ? dataInsights : await getDataInsights(user.uid);
       const quiz = quizAnswers.length > 0 ? quizAnswers : await getQuizAnswers(user.uid);
       const session = sessionInsights.length > 0 ? sessionInsights : await getSessionInsights(user.uid);
+      const quizScoresData = await getQuizScores(user.uid);
 
       reportMutation.mutate({
         dataInsights: insights,
         quizAnswers: quiz,
         sessionInsights: session,
+        quizScores: quizScoresData?.dimensionSummary,
       }, {
         onSuccess: async (reportData) => {
           await saveTalentReport(user.uid, reportData);
+          await saveReportVersion(user.uid, reportData, quizScoresData?.dimensionSummary);
           setReport(reportData);
           await advanceStage('report');
           toast.success('Your talent report is ready!');
@@ -59,6 +64,14 @@ export default function ReportPage() {
       toast.error('Failed to load assessment data.');
     }
   }, [user, dataInsights, quizAnswers, sessionInsights, setReport, advanceStage, reportMutation]);
+
+  const handleCareerFeedback = useCallback((pathTitle: string, feedback: 'agree' | 'disagree', reason?: string) => {
+    feedbackMutation.mutate({ itemType: 'career', itemId: pathTitle, feedback, reason });
+  }, [feedbackMutation]);
+
+  const handleStrengthFeedback = useCallback((strengthName: string, feedback: 'agree' | 'disagree', reason?: string) => {
+    feedbackMutation.mutate({ itemType: 'strength', itemId: strengthName, feedback, reason });
+  }, [feedbackMutation]);
 
   if (reportQuery.isLoading) {
     return (
@@ -137,7 +150,7 @@ export default function ReportPage() {
           <LuminaIcon className="h-5 w-5 text-primary" />
           <span className="text-primary">Top</span> Strengths
         </h2>
-        <StrengthsGrid strengths={report.topStrengths} />
+        <StrengthsGrid strengths={report.topStrengths} onFeedback={handleStrengthFeedback} />
       </div>
 
       {/* Hidden Talents */}
@@ -184,7 +197,7 @@ export default function ReportPage() {
           <Rocket className="h-5 w-5 text-primary" />
           <span className="text-primary">Recommended</span> Career Paths
         </h2>
-        <CareerPaths paths={report.careerPaths} />
+        <CareerPaths paths={report.careerPaths} onFeedback={handleCareerFeedback} />
       </div>
 
       {/* Action Plan */}
@@ -213,6 +226,13 @@ export default function ReportPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Report History */}
+      {user && (
+        <div className="mb-8 animate-fade-in-up" style={{ animationDelay: '700ms' }}>
+          <ReportHistory uid={user.uid} />
+        </div>
+      )}
     </div>
   );
 }

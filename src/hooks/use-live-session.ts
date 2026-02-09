@@ -6,7 +6,7 @@ import { AudioPlaybackManager, base64ToFloat32 } from '@/lib/gemini/audio-utils'
 import { FrameCapturer } from '@/lib/gemini/video-utils';
 import { useWebcam } from './use-webcam';
 import { useMicrophone } from './use-microphone';
-import type { SessionInsight } from '@/types';
+import type { SessionInsight, UserSignal } from '@/types';
 
 export interface TranscriptEntry {
   text: string;
@@ -20,8 +20,11 @@ export function useLiveSession() {
   const capturerRef = useRef<FrameCapturer | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [isReconnecting, setIsReconnecting] = useState(false);
+  const [reconnectAttempt, setReconnectAttempt] = useState(0);
   const [transcript, setTranscript] = useState<TranscriptEntry[]>([]);
   const [insights, setInsights] = useState<SessionInsight[]>([]);
+  const [signals, setSignals] = useState<UserSignal[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [sessionDuration, setSessionDuration] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -57,9 +60,20 @@ export function useLiveSession() {
     onConnectionChange: (connected: boolean) => {
       setIsConnected(connected);
       setIsConnecting(false);
+      if (connected) {
+        setIsReconnecting(false);
+        setReconnectAttempt(0);
+      }
     },
     onInterrupted: () => {
       playbackRef.current?.stop();
+    },
+    onReconnecting: (attempt: number) => {
+      setIsReconnecting(true);
+      setReconnectAttempt(attempt);
+    },
+    onSignal: (signal: UserSignal) => {
+      setSignals((prev) => [...prev, signal]);
     },
   });
 
@@ -132,8 +146,11 @@ export function useLiveSession() {
   return {
     isConnected,
     isConnecting,
+    isReconnecting,
+    reconnectAttempt,
     transcript,
     insights,
+    signals,
     error,
     sessionDuration,
     webcam,

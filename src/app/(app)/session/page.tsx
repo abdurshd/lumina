@@ -26,6 +26,8 @@ export default function SessionPage() {
   const {
     isConnected,
     isConnecting,
+    isReconnecting,
+    reconnectAttempt,
     transcript,
     insights,
     error: sessionError,
@@ -133,6 +135,15 @@ export default function SessionPage() {
           onRetry={() => setError(null)}
           className="mb-6"
         />
+      )}
+
+      {isReconnecting && (
+        <div className="mb-6 flex items-center gap-3 rounded-xl border-2 border-yellow-500/30 bg-yellow-500/5 p-4 animate-fade-in">
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-yellow-500 border-t-transparent" />
+          <p className="text-sm font-medium text-yellow-500">
+            Reconnecting (attempt {reconnectAttempt}/3)...
+          </p>
+        </div>
       )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 animate-fade-in">

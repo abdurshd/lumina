@@ -17,4 +17,6 @@ export const serverEnv = {
   get FIREBASE_ADMIN_PROJECT_ID() { return requireEnv('FIREBASE_ADMIN_PROJECT_ID'); },
   get FIREBASE_ADMIN_CLIENT_EMAIL() { return requireEnv('FIREBASE_ADMIN_CLIENT_EMAIL'); },
   get FIREBASE_ADMIN_PRIVATE_KEY() { return requireEnv('FIREBASE_ADMIN_PRIVATE_KEY'); },
+  get NOTION_CLIENT_ID() { return process.env.NOTION_CLIENT_ID ?? ''; },
+  get NOTION_CLIENT_SECRET() { return process.env.NOTION_CLIENT_SECRET ?? ''; },
 };

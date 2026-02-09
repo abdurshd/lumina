@@ -32,3 +32,35 @@ export const SaveInsightFunctionDeclaration: FunctionDeclaration = {
     required: ['observation', 'category', 'confidence'],
   },
 };
+
+export const FetchUserProfileDeclaration: FunctionDeclaration = {
+  name: 'fetchUserProfile',
+  description: 'Retrieve the user\'s data insights and quiz dimension scores to personalize the conversation. Call this early in the session to understand the user better.',
+  parameters: {
+    type: Type.OBJECT,
+    properties: {},
+  },
+};
+
+export const SaveSignalDeclaration: FunctionDeclaration = {
+  name: 'saveSignal',
+  description: 'Save an atomic talent signal when you identify a clear pattern in the user. Examples: "enjoys organizing events", "thinks visually", "energized by debate".',
+  parameters: {
+    type: Type.OBJECT,
+    properties: {
+      signal: {
+        type: Type.STRING,
+        description: 'A concise description of the talent signal',
+      },
+      evidence: {
+        type: Type.STRING,
+        description: 'What evidence supports this signal (what the user said/did)',
+      },
+      confidence: {
+        type: Type.NUMBER,
+        description: 'Confidence level (0-1)',
+      },
+    },
+    required: ['signal', 'evidence', 'confidence'],
+  },
+};
