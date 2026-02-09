@@ -72,6 +72,7 @@ export default function SettingsPage() {
   const [isEditingName, setIsEditingName] = useState(false);
   const [consentSources, setConsentSources] = useState<string[]>(profile?.consentSources ?? []);
   const [isExporting, setIsExporting] = useState(false);
+  const [isDeletingCorpus, setIsDeletingCorpus] = useState(false);
 
   const handleDeleteSource = useCallback((sourceKey: string) => {
     deleteDataMutation.mutate({ sources: [sourceKey] }, {
@@ -174,6 +175,34 @@ export default function SettingsPage() {
       },
     });
   }, [deleteCorpusDocMutation, corpusDocsQuery]);
+
+  const handleRevokeSource = useCallback((sourceId: string) => {
+    deleteDataMutation.mutate({ sources: [sourceId] }, {
+      onSuccess: async () => {
+        setConsentSources((prev) => prev.filter((source) => source !== sourceId));
+        await refreshProfile();
+        toast.success('Source revoked and related data removed.');
+      },
+      onError: (err) => {
+        const message = err instanceof FetchError ? err.message : 'Failed to revoke source';
+        toast.error(message);
+      },
+    });
+  }, [deleteDataMutation, refreshProfile]);
+
+  const handleDeleteCorpus = useCallback(async () => {
+    setIsDeletingCorpus(true);
+    try {
+      await apiFetch<{ success: boolean }>('/api/corpus', { method: 'DELETE' });
+      await corpusDocsQuery.refetch();
+      toast.success('Corpus deleted.');
+    } catch (err) {
+      const message = err instanceof FetchError ? err.message : 'Failed to delete corpus';
+      toast.error(message);
+    } finally {
+      setIsDeletingCorpus(false);
+    }
+  }, [corpusDocsQuery]);
 
   const formatBytes = (bytes: number): string => {
     if (bytes === 0) return '0 B';
@@ -384,6 +413,36 @@ export default function SettingsPage() {
                     </div>
                   </div>
                 )}
+                <div className="pt-2">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-2">
+                    Consent Revocation
+                  </p>
+                  <div className="space-y-2">
+                    {CONSENT_SOURCE_OPTIONS.map((source) => {
+                      const isConsented = consentSources.includes(source.id);
+                      return (
+                        <div key={source.id} className="flex items-center justify-between rounded-md border px-3 py-2">
+                          <div>
+                            <p className="text-sm">{source.label}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {isConsented ? 'Consented' : 'Not consented'}
+                            </p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => handleRevokeSource(source.id)}
+                            disabled={!isConsented || deleteDataMutation.isPending}
+                          >
+                            <Link2Off className="h-3 w-3 mr-1" />
+                            Revoke
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -433,6 +492,16 @@ export default function SettingsPage() {
               ) : (
                 <p className="text-sm text-muted-foreground">No documents stored.</p>
               )}
+              <div className="mt-4">
+                <LoadingButton
+                  variant="outline"
+                  loading={isDeletingCorpus}
+                  onClick={handleDeleteCorpus}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Entire Corpus
+                </LoadingButton>
+              </div>
             </CardContent>
           </Card>
         </StaggerItem>

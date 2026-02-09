@@ -1,5 +1,6 @@
 import { getGeminiClient } from '@/lib/gemini/client';
 import { GEMINI_MODELS } from '@/lib/gemini/models';
+import type { IngestionPayload } from '@/lib/data/ingestion';
 
 const SUPPORTED_MIME_TYPES = [
   'application/pdf',
@@ -14,7 +15,7 @@ export function isSupportedMimeType(type: string): type is SupportedMimeType {
   return (SUPPORTED_MIME_TYPES as readonly string[]).includes(type);
 }
 
-export async function parseUploadedFile(buffer: Buffer, mimeType: string): Promise<string> {
+export async function parseUploadedFile(buffer: Buffer, mimeType: string): Promise<IngestionPayload> {
   if (!isSupportedMimeType(mimeType)) {
     throw new Error(`Unsupported file type: ${mimeType}`);
   }
@@ -24,10 +25,14 @@ export async function parseUploadedFile(buffer: Buffer, mimeType: string): Promi
   }
 
   // Text-based files: read as UTF-8
-  return buffer.toString('utf-8');
+  return {
+    data: buffer.toString('utf-8'),
+    itemCount: 1,
+    parseQuality: 'high',
+  };
 }
 
-async function extractPdfText(buffer: Buffer): Promise<string> {
+async function extractPdfText(buffer: Buffer): Promise<IngestionPayload> {
   const client = getGeminiClient();
   const base64 = buffer.toString('base64');
 
@@ -55,5 +60,10 @@ async function extractPdfText(buffer: Buffer): Promise<string> {
   if (!text) {
     throw new Error('Failed to extract text from PDF');
   }
-  return text;
+  return {
+    data: text,
+    itemCount: 1,
+    parseQuality: 'medium',
+    warnings: ['PDF text extraction may omit complex layout elements.'],
+  };
 }

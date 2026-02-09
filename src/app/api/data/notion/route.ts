@@ -1,11 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth, errorResponse, ErrorCode } from '@/lib/api-helpers';
 import { fetchNotionData } from '@/lib/data/notion';
+import { buildIngestionResponse } from '@/lib/data/ingestion';
+import { hasSourceConsent } from '@/lib/data/consent';
 
 export async function POST(req: NextRequest) {
   const authResult = await verifyAuth(req);
   if (!authResult) {
     return errorResponse('Authentication required', ErrorCode.UNAUTHORIZED, 401);
+  }
+
+  const consented = await hasSourceConsent(authResult.uid, 'notion');
+  if (!consented) {
+    return errorResponse(
+      'Notion consent not granted. Enable this source in onboarding or settings first.',
+      ErrorCode.FORBIDDEN,
+      403,
+    );
   }
 
   let body: { accessToken?: string };
@@ -21,9 +32,8 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const data = await fetchNotionData(accessToken);
-    const tokenCount = Math.round(data.length / 4);
-    return NextResponse.json({ data, tokenCount });
+    const payload = await fetchNotionData(accessToken);
+    return NextResponse.json(buildIngestionResponse('notion', payload));
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
 

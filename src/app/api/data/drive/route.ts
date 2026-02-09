@@ -1,11 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth, errorResponse, ErrorCode } from '@/lib/api-helpers';
 import { fetchDriveData } from '@/lib/data/drive';
+import { buildIngestionResponse } from '@/lib/data/ingestion';
+import { hasSourceConsent } from '@/lib/data/consent';
 
 export async function POST(req: NextRequest) {
   const authResult = await verifyAuth(req);
   if (!authResult) {
     return errorResponse('Authentication required', ErrorCode.UNAUTHORIZED, 401);
+  }
+
+  const consented = await hasSourceConsent(authResult.uid, 'drive');
+  if (!consented) {
+    return errorResponse(
+      'Google Drive consent not granted. Enable this source in onboarding or settings first.',
+      ErrorCode.FORBIDDEN,
+      403,
+    );
   }
 
   let body: { accessToken?: string };
@@ -21,9 +32,8 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const data = await fetchDriveData(accessToken);
-    const tokenCount = Math.round(data.length / 4);
-    return NextResponse.json({ data, tokenCount });
+    const payload = await fetchDriveData(accessToken);
+    return NextResponse.json(buildIngestionResponse('drive', payload));
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     const statusCode = (error as { code?: number }).code;

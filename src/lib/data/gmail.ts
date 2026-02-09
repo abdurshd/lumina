@@ -1,6 +1,7 @@
 import { google } from 'googleapis';
+import type { IngestionPayload } from '@/lib/data/ingestion';
 
-export async function fetchGmailData(accessToken: string): Promise<string> {
+export async function fetchGmailData(accessToken: string): Promise<IngestionPayload> {
   const auth = new google.auth.OAuth2();
   auth.setCredentials({ access_token: accessToken });
 
@@ -15,6 +16,7 @@ export async function fetchGmailData(accessToken: string): Promise<string> {
 
   const messages = data.messages ?? [];
   const emailTexts: string[] = [];
+  let skippedCount = 0;
 
   // Fetch first 50 email contents (to stay within limits)
   for (const msg of messages.slice(0, 50)) {
@@ -31,8 +33,17 @@ export async function fetchGmailData(accessToken: string): Promise<string> {
       emailTexts.push(`Subject: ${subject}\nSnippet: ${snippet}`);
     } catch {
       // Skip failed messages
+      skippedCount += 1;
     }
   }
 
-  return emailTexts.join('\n---\n');
+  const successCount = emailTexts.length;
+  const parseQuality = skippedCount > 10 ? 'medium' : 'high';
+
+  return {
+    data: emailTexts.join('\n---\n'),
+    itemCount: successCount,
+    parseQuality,
+    warnings: skippedCount > 0 ? [`Skipped ${skippedCount} messages that could not be read.`] : [],
+  };
 }

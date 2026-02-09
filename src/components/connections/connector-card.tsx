@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { LoadingButton } from "@/components/shared/loading-button";
 import { AnimatedCounter } from "@/components/motion/animated-counter";
 import { CheckCircle2 } from "lucide-react";
-import { smoothTransition, snappySpring } from "@/lib/motion";
+import { smoothTransition } from "@/lib/motion";
 import type { ReactNode } from "react";
 
 interface ConnectorCardProps {
@@ -24,6 +24,13 @@ interface ConnectorCardProps {
   isLoading: boolean;
   onConnect: () => void;
   tokenCount?: number;
+  metadata?: {
+    itemCount: number;
+    parseQuality: 'high' | 'medium' | 'low';
+    truncated: boolean;
+    truncationSummary?: string;
+    warnings: string[];
+  };
   disabled?: boolean;
   disabledReason?: string;
 }
@@ -36,6 +43,7 @@ export const ConnectorCard = memo(function ConnectorCard({
   isLoading,
   onConnect,
   tokenCount,
+  metadata,
   disabled,
   disabledReason,
 }: ConnectorCardProps) {
@@ -77,15 +85,24 @@ export const ConnectorCard = memo(function ConnectorCard({
         </CardHeader>
         <CardContent>
           {isConnected ? (
-            <motion.p
-              className="text-sm text-muted-foreground font-medium"
-              initial={shouldReduceMotion ? false : { opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={smoothTransition}
-            >
-              ~<AnimatedCounter value={tokenCount ?? 0} /> tokens of data
-              collected
-            </motion.p>
+            <>
+              <motion.p
+                className="text-sm text-muted-foreground font-medium"
+                initial={shouldReduceMotion ? false : { opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={smoothTransition}
+              >
+                ~<AnimatedCounter value={tokenCount ?? 0} /> tokens of data
+                collected
+              </motion.p>
+              {metadata && (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {metadata.itemCount} item{metadata.itemCount === 1 ? '' : 's'} • quality: {metadata.parseQuality}
+                  {metadata.truncated ? ' • truncated' : ''}
+                  {metadata.warnings.length > 0 ? ` • ${metadata.warnings.length === 1 ? '1 warning' : `${metadata.warnings.length} warnings`}` : ''}
+                </p>
+              )}
+            </>
           ) : disabled ? (
             <p className="text-sm text-muted-foreground italic">
               {disabledReason}

@@ -25,8 +25,18 @@ import { StaggerList, StaggerItem } from '@/components/motion/stagger-list';
 import { fadeInUp, reducedMotionVariants } from '@/lib/motion';
 
 interface DataSource {
+  source: 'gmail' | 'drive' | 'notion' | 'chatgpt' | 'file_upload';
   data: string;
   tokenCount: number;
+  metadata: {
+    itemCount: number;
+    charCount: number;
+    byteSize: number;
+    parseQuality: 'high' | 'medium' | 'low';
+    truncated: boolean;
+    truncationSummary?: string;
+    warnings: string[];
+  };
 }
 
 const MAX_CHATGPT_SIZE = 50 * 1024 * 1024; // 50MB
@@ -240,6 +250,7 @@ export default function ConnectionsPage() {
             isLoading={gmailMutation.isPending}
             onConnect={connectGmail}
             tokenCount={dataSources.gmail?.tokenCount}
+            metadata={dataSources.gmail?.metadata}
           />
         </StaggerItem>
 
@@ -252,6 +263,7 @@ export default function ConnectionsPage() {
             isLoading={chatgptMutation.isPending}
             onConnect={handleChatGPTUpload}
             tokenCount={dataSources.chatgpt?.tokenCount}
+            metadata={dataSources.chatgpt?.metadata}
           />
         </StaggerItem>
 
@@ -264,6 +276,7 @@ export default function ConnectionsPage() {
             isLoading={fileUploadMutation.isPending}
             onConnect={handleFileUpload}
             tokenCount={dataSources.file_upload?.tokenCount}
+            metadata={dataSources.file_upload?.metadata}
           />
         </StaggerItem>
 
@@ -276,6 +289,7 @@ export default function ConnectionsPage() {
             isLoading={driveMutation.isPending}
             onConnect={connectDrive}
             tokenCount={dataSources.drive?.tokenCount}
+            metadata={dataSources.drive?.metadata}
           />
         </StaggerItem>
 
@@ -288,6 +302,7 @@ export default function ConnectionsPage() {
             isLoading={notionMutation.isPending}
             onConnect={handleConnectNotion}
             tokenCount={dataSources.notion?.tokenCount}
+            metadata={dataSources.notion?.metadata}
           />
         </StaggerItem>
 

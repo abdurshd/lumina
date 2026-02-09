@@ -1,3 +1,5 @@
+import type { IngestionPayload } from '@/lib/data/ingestion';
+
 interface ChatGPTConversation {
   title: string;
   mapping: Record<string, {
@@ -8,7 +10,7 @@ interface ChatGPTConversation {
   }>;
 }
 
-export function parseChatGPTExport(jsonContent: string): string {
+export function parseChatGPTExport(jsonContent: string): IngestionPayload {
   try {
     const conversations: ChatGPTConversation[] = JSON.parse(jsonContent);
     const summaries: string[] = [];
@@ -32,7 +34,12 @@ export function parseChatGPTExport(jsonContent: string): string {
       }
     }
 
-    return summaries.join('\n---\n');
+    const parseQuality = summaries.length >= 10 ? 'high' : summaries.length >= 3 ? 'medium' : 'low';
+    return {
+      data: summaries.join('\n---\n'),
+      itemCount: summaries.length,
+      parseQuality,
+    };
   } catch {
     throw new Error('Invalid ChatGPT export format. Please upload a valid conversations.json file.');
   }

@@ -79,8 +79,18 @@ interface FeedbackRequest {
 
 // Response types
 interface DataSourceResponse {
+  source: 'gmail' | 'drive' | 'notion' | 'chatgpt' | 'file_upload';
   data: string;
   tokenCount: number;
+  metadata: {
+    itemCount: number;
+    charCount: number;
+    byteSize: number;
+    parseQuality: 'high' | 'medium' | 'low';
+    truncated: boolean;
+    truncationSummary?: string;
+    warnings: string[];
+  };
 }
 
 interface AnalyzeResponse {

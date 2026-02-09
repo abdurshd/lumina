@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth, errorResponse, ErrorCode } from '@/lib/api-helpers';
 import { parseUploadedFile, isSupportedMimeType } from '@/lib/data/file-upload';
+import { buildIngestionResponse } from '@/lib/data/ingestion';
+import { hasSourceConsent } from '@/lib/data/consent';
 
 const MAX_PDF_SIZE = 10 * 1024 * 1024; // 10MB
 const MAX_TEXT_SIZE = 50 * 1024 * 1024; // 50MB
@@ -9,6 +11,15 @@ export async function POST(req: NextRequest) {
   const authResult = await verifyAuth(req);
   if (!authResult) {
     return errorResponse('Authentication required', ErrorCode.UNAUTHORIZED, 401);
+  }
+
+  const consented = await hasSourceConsent(authResult.uid, 'file_upload');
+  if (!consented) {
+    return errorResponse(
+      'File upload consent not granted. Enable this source in onboarding or settings first.',
+      ErrorCode.FORBIDDEN,
+      403,
+    );
   }
 
   let formData: FormData;
@@ -43,9 +54,8 @@ export async function POST(req: NextRequest) {
 
   try {
     const buffer = Buffer.from(await file.arrayBuffer());
-    const data = await parseUploadedFile(buffer, mimeType);
-    const tokenCount = Math.round(data.length / 4);
-    return NextResponse.json({ data, tokenCount });
+    const payload = await parseUploadedFile(buffer, mimeType);
+    return NextResponse.json(buildIngestionResponse('file_upload', payload));
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to process file';
     console.error('[File Upload Error]', message);

@@ -1,6 +1,7 @@
 import { Client } from '@notionhq/client';
+import type { IngestionPayload } from '@/lib/data/ingestion';
 
-export async function fetchNotionData(accessToken: string): Promise<string> {
+export async function fetchNotionData(accessToken: string): Promise<IngestionPayload> {
   const notion = new Client({ auth: accessToken });
 
   // Search for recent pages
@@ -16,6 +17,7 @@ export async function fetchNotionData(accessToken: string): Promise<string> {
   }
 
   const chunks: string[] = [];
+  let skippedCount = 0;
   for (const page of pages) {
     if (page.object !== 'page') continue;
     try {
@@ -33,6 +35,7 @@ export async function fetchNotionData(accessToken: string): Promise<string> {
       }
     } catch {
       // Skip pages that can't be read
+      skippedCount += 1;
     }
   }
 
@@ -40,7 +43,13 @@ export async function fetchNotionData(accessToken: string): Promise<string> {
     throw new Error('Could not extract any Notion page content.');
   }
 
-  return chunks.join('\n\n');
+  const parseQuality = skippedCount > 12 ? 'medium' : 'high';
+  return {
+    data: chunks.join('\n\n'),
+    itemCount: chunks.length,
+    parseQuality,
+    warnings: skippedCount > 0 ? [`Skipped ${skippedCount} pages that could not be read.`] : [],
+  };
 }
 
 function extractPageTitle(page: Record<string, unknown>): string {

@@ -1,6 +1,7 @@
 import { google } from 'googleapis';
+import type { IngestionPayload } from '@/lib/data/ingestion';
 
-export async function fetchDriveData(accessToken: string): Promise<string> {
+export async function fetchDriveData(accessToken: string): Promise<IngestionPayload> {
   const auth = new google.auth.OAuth2();
   auth.setCredentials({ access_token: accessToken });
 
@@ -20,6 +21,7 @@ export async function fetchDriveData(accessToken: string): Promise<string> {
   }
 
   const chunks: string[] = [];
+  let skippedCount = 0;
   for (const file of files) {
     if (!file.id) continue;
     try {
@@ -33,6 +35,7 @@ export async function fetchDriveData(accessToken: string): Promise<string> {
       }
     } catch {
       // Skip files that can't be exported
+      skippedCount += 1;
     }
   }
 
@@ -40,5 +43,11 @@ export async function fetchDriveData(accessToken: string): Promise<string> {
     throw new Error('Could not export any Google Docs content.');
   }
 
-  return chunks.join('\n\n');
+  const parseQuality = skippedCount > 12 ? 'medium' : 'high';
+  return {
+    data: chunks.join('\n\n'),
+    itemCount: chunks.length,
+    parseQuality,
+    warnings: skippedCount > 0 ? [`Skipped ${skippedCount} documents that could not be exported.`] : [],
+  };
 }
