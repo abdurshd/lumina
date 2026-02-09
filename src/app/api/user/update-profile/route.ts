@@ -9,6 +9,10 @@ const RequestSchema = z.object({
   ageGateConfirmed: z.boolean().optional(),
   videoBehaviorConsent: z.boolean().optional(),
   dataRetentionMode: z.enum(['session_only', 'persistent']).optional(),
+  byokEnabled: z.boolean().optional(),
+  byokKeyLast4: z.string().max(8).optional(),
+  byokMonthlyBudgetUsd: z.number().min(1).max(2000).optional(),
+  byokHardStop: z.boolean().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -48,6 +52,18 @@ export async function POST(req: NextRequest) {
   }
   if (parsed.data.dataRetentionMode !== undefined) {
     updates.dataRetentionMode = parsed.data.dataRetentionMode;
+  }
+  if (parsed.data.byokEnabled !== undefined) {
+    updates.byokEnabled = parsed.data.byokEnabled;
+  }
+  if (parsed.data.byokKeyLast4 !== undefined) {
+    updates.byokKeyLast4 = parsed.data.byokKeyLast4;
+  }
+  if (parsed.data.byokMonthlyBudgetUsd !== undefined) {
+    updates.byokMonthlyBudgetUsd = parsed.data.byokMonthlyBudgetUsd;
+  }
+  if (parsed.data.byokHardStop !== undefined) {
+    updates.byokHardStop = parsed.data.byokHardStop;
   }
 
   const consentChanged =

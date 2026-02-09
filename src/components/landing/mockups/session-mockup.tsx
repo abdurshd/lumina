@@ -14,7 +14,7 @@ export function SessionMockup() {
                         <div className="relative">
                             <div className="h-2.5 w-2.5 rounded-full bg-green-500 absolute -bottom-0.5 -right-0.5 border-2 border-card" />
                             <Avatar className="h-8 w-8 border border-border">
-                                <AvatarImage src="/ai-avatar-placeholder.png" alt="Lumina AI" />
+                                <AvatarImage src="/lumina-ai-avatar.png" alt="Lumina AI" />
                                 <AvatarFallback className="bg-primary/10 text-primary text-xs">AI</AvatarFallback>
                             </Avatar>
                         </div>

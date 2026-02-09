@@ -2,11 +2,12 @@ export const maxDuration = 60;
 
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth, errorResponse, ErrorCode, safeParseJson, GeminiError } from '@/lib/api-helpers';
-import { getGeminiClient } from '@/lib/gemini/client';
+import { getGeminiClientForUser } from '@/lib/gemini/client';
 import { GEMINI_MODELS } from '@/lib/gemini/models';
 import { CHALLENGE_GENERATION_PROMPT } from '@/lib/gemini/prompts';
 import { MicroChallengeResponseSchema } from '@/lib/schemas/iteration';
 import { getTalentReport, getComputedProfile, getChallenges, saveChallenges, updateIterationState } from '@/lib/firebase/firestore';
+import { trackGeminiUsage } from '@/lib/gemini/byok';
 import { z } from 'zod';
 import type { MicroChallenge } from '@/types';
 
@@ -53,7 +54,11 @@ Dimension Scores: ${Object.entries(profile.dimensionScores).map(([dim, score]) =
 ${completedTitles.length > 0 ? completedTitles.join('\n') : 'None yet'}
 `;
 
-    const client = getGeminiClient();
+    const { client, keySource } = await getGeminiClientForUser({
+      uid,
+      model: GEMINI_MODELS.FAST,
+    });
+    const promptText = `${CHALLENGE_GENERATION_PROMPT}\n\n${context}`;
 
     const response = await client.models.generateContent({
       model: GEMINI_MODELS.FAST,
@@ -62,7 +67,7 @@ ${completedTitles.length > 0 ? completedTitles.join('\n') : 'None yet'}
           role: 'user',
           parts: [
             {
-              text: `${CHALLENGE_GENERATION_PROMPT}\n\n${context}`,
+              text: promptText,
             },
           ],
         },
@@ -76,6 +81,15 @@ ${completedTitles.length > 0 ? completedTitles.join('\n') : 'None yet'}
     if (!text) {
       throw new GeminiError('Gemini returned an empty response');
     }
+
+    await trackGeminiUsage({
+      uid,
+      model: GEMINI_MODELS.FAST,
+      feature: 'challenge_generate',
+      keySource,
+      inputChars: promptText.length,
+      outputChars: text.length,
+    });
 
     const jsonData = safeParseJson(text);
     const validated = MicroChallengeResponseSchema.parse(jsonData);
@@ -112,6 +126,13 @@ ${completedTitles.length > 0 ? completedTitles.join('\n') : 'None yet'}
       );
     }
     const message = error instanceof Error ? error.message : 'Unknown error';
+    if (message.includes('budget exceeded')) {
+      return errorResponse(
+        'Monthly Gemini budget exceeded. Update BYOK settings or wait for next cycle.',
+        ErrorCode.RATE_LIMITED,
+        429
+      );
+    }
     console.error('[Challenge Generation Error]', message);
     return errorResponse('Challenge generation failed. Please try again.', ErrorCode.INTERNAL_ERROR, 500);
   }

@@ -2,7 +2,7 @@ export const maxDuration = 60;
 
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth, errorResponse, ErrorCode, safeParseJson, GeminiError } from '@/lib/api-helpers';
-import { getGeminiClient } from '@/lib/gemini/client';
+import { getGeminiClientForUser } from '@/lib/gemini/client';
 import { GEMINI_MODELS } from '@/lib/gemini/models';
 import { REFLECTION_ANALYSIS_PROMPT } from '@/lib/gemini/prompts';
 import { ReflectionAnalysisSchema } from '@/lib/schemas/iteration';
@@ -17,6 +17,7 @@ import {
   getIterationState,
 } from '@/lib/firebase/firestore';
 import { evolveProfile } from '@/lib/career/profile-evolution';
+import { trackGeminiUsage } from '@/lib/gemini/byok';
 import { z } from 'zod';
 import type { Reflection, ProfileSnapshot } from '@/types';
 
@@ -67,7 +68,11 @@ export async function POST(
 
     // If a reflection is provided, analyze it and evolve the profile
     if (reflection) {
-      const client = getGeminiClient();
+      const { client, keySource } = await getGeminiClientForUser({
+        uid,
+        model: GEMINI_MODELS.FAST,
+      });
+      const promptText = `${REFLECTION_ANALYSIS_PROMPT}\n\nUser reflection after completing a challenge:\n"${reflection}"`;
 
       const response = await client.models.generateContent({
         model: GEMINI_MODELS.FAST,
@@ -76,7 +81,7 @@ export async function POST(
             role: 'user',
             parts: [
               {
-                text: `${REFLECTION_ANALYSIS_PROMPT}\n\nUser reflection after completing a challenge:\n"${reflection}"`,
+                text: promptText,
               },
             ],
           },
@@ -90,6 +95,15 @@ export async function POST(
       if (!text) {
         throw new GeminiError('Gemini returned an empty response');
       }
+
+      await trackGeminiUsage({
+        uid,
+        model: GEMINI_MODELS.FAST,
+        feature: 'challenge_complete_reflection',
+        keySource,
+        inputChars: promptText.length,
+        outputChars: text.length,
+      });
 
       const jsonData = safeParseJson(text);
       const analysis = ReflectionAnalysisSchema.parse(jsonData);
@@ -167,6 +181,13 @@ export async function POST(
       );
     }
     const message = error instanceof Error ? error.message : 'Unknown error';
+    if (message.includes('budget exceeded')) {
+      return errorResponse(
+        'Monthly Gemini budget exceeded. Update BYOK settings or wait for next cycle.',
+        ErrorCode.RATE_LIMITED,
+        429
+      );
+    }
     console.error('[Challenge Complete Error]', message);
     return errorResponse('Failed to complete challenge. Please try again.', ErrorCode.INTERNAL_ERROR, 500);
   }

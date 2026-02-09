@@ -6,11 +6,12 @@ import {
   safeParseJson,
   GeminiError,
 } from "@/lib/api-helpers";
-import { getGeminiClient } from "@/lib/gemini/client";
+import { getGeminiClientForUser } from "@/lib/gemini/client";
 import { GEMINI_MODELS } from "@/lib/gemini/models";
 import { QUIZ_GENERATION_PROMPT, getModuleQuizPrompt } from "@/lib/gemini/prompts";
 import { QuizQuestionsResponseSchema, QuizModuleIdSchema } from "@/lib/schemas/quiz";
 import { getModuleConfig } from "@/lib/quiz/module-config";
+import { trackGeminiUsage } from "@/lib/gemini/byok";
 import { z } from "zod";
 
 const RequestSchema = z.object({
@@ -56,7 +57,10 @@ export async function POST(req: NextRequest) {
   const { dataContext, previousAnswers, batchIndex, moduleId } = parsed.data;
 
   try {
-    const client = getGeminiClient();
+    const { client, keySource } = await getGeminiClientForUser({
+      uid: authResult.uid,
+      model: GEMINI_MODELS.FAST,
+    });
 
     const previousContext =
       previousAnswers.length > 0
@@ -76,6 +80,15 @@ export async function POST(req: NextRequest) {
       questionCount = batchIndex === 0 ? 4 : 3;
     }
 
+    const promptText = `${prompt}
+
+${dataContext ? `User's data analysis:\n${dataContext}\n` : ""}
+${previousContext}
+
+Generate exactly ${questionCount} questions${moduleId ? ` for the "${moduleId}" module` : ` for batch #${batchIndex + 1}`}. Each question needs: id (string like "q${moduleId ? moduleId + '_' : ''}${batchIndex * 3 + 1}"), type ("multiple_choice" | "slider" | "freetext"), question, options (for multiple_choice, 4 options), sliderMin/sliderMax/sliderLabels (for slider), category${moduleId ? `, moduleId ("${moduleId}")` : ''}.
+
+Respond with valid JSON: { "questions": [...] }`;
+
     const response = await client.models.generateContent({
       model: GEMINI_MODELS.FAST,
       contents: [
@@ -83,14 +96,7 @@ export async function POST(req: NextRequest) {
           role: "user",
           parts: [
             {
-              text: `${prompt}
-
-${dataContext ? `User's data analysis:\n${dataContext}\n` : ""}
-${previousContext}
-
-Generate exactly ${questionCount} questions${moduleId ? ` for the "${moduleId}" module` : ` for batch #${batchIndex + 1}`}. Each question needs: id (string like "q${moduleId ? moduleId + '_' : ''}${batchIndex * 3 + 1}"), type ("multiple_choice" | "slider" | "freetext"), question, options (for multiple_choice, 4 options), sliderMin/sliderMax/sliderLabels (for slider), category${moduleId ? `, moduleId ("${moduleId}")` : ''}.
-
-Respond with valid JSON: { "questions": [...] }`,
+              text: promptText,
             },
           ],
         },
@@ -104,6 +110,15 @@ Respond with valid JSON: { "questions": [...] }`,
     if (!text) {
       throw new GeminiError("Gemini returned an empty response");
     }
+
+    await trackGeminiUsage({
+      uid: authResult.uid,
+      model: GEMINI_MODELS.FAST,
+      feature: "quiz_generate",
+      keySource,
+      inputChars: promptText.length,
+      outputChars: text.length,
+    });
 
     const jsonData = safeParseJson(text);
     const validated = QuizQuestionsResponseSchema.parse(jsonData);
@@ -127,6 +142,13 @@ Respond with valid JSON: { "questions": [...] }`,
       );
     }
     const message = error instanceof Error ? error.message : "Unknown error";
+    if (message.includes("budget exceeded")) {
+      return errorResponse(
+        "Monthly Gemini budget exceeded. Update BYOK settings or wait for next cycle.",
+        ErrorCode.RATE_LIMITED,
+        429,
+      );
+    }
     console.error("[Quiz Error]", message);
     return errorResponse(
       "Failed to generate quiz questions. Please try again.",

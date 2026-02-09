@@ -34,6 +34,10 @@ export interface UserProfile {
   ageGateConfirmed?: boolean;
   videoBehaviorConsent?: boolean;
   dataRetentionMode?: 'session_only' | 'persistent';
+  byokEnabled?: boolean;
+  byokKeyLast4?: string;
+  byokMonthlyBudgetUsd?: number;
+  byokHardStop?: boolean;
   corpusName?: string;
 }
 

@@ -1,6 +1,7 @@
 import { getGeminiClient } from '@/lib/gemini/client';
 import { GEMINI_MODELS } from '@/lib/gemini/models';
 import type { IngestionPayload } from '@/lib/data/ingestion';
+import type { GoogleGenAI } from '@google/genai';
 
 const SUPPORTED_MIME_TYPES = [
   'application/pdf',
@@ -15,13 +16,17 @@ export function isSupportedMimeType(type: string): type is SupportedMimeType {
   return (SUPPORTED_MIME_TYPES as readonly string[]).includes(type);
 }
 
-export async function parseUploadedFile(buffer: Buffer, mimeType: string): Promise<IngestionPayload> {
+export async function parseUploadedFile(
+  buffer: Buffer,
+  mimeType: string,
+  options?: { client?: GoogleGenAI },
+): Promise<IngestionPayload> {
   if (!isSupportedMimeType(mimeType)) {
     throw new Error(`Unsupported file type: ${mimeType}`);
   }
 
   if (mimeType === 'application/pdf') {
-    return extractPdfText(buffer);
+    return extractPdfText(buffer, options?.client);
   }
 
   // Text-based files: read as UTF-8
@@ -32,8 +37,8 @@ export async function parseUploadedFile(buffer: Buffer, mimeType: string): Promi
   };
 }
 
-async function extractPdfText(buffer: Buffer): Promise<IngestionPayload> {
-  const client = getGeminiClient();
+async function extractPdfText(buffer: Buffer, providedClient?: GoogleGenAI): Promise<IngestionPayload> {
+  const client = providedClient ?? getGeminiClient();
   const base64 = buffer.toString('base64');
 
   const response = await client.models.generateContent({

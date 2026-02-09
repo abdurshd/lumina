@@ -4,6 +4,7 @@ import { ReactNode } from 'react';
 
 import { ScrollReveal } from '@/components/motion/scroll-reveal';
 import { fadeInScale } from '@/lib/motion';
+import { FloatingParticles } from '@/components/landing/floating-particles';
 import { TornEdge } from './torn-edge';
 
 interface DarkSectionHeroProps {
@@ -20,6 +21,7 @@ export function DarkSectionHero({ id, title, subtitle, visual, children }: DarkS
             {/* Background Visual */}
             <div className="absolute inset-0 z-0">
                 {visual}
+                <FloatingParticles count={4} images={['/lumina-shard.png']} className="z-0 opacity-50" />
             </div>
 
             {/* Content Overlay */}

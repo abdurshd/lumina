@@ -12,6 +12,7 @@ export function CTASection() {
         <section className="relative w-full py-24 sm:py-32 overflow-hidden flex items-center justify-center">
             {/* Background ambient glow */}
             <div className="absolute inset-0 z-0 bg-background">
+                <div className="absolute inset-0 bg-[url('/lumina-abstract-bg.png')] bg-cover bg-center opacity-20 mix-blend-screen" />
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/20 blur-[120px] rounded-full opacity-50" />
             </div>
 

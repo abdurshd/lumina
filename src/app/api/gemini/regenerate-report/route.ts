@@ -8,11 +8,12 @@ import {
   safeParseJson,
   GeminiError,
 } from "@/lib/api-helpers";
-import { getGeminiClient } from "@/lib/gemini/client";
+import { getGeminiClientForUser } from "@/lib/gemini/client";
 import { GEMINI_MODELS } from "@/lib/gemini/models";
 import { REPORT_GENERATION_PROMPT, REPORT_REGENERATION_PROMPT } from "@/lib/gemini/prompts";
 import { TalentReportSchema } from "@/lib/schemas/report";
 import { SESSION_INSIGHT_CATEGORIES } from "@/lib/psychometrics/dimension-model";
+import { trackGeminiUsage } from "@/lib/gemini/byok";
 import { z } from "zod";
 import {
   getDataInsights,
@@ -119,7 +120,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const client = getGeminiClient();
+    const { client, keySource } = await getGeminiClientForUser({
+      uid,
+      model: GEMINI_MODELS.DEEP,
+    });
 
     const context = `
 === EXISTING REPORT ===
@@ -143,6 +147,8 @@ ${sessionInsights.map((i) => `[${i.category}] (confidence: ${i.confidence}): ${i
 ${quizScoresData ? Object.entries(quizScoresData.dimensionSummary).map(([dim, score]) => `${dim}: ${score}/100`).join("\n") : "No dimension scores available."}
 `;
 
+    const promptText = `${REPORT_REGENERATION_PROMPT}\n\n${REPORT_GENERATION_PROMPT}\n\n${context}\n\nRegenerate the talent report as JSON with the same schema as the existing report. Address the user's feedback while maintaining evidence-based reasoning.`;
+
     const response = await client.models.generateContent({
       model: GEMINI_MODELS.DEEP,
       contents: [
@@ -150,7 +156,7 @@ ${quizScoresData ? Object.entries(quizScoresData.dimensionSummary).map(([dim, sc
           role: "user",
           parts: [
             {
-              text: `${REPORT_REGENERATION_PROMPT}\n\n${REPORT_GENERATION_PROMPT}\n\n${context}\n\nRegenerate the talent report as JSON with the same schema as the existing report. Address the user's feedback while maintaining evidence-based reasoning.`,
+              text: promptText,
             },
           ],
         },
@@ -164,6 +170,15 @@ ${quizScoresData ? Object.entries(quizScoresData.dimensionSummary).map(([dim, sc
     if (!text) {
       throw new GeminiError("Gemini returned an empty response");
     }
+
+    await trackGeminiUsage({
+      uid,
+      model: GEMINI_MODELS.DEEP,
+      feature: "report_regenerate",
+      keySource,
+      inputChars: promptText.length,
+      outputChars: text.length,
+    });
 
     const jsonData = safeParseJson(text);
     const validated = TalentReportSchema.parse(jsonData);
@@ -182,6 +197,13 @@ ${quizScoresData ? Object.entries(quizScoresData.dimensionSummary).map(([dim, sc
       );
     }
     const message = error instanceof Error ? error.message : "Unknown error";
+    if (message.includes("budget exceeded")) {
+      return errorResponse(
+        "Monthly Gemini budget exceeded. Update BYOK settings or wait for next cycle.",
+        ErrorCode.RATE_LIMITED,
+        429,
+      );
+    }
     console.error("[Regenerate Report Error]", message);
     return errorResponse(
       "Report regeneration failed. Please try again.",

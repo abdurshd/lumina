@@ -3,6 +3,9 @@ import { verifyAuth, errorResponse, ErrorCode } from '@/lib/api-helpers';
 import { parseUploadedFile, isSupportedMimeType } from '@/lib/data/file-upload';
 import { buildIngestionResponse } from '@/lib/data/ingestion';
 import { hasSourceConsent } from '@/lib/data/consent';
+import { getGeminiClientForUser } from '@/lib/gemini/client';
+import { GEMINI_MODELS } from '@/lib/gemini/models';
+import { trackGeminiUsage } from '@/lib/gemini/byok';
 
 const MAX_PDF_SIZE = 10 * 1024 * 1024; // 10MB
 const MAX_TEXT_SIZE = 50 * 1024 * 1024; // 50MB
@@ -54,7 +57,25 @@ export async function POST(req: NextRequest) {
 
   try {
     const buffer = Buffer.from(await file.arrayBuffer());
-    const payload = await parseUploadedFile(buffer, mimeType);
+    let payload;
+    if (mimeType === 'application/pdf') {
+      const { client, keySource } = await getGeminiClientForUser({
+        uid: authResult.uid,
+        model: GEMINI_MODELS.FAST,
+      });
+      payload = await parseUploadedFile(buffer, mimeType, { client });
+      await trackGeminiUsage({
+        uid: authResult.uid,
+        model: GEMINI_MODELS.FAST,
+        feature: 'file_upload_pdf_extract',
+        keySource,
+        inputChars: buffer.length,
+        outputChars: payload.data.length,
+      });
+    } else {
+      payload = await parseUploadedFile(buffer, mimeType);
+    }
+
     return NextResponse.json(buildIngestionResponse('file_upload', payload));
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to process file';

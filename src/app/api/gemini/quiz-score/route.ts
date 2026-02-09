@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth, errorResponse, ErrorCode, safeParseJson } from '@/lib/api-helpers';
-import { getGeminiClient } from '@/lib/gemini/client';
+import { getGeminiClientForUser } from '@/lib/gemini/client';
 import { GEMINI_MODELS } from '@/lib/gemini/models';
 import { QUIZ_SCORING_PROMPT } from '@/lib/gemini/prompts';
 import { z } from 'zod';
 import type { QuizScore, QuizDimensionSummary } from '@/types';
 import { ALL_PSYCHOMETRIC_DIMENSIONS, normalizeDimensionName } from '@/lib/psychometrics/dimension-model';
+import { trackGeminiUsage } from '@/lib/gemini/byok';
 
 const RequestSchema = z.object({
   answers: z.array(z.object({
@@ -117,18 +118,16 @@ export async function POST(req: NextRequest) {
   // Batch score freetext answers with Gemini
   if (freetextToScore.length > 0) {
     try {
-      const client = getGeminiClient();
+      const { client, keySource } = await getGeminiClientForUser({
+        uid: authResult.uid,
+        model: GEMINI_MODELS.FAST,
+      });
 
       const context = freetextToScore.map((ft) =>
         `Question (${ft.questionId}, dimension: ${ft.dimension}): ${ft.question}\nAnswer: ${ft.answer}`
       ).join('\n\n');
 
-      const response = await client.models.generateContent({
-        model: GEMINI_MODELS.FAST,
-        contents: [{
-          role: 'user',
-          parts: [{
-            text: `${QUIZ_SCORING_PROMPT}
+      const promptText = `${QUIZ_SCORING_PROMPT}
 
 Allowed dimensions:
 ${ALL_PSYCHOMETRIC_DIMENSIONS.map((d) => `- ${d}`).join('\n')}
@@ -152,7 +151,14 @@ Return strict JSON:
       ]
     }
   ]
-}`,
+}`;
+
+      const response = await client.models.generateContent({
+        model: GEMINI_MODELS.FAST,
+        contents: [{
+          role: 'user',
+          parts: [{
+            text: promptText,
           }],
         }],
         config: { responseMimeType: 'application/json' },
@@ -160,6 +166,14 @@ Return strict JSON:
 
       const text = response.text;
       if (text) {
+        await trackGeminiUsage({
+          uid: authResult.uid,
+          model: GEMINI_MODELS.FAST,
+          feature: 'quiz_score_freetext',
+          keySource,
+          inputChars: promptText.length,
+          outputChars: text.length,
+        });
         const parsedResponse = FreetextResponseSchema.safeParse(safeParseJson(text));
         if (parsedResponse.success) {
           for (const result of parsedResponse.data.results) {

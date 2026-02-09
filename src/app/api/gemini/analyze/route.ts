@@ -6,9 +6,10 @@ import {
   safeParseJson,
   GeminiError,
 } from "@/lib/api-helpers";
-import { getGeminiClient } from "@/lib/gemini/client";
+import { getGeminiClientForUser } from "@/lib/gemini/client";
 import { GEMINI_MODELS } from "@/lib/gemini/models";
 import { DATA_ANALYSIS_PROMPT } from "@/lib/gemini/prompts";
+import { trackGeminiUsage } from "@/lib/gemini/byok";
 import { AnalysisResponseSchema } from "@/lib/schemas/analysis";
 import { z } from "zod";
 
@@ -49,7 +50,10 @@ export async function POST(req: NextRequest) {
   const { dataSources } = parsed.data;
 
   try {
-    const client = getGeminiClient();
+    const { client, keySource } = await getGeminiClientForUser({
+      uid: authResult.uid,
+      model: GEMINI_MODELS.FAST,
+    });
 
     const contextParts: string[] = [];
     for (const [source, data] of Object.entries(dataSources)) {
@@ -66,6 +70,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const promptText = `${DATA_ANALYSIS_PROMPT}\n\n${contextParts.join("\n\n")}\n\nRespond with valid JSON matching this schema: { insights: [{ source, summary, themes, skills, interests, rawTokenCount }], overallSummary, keyPatterns }`;
+
     const response = await client.models.generateContent({
       model: GEMINI_MODELS.FAST,
       contents: [
@@ -73,7 +79,7 @@ export async function POST(req: NextRequest) {
           role: "user",
           parts: [
             {
-              text: `${DATA_ANALYSIS_PROMPT}\n\n${contextParts.join("\n\n")}\n\nRespond with valid JSON matching this schema: { insights: [{ source, summary, themes, skills, interests, rawTokenCount }], overallSummary, keyPatterns }`,
+              text: promptText,
             },
           ],
         },
@@ -87,6 +93,15 @@ export async function POST(req: NextRequest) {
     if (!text) {
       throw new GeminiError("Gemini returned an empty response");
     }
+
+    await trackGeminiUsage({
+      uid: authResult.uid,
+      model: GEMINI_MODELS.FAST,
+      feature: "analyze",
+      keySource,
+      inputChars: promptText.length,
+      outputChars: text.length,
+    });
 
     const jsonData = safeParseJson(text);
     const validated = AnalysisResponseSchema.parse(jsonData);
@@ -110,6 +125,13 @@ export async function POST(req: NextRequest) {
       );
     }
     const message = error instanceof Error ? error.message : "Unknown error";
+    if (message.includes("budget exceeded")) {
+      return errorResponse(
+        "Monthly Gemini budget exceeded. Update BYOK settings or wait for next cycle.",
+        ErrorCode.RATE_LIMITED,
+        429,
+      );
+    }
     console.error("[Analysis Error]", message);
     return errorResponse(
       "Data analysis failed. Please try again.",

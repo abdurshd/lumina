@@ -68,6 +68,10 @@ interface UpdateProfileRequest {
   ageGateConfirmed?: boolean;
   videoBehaviorConsent?: boolean;
   dataRetentionMode?: 'session_only' | 'persistent';
+  byokEnabled?: boolean;
+  byokKeyLast4?: string;
+  byokMonthlyBudgetUsd?: number;
+  byokHardStop?: boolean;
 }
 
 interface FeedbackRequest {
@@ -75,6 +79,14 @@ interface FeedbackRequest {
   itemId: string;
   feedback: 'agree' | 'disagree';
   reason?: string;
+}
+
+interface ByokUpdateRequest {
+  enabled?: boolean;
+  apiKey?: string;
+  clearKey?: boolean;
+  monthlyBudgetUsd?: number;
+  hardStop?: boolean;
 }
 
 // Response types
@@ -215,6 +227,22 @@ export const apiClient = {
 
     updateActionPlanProgress: (req: { items: ActionPlanProgress['items'] }) =>
       apiFetch<{ success: boolean }>('/api/user/action-plan-progress', {
+        method: 'POST',
+        body: JSON.stringify(req),
+      }),
+
+    getByok: () =>
+      apiFetch<{
+        enabled: boolean;
+        keyLast4: string | null;
+        monthlyBudgetUsd: number;
+        hardStop: boolean;
+        estimatedMonthlySpendUsd: number;
+        budgetExceeded: boolean;
+      }>('/api/user/byok'),
+
+    updateByok: (req: ByokUpdateRequest) =>
+      apiFetch<{ success: boolean }>('/api/user/byok', {
         method: 'POST',
         body: JSON.stringify(req),
       }),

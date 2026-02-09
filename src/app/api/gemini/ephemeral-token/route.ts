@@ -3,6 +3,7 @@ import { verifyAuth, errorResponse, ErrorCode } from '@/lib/api-helpers';
 import { GoogleGenAI } from '@google/genai';
 import { GEMINI_MODELS } from '@/lib/gemini/models';
 import { getAdminDb } from '@/lib/firebase/admin';
+import { resolveGeminiKeyForUser } from '@/lib/gemini/byok';
 
 export async function POST(req: NextRequest) {
   const authResult = await verifyAuth(req);
@@ -10,8 +11,8 @@ export async function POST(req: NextRequest) {
     return errorResponse('Authentication required', ErrorCode.UNAUTHORIZED, 401);
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
+  const platformApiKey = process.env.GEMINI_API_KEY;
+  if (!platformApiKey) {
     return errorResponse(
       'Gemini API key not configured',
       ErrorCode.INTERNAL_ERROR,
@@ -34,8 +35,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const resolvedKey = await resolveGeminiKeyForUser({
+      uid: authResult.uid,
+      model: GEMINI_MODELS.LIVE,
+      fallbackApiKey: platformApiKey,
+    });
+
     const ai = new GoogleGenAI({
-      apiKey,
+      apiKey: resolvedKey.apiKey,
       httpOptions: { apiVersion: 'v1alpha' },
     });
 
@@ -69,6 +76,13 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
+    if (message.includes('budget exceeded')) {
+      return errorResponse(
+        'Monthly Gemini budget exceeded. Update your BYOK settings or wait for next billing cycle.',
+        ErrorCode.RATE_LIMITED,
+        429
+      );
+    }
     console.error('[Ephemeral Token Error]', message);
     return errorResponse(
       'Failed to mint ephemeral token',

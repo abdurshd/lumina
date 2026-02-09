@@ -10,7 +10,7 @@ Last updated: 2026-02-09
 - [x] Workstream C: Psychometric Core v2
 - [x] Workstream D: Live Session Intelligence v2
 - [x] Workstream E: Connector and Ingestion Robustness
-- [ ] Workstream F: BYOK and Cost Governance
+- [x] Workstream F: BYOK and Cost Governance
 - [ ] Workstream G: Report, Roadmap, and Portfolio Task Engine
 - [ ] Workstream H: Iteration and Evolution Loop
 - [ ] Workstream I: Testing and QA
@@ -55,11 +55,11 @@ Last updated: 2026-02-09
 - [x] E5. Add source deletion and consent revocation handling.
 
 #### Workstream F Tasks
-- [ ] F1. Add BYOK settings UI.
-- [ ] F2. Add secure BYOK storage/reference strategy.
-- [ ] F3. Add request routing policy (BYOK vs platform key).
-- [ ] F4. Add usage accounting per feature/stage.
-- [ ] F5. Add soft/hard budget caps and fallback policy.
+- [x] F1. Add BYOK settings UI.
+- [x] F2. Add secure BYOK storage/reference strategy.
+- [x] F3. Add request routing policy (BYOK vs platform key).
+- [x] F4. Add usage accounting per feature/stage.
+- [x] F5. Add soft/hard budget caps and fallback policy.
 
 #### Workstream G Tasks
 - [ ] G1. Expand report schema for rationale/evidence/risk.

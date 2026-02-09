@@ -8,13 +8,14 @@ import {
   safeParseJson,
   GeminiError,
 } from "@/lib/api-helpers";
-import { getGeminiClient } from "@/lib/gemini/client";
+import { getGeminiClientForUser } from "@/lib/gemini/client";
 import { GEMINI_MODELS } from "@/lib/gemini/models";
 import { REPORT_GENERATION_PROMPT } from "@/lib/gemini/prompts";
 import { TalentReportSchema } from "@/lib/schemas/report";
 import { UserConstraintsSchema } from "@/lib/schemas/quiz";
 import { buildComputedProfile } from "@/lib/career/profile-builder";
 import { SESSION_INSIGHT_CATEGORIES } from "@/lib/psychometrics/dimension-model";
+import { trackGeminiUsage } from "@/lib/gemini/byok";
 import { z } from "zod";
 // types used implicitly via Zod schemas
 
@@ -108,7 +109,10 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const client = getGeminiClient();
+    const { client, keySource } = await getGeminiClientForUser({
+      uid: authResult.uid,
+      model: GEMINI_MODELS.DEEP,
+    });
     const resolvedComputedProfile = computedProfile
       ?? (quizScores
         ? buildComputedProfile({
@@ -166,14 +170,7 @@ Education Willingness: ${constraints.educationWillingness}
 Relocation: ${constraints.relocationWillingness}` : ""}
 `;
 
-    const response = await client.models.generateContent({
-      model: GEMINI_MODELS.DEEP,
-      contents: [
-        {
-          role: "user",
-          parts: [
-            {
-              text: `${REPORT_GENERATION_PROMPT}\n\n${context}\n\nGenerate the talent report as JSON matching this schema:
+    const promptText = `${REPORT_GENERATION_PROMPT}\n\n${context}\n\nGenerate the talent report as JSON matching this schema:
 {
   "headline": "string - specific surprising headline talent",
   "tagline": "string - short inspiring tagline",
@@ -188,7 +185,16 @@ Relocation: ${constraints.relocationWillingness}` : ""}
 
 Include exactly 6 radar dimensions (Creativity, Analysis, Leadership, Empathy, Resilience, Vision), 5 top strengths, 3-5 hidden talents, 4 career paths, 5 action items, and 4 personality insights.${resolvedComputedProfile ? `
 
-Also include "careerRecommendations" array with 4 entries, each having: clusterId, matchScore (0-100), confidence (0-100), whyYou, whatYouDo, howToTest, skillsToBuild (array of 3-5 strings), evidenceChain (array of {type: "quiz"|"session"|"data_source"|"signal", excerpt: string}).` : ''}`,
+Also include "careerRecommendations" array with 4 entries, each having: clusterId, matchScore (0-100), confidence (0-100), whyYou, whatYouDo, howToTest, skillsToBuild (array of 3-5 strings), evidenceChain (array of {type: "quiz"|"session"|"data_source"|"signal", excerpt: string}).` : ''}`;
+
+    const response = await client.models.generateContent({
+      model: GEMINI_MODELS.DEEP,
+      contents: [
+        {
+          role: "user",
+          parts: [
+            {
+              text: promptText,
             },
           ],
         },
@@ -202,6 +208,15 @@ Also include "careerRecommendations" array with 4 entries, each having: clusterI
     if (!text) {
       throw new GeminiError("Gemini returned an empty response");
     }
+
+    await trackGeminiUsage({
+      uid: authResult.uid,
+      model: GEMINI_MODELS.DEEP,
+      feature: "report_generate",
+      keySource,
+      inputChars: promptText.length,
+      outputChars: text.length,
+    });
 
     const jsonData = safeParseJson(text);
     const validated = TalentReportSchema.parse(jsonData);
@@ -225,6 +240,13 @@ Also include "careerRecommendations" array with 4 entries, each having: clusterI
       );
     }
     const message = error instanceof Error ? error.message : "Unknown error";
+    if (message.includes("budget exceeded")) {
+      return errorResponse(
+        "Monthly Gemini budget exceeded. Update BYOK settings or wait for next cycle.",
+        ErrorCode.RATE_LIMITED,
+        429,
+      );
+    }
     console.error("[Report Error]", message);
     return errorResponse(
       "Report generation failed. Please try again.",

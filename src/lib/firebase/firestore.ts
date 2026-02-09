@@ -286,6 +286,10 @@ export async function updateUserProfile(
       | 'ageGateConfirmed'
       | 'videoBehaviorConsent'
       | 'dataRetentionMode'
+      | 'byokEnabled'
+      | 'byokKeyLast4'
+      | 'byokMonthlyBudgetUsd'
+      | 'byokHardStop'
     >
   >
 ): Promise<void> {

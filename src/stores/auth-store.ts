@@ -80,6 +80,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         },
         googleAccessToken: accessToken ?? undefined,
         dataRetentionMode: 'session_only',
+        byokEnabled: false,
+        byokMonthlyBudgetUsd: 25,
+        byokHardStop: false,
       };
       await createUserProfile(newProfile);
       setCachedRetentionMode(u.uid, resolveRetentionMode(newProfile.dataRetentionMode));

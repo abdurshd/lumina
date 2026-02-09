@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { toast } from 'sonner';
 import { useTheme } from 'next-themes';
@@ -10,6 +10,7 @@ import { useDeleteDataMutation, useUpdateProfileMutation, useDeleteCorpusDocMuta
 import { useCorpusDocumentsQuery } from '@/hooks/use-api-queries';
 import { disconnectNotion } from '@/lib/firebase/firestore';
 import { FetchError, apiFetch } from '@/lib/fetch-client';
+import { apiClient } from '@/lib/api/client';
 import { PageHeader, LoadingButton } from '@/components/shared';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -73,6 +74,29 @@ export default function SettingsPage() {
   const [consentSources, setConsentSources] = useState<string[]>(profile?.consentSources ?? []);
   const [isExporting, setIsExporting] = useState(false);
   const [isDeletingCorpus, setIsDeletingCorpus] = useState(false);
+  const [byokEnabled, setByokEnabled] = useState(profile?.byokEnabled ?? false);
+  const [byokKeyInput, setByokKeyInput] = useState('');
+  const [byokKeyLast4, setByokKeyLast4] = useState<string | null>(profile?.byokKeyLast4 ?? null);
+  const [byokMonthlyBudgetUsd, setByokMonthlyBudgetUsd] = useState<number>(profile?.byokMonthlyBudgetUsd ?? 25);
+  const [byokHardStop, setByokHardStop] = useState<boolean>(profile?.byokHardStop ?? false);
+  const [byokSpendUsd, setByokSpendUsd] = useState<number>(0);
+  const [loadingByok, setLoadingByok] = useState(false);
+  const [savingByok, setSavingByok] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    setLoadingByok(true);
+    apiClient.user.getByok()
+      .then((byok) => {
+        setByokEnabled(byok.enabled);
+        setByokKeyLast4(byok.keyLast4);
+        setByokMonthlyBudgetUsd(byok.monthlyBudgetUsd);
+        setByokHardStop(byok.hardStop);
+        setByokSpendUsd(byok.estimatedMonthlySpendUsd);
+      })
+      .catch(() => undefined)
+      .finally(() => setLoadingByok(false));
+  }, [user]);
 
   const handleDeleteSource = useCallback((sourceKey: string) => {
     deleteDataMutation.mutate({ sources: [sourceKey] }, {
@@ -203,6 +227,61 @@ export default function SettingsPage() {
       setIsDeletingCorpus(false);
     }
   }, [corpusDocsQuery]);
+
+  const handleSaveByokPolicy = useCallback(async () => {
+    setSavingByok(true);
+    try {
+      await apiClient.user.updateByok({
+        enabled: byokEnabled,
+        monthlyBudgetUsd: byokMonthlyBudgetUsd,
+        hardStop: byokHardStop,
+      });
+      await refreshProfile();
+      toast.success('BYOK policy saved.');
+    } catch (err) {
+      const message = err instanceof FetchError ? err.message : 'Failed to save BYOK policy';
+      toast.error(message);
+    } finally {
+      setSavingByok(false);
+    }
+  }, [byokEnabled, byokMonthlyBudgetUsd, byokHardStop, refreshProfile]);
+
+  const handleSaveByokKey = useCallback(async () => {
+    if (!byokKeyInput.trim()) return;
+    setSavingByok(true);
+    try {
+      await apiClient.user.updateByok({
+        apiKey: byokKeyInput.trim(),
+        enabled: true,
+      });
+      setByokKeyLast4(byokKeyInput.trim().slice(-4));
+      setByokKeyInput('');
+      setByokEnabled(true);
+      await refreshProfile();
+      toast.success('BYOK key saved securely.');
+    } catch (err) {
+      const message = err instanceof FetchError ? err.message : 'Failed to save BYOK key';
+      toast.error(message);
+    } finally {
+      setSavingByok(false);
+    }
+  }, [byokKeyInput, refreshProfile]);
+
+  const handleClearByokKey = useCallback(async () => {
+    setSavingByok(true);
+    try {
+      await apiClient.user.updateByok({ clearKey: true });
+      setByokKeyLast4(null);
+      setByokEnabled(false);
+      await refreshProfile();
+      toast.success('BYOK key removed.');
+    } catch (err) {
+      const message = err instanceof FetchError ? err.message : 'Failed to clear BYOK key';
+      toast.error(message);
+    } finally {
+      setSavingByok(false);
+    }
+  }, [refreshProfile]);
 
   const formatBytes = (bytes: number): string => {
     if (bytes === 0) return '0 B';
@@ -527,6 +606,70 @@ export default function SettingsPage() {
                 <Download className="h-4 w-4 mr-2" />
                 Export as JSON
               </LoadingButton>
+            </CardContent>
+          </Card>
+        </StaggerItem>
+
+        {/* BYOK + Budget */}
+        <StaggerItem>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 font-sans">
+                <Database className="h-5 w-5 text-primary" />
+                Gemini BYOK & Budget
+              </CardTitle>
+              <CardDescription>
+                Use your own Gemini API key and control monthly estimated spend.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {loadingByok ? (
+                <p className="text-sm text-muted-foreground">Loading BYOK settings...</p>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium">Enable BYOK routing</p>
+                    <Switch checked={byokEnabled} onCheckedChange={setByokEnabled} />
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">API key</p>
+                    <Input
+                      type="password"
+                      value={byokKeyInput}
+                      onChange={(e) => setByokKeyInput(e.target.value)}
+                      placeholder={byokKeyLast4 ? `Saved key ending in ${byokKeyLast4}` : 'Paste your Gemini API key'}
+                    />
+                    <div className="flex items-center gap-2">
+                      <LoadingButton size="sm" onClick={handleSaveByokKey} loading={savingByok} disabled={!byokKeyInput.trim()}>
+                        Save Key
+                      </LoadingButton>
+                      <Button size="sm" variant="outline" onClick={handleClearByokKey} disabled={savingByok || !byokKeyLast4}>
+                        Remove Key
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Monthly budget (USD estimate)</p>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={2000}
+                      value={String(byokMonthlyBudgetUsd)}
+                      onChange={(e) => setByokMonthlyBudgetUsd(Number(e.target.value) || 1)}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Current month estimated spend: ${byokSpendUsd.toFixed(2)}
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium">Hard stop when budget is exceeded</p>
+                    <Switch checked={byokHardStop} onCheckedChange={setByokHardStop} />
+                  </div>
+                  <LoadingButton onClick={handleSaveByokPolicy} loading={savingByok}>
+                    Save BYOK Policy
+                  </LoadingButton>
+                </>
+              )}
             </CardContent>
           </Card>
         </StaggerItem>
