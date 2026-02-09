@@ -1,6 +1,6 @@
 'use client';
 
-import { useAuth } from '@/contexts/auth-context';
+import { useAuthStore } from '@/stores/auth-store';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StatusBadge, StageCardSkeleton } from '@/components/shared';
@@ -16,7 +16,7 @@ const stages: { key: AssessmentStage; label: string; description: string; icon: 
 ];
 
 export default function DashboardPage() {
-  const { profile, loading } = useAuth();
+  const { profile, loading } = useAuthStore();
 
   const completedCount = profile
     ? Object.values(profile.stages).filter((s) => s === 'completed').length
@@ -24,9 +24,9 @@ export default function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-10">
-      <div className="mb-8">
+      <div className="mb-8 animate-fade-in-up">
         <div className="flex items-center gap-3 mb-2">
-          <Sparkles className="h-6 w-6 text-primary" />
+          <Sparkles className="h-6 w-6 text-primary animate-pulse-glow" />
           <h1 className="text-3xl font-bold">
             Welcome back{profile?.displayName ? `, ${profile.displayName.split(' ')[0]}` : ''}
           </h1>
@@ -35,13 +35,13 @@ export default function DashboardPage() {
           Complete all four stages to unlock your personalized talent report.
         </p>
         <div className="mt-4 flex items-center gap-2">
-          <div className="h-2 flex-1 rounded-full bg-muted overflow-hidden">
+          <div className="h-2 flex-1 rounded-full bg-white/[0.06] overflow-hidden">
             <div
-              className="h-2 rounded-full bg-primary transition-all duration-500 ease-out"
+              className="h-2 rounded-full bg-primary transition-all duration-500 ease-out glow-amber-sm"
               style={{ width: `${(completedCount / 4) * 100}%` }}
             />
           </div>
-          <span className="text-sm font-medium text-muted-foreground">{completedCount}/4</span>
+          <span className="text-sm font-medium text-muted-foreground font-mono">{completedCount}/4</span>
         </div>
       </div>
 
@@ -58,13 +58,14 @@ export default function DashboardPage() {
             return (
               <Card
                 key={stage.key}
-                className={
+                className={`transition-all duration-300 animate-fade-in-up ${
                   isActive
-                    ? 'border-primary/50 shadow-md transition-shadow'
+                    ? 'glass glow-amber-sm'
                     : isCompleted
-                    ? 'border-green-500/30 transition-shadow'
-                    : 'opacity-60 transition-opacity'
-                }
+                    ? 'glass border-emerald-500/20'
+                    : 'opacity-50'
+                }`}
+                style={{ animationDelay: `${i * 80}ms` }}
               >
                 <CardHeader className="flex flex-row items-center gap-4 py-4">
                   <div
@@ -72,16 +73,16 @@ export default function DashboardPage() {
                       isActive
                         ? 'bg-primary/10 text-primary'
                         : isCompleted
-                        ? 'bg-green-100 text-green-600'
-                        : 'bg-muted text-muted-foreground'
+                        ? 'bg-emerald-500/10 text-emerald-400'
+                        : 'bg-white/[0.04] text-muted-foreground'
                     }`}
                   >
                     <Icon className="h-6 w-6" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <CardTitle className="text-lg">
-                        <span className="mr-2 text-muted-foreground">0{i + 1}</span>
+                      <CardTitle className="text-lg font-sans">
+                        <span className="mr-2 text-muted-foreground font-mono text-sm">0{i + 1}</span>
                         {stage.label}
                       </CardTitle>
                       <StatusBadge status={status} />
@@ -90,7 +91,7 @@ export default function DashboardPage() {
                   </div>
                   {(isActive || isCompleted) && (
                     <Link href={stage.href}>
-                      <Button variant={isActive ? 'default' : 'outline'} size="sm">
+                      <Button variant={isActive ? 'default' : 'outline'} size="sm" className={isActive ? 'glow-amber-sm' : ''}>
                         {isActive ? 'Start' : 'Review'}
                         <ChevronRight className="ml-1 h-4 w-4" />
                       </Button>

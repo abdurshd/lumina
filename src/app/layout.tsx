@@ -1,11 +1,17 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Instrument_Serif, Outfit, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { AuthProvider } from "@/contexts/auth-context";
+import { AppProviders } from "@/components/providers/app-providers";
 import { Toaster } from "@/components/ui/sonner";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const instrumentSerif = Instrument_Serif({
+  variable: "--font-instrument-serif",
+  subsets: ["latin"],
+  weight: "400",
+});
+
+const outfit = Outfit({
+  variable: "--font-outfit",
   subsets: ["latin"],
 });
 
@@ -27,12 +33,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${instrumentSerif.variable} ${outfit.variable} ${geistMono.variable} antialiased`}
       >
-        <AuthProvider>
+        <AppProviders>
           {children}
-        </AuthProvider>
+        </AppProviders>
         <Toaster richColors position="bottom-right" />
+        <div className="grain-overlay" aria-hidden="true" />
       </body>
     </html>
   );

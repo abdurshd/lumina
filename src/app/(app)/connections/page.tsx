@@ -150,7 +150,7 @@ export default function ConnectionsPage() {
 
       {error && <ErrorAlert message={error} onRetry={() => setError(null)} className="mb-6" />}
 
-      <div className="space-y-4">
+      <div className="space-y-4 animate-fade-in">
         <ConnectorCard
           title="Gmail"
           description="Analyze your sent emails to understand communication style and interests"
@@ -184,9 +184,9 @@ export default function ConnectionsPage() {
       </div>
 
       {connectedCount > 0 && (
-        <Card className="mt-8">
+        <Card className="mt-8 glass animate-fade-in-up">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 font-sans">
               <Sparkles className="h-5 w-5 text-primary" />
               Ready to Analyze
             </CardTitle>
@@ -200,7 +200,7 @@ export default function ConnectionsPage() {
               <LoadingButton
                 onClick={() => router.push('/quiz')}
                 icon={ArrowRight}
-                className="w-full"
+                className="w-full glow-amber-sm"
               >
                 Continue to Quiz
               </LoadingButton>
@@ -210,7 +210,7 @@ export default function ConnectionsPage() {
                 loading={isAnalyzing}
                 loadingText="Analyzing your data with AI..."
                 icon={Sparkles}
-                className="w-full"
+                className="w-full glow-amber-sm"
               >
                 Analyze Data
               </LoadingButton>

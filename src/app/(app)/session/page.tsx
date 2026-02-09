@@ -110,7 +110,7 @@ export default function SessionPage() {
         <div className="flex items-center gap-4">
           {isConnected && <SessionTimer seconds={sessionDuration} />}
           {!isConnected && insights.length > 0 && (
-            <LoadingButton onClick={handleFinish} loading={isSaving} icon={Brain}>
+            <LoadingButton onClick={handleFinish} loading={isSaving} icon={Brain} className="glow-amber-sm">
               View Report
             </LoadingButton>
           )}
@@ -125,7 +125,7 @@ export default function SessionPage() {
         />
       )}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 animate-fade-in">
         {/* Video + Controls */}
         <div className="space-y-4">
           <WebcamPreview videoRef={webcam.videoRef} isActive={webcam.isActive} />
@@ -148,16 +148,16 @@ export default function SessionPage() {
         </div>
 
         {/* Transcript */}
-        <Card className="lg:col-span-2">
+        <Card className="lg:col-span-2 glass">
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Conversation</CardTitle>
+            <CardTitle className="text-lg font-sans">Conversation</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <div className="h-[400px]">
               <TranscriptPanel entries={transcript} />
             </div>
             {isConnected && (
-              <div className="border-t p-3">
+              <div className="border-t border-white/[0.06] p-3">
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
@@ -183,9 +183,9 @@ export default function SessionPage() {
 
       {/* Insights */}
       {insights.length > 0 && (
-        <Card className="mt-6">
+        <Card className="mt-6 glass animate-fade-in-up">
           <CardHeader>
-            <CardTitle className="text-lg">
+            <CardTitle className="text-lg font-sans">
               <Brain className="mr-2 inline h-5 w-5" />
               Session Insights ({insights.length})
             </CardTitle>
@@ -193,7 +193,7 @@ export default function SessionPage() {
           <CardContent>
             <div className="flex flex-wrap gap-2">
               {insights.map((insight, i) => (
-                <Badge key={i} variant="secondary" className="py-1">
+                <Badge key={i} variant="secondary" className="py-1 bg-white/[0.06]">
                   <span className="font-medium mr-1">{insight.category}:</span>
                   {insight.observation.length > 60
                     ? `${insight.observation.slice(0, 60)}...`

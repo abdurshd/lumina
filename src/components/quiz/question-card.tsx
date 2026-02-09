@@ -36,11 +36,11 @@ export function QuestionCard({ question, onAnswer, questionNumber, totalQuestion
     (question.type === 'freetext' && textValue.trim().length > 0);
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
+    <Card className="w-full max-w-2xl mx-auto glass animate-fade-in-up">
       <CardHeader>
         <div className="flex items-center justify-between mb-2">
-          <Badge variant="secondary">{question.category}</Badge>
-          <span className="text-sm text-muted-foreground">
+          <Badge variant="secondary" className="bg-white/[0.06]">{question.category}</Badge>
+          <span className="text-sm text-muted-foreground font-mono">
             {questionNumber} of {totalQuestions}
           </span>
         </div>
@@ -53,10 +53,12 @@ export function QuestionCard({ question, onAnswer, questionNumber, totalQuestion
               <Button
                 key={i}
                 variant={selectedOption === option ? 'default' : 'outline'}
-                className="w-full justify-start text-left h-auto py-3 px-4"
+                className={`w-full justify-start text-left h-auto py-3 px-4 transition-all duration-200 ${
+                  selectedOption === option ? 'glow-amber-sm' : 'hover:bg-white/[0.06]'
+                }`}
                 onClick={() => setSelectedOption(option)}
               >
-                <span className="mr-3 flex h-6 w-6 items-center justify-center rounded-full border text-xs">
+                <span className="mr-3 flex h-6 w-6 items-center justify-center rounded-full border border-white/[0.15] text-xs font-mono">
                   {String.fromCharCode(65 + i)}
                 </span>
                 {option}
@@ -76,7 +78,7 @@ export function QuestionCard({ question, onAnswer, questionNumber, totalQuestion
             />
             <div className="flex justify-between text-sm text-muted-foreground">
               <span>{question.sliderLabels?.min ?? 'Low'}</span>
-              <span className="font-medium text-foreground">{sliderValue}</span>
+              <span className="font-medium text-foreground font-mono">{sliderValue}</span>
               <span>{question.sliderLabels?.max ?? 'High'}</span>
             </div>
           </div>
@@ -91,7 +93,7 @@ export function QuestionCard({ question, onAnswer, questionNumber, totalQuestion
           />
         )}
 
-        <Button onClick={handleSubmit} disabled={!canSubmit} className="w-full">
+        <Button onClick={handleSubmit} disabled={!canSubmit} className="w-full glow-amber-sm">
           {questionNumber === totalQuestions ? 'Finish Quiz' : 'Next Question'}
         </Button>
       </CardContent>

@@ -107,7 +107,7 @@ export default function QuizPage() {
           title="Quiz Complete!"
           description="Great job! Your answers will help Lumina understand your unique strengths. Now let's have a live conversation."
           action={
-            <LoadingButton onClick={() => router.push('/session')} size="lg" icon={ArrowRight}>
+            <LoadingButton onClick={() => router.push('/session')} size="lg" icon={ArrowRight} className="glow-amber-sm">
               Start Live Session
             </LoadingButton>
           }
@@ -124,7 +124,9 @@ export default function QuizPage() {
         description="Answer these questions to help Lumina understand your unique abilities."
       />
 
-      <Progress value={(currentIndex / TOTAL_QUESTIONS) * 100} className="mb-8" />
+      <div className="mb-8 animate-fade-in">
+        <Progress value={(currentIndex / TOTAL_QUESTIONS) * 100} />
+      </div>
 
       {error && (
         <ErrorAlert
@@ -134,16 +136,18 @@ export default function QuizPage() {
         />
       )}
 
-      {isLoading && questions.length <= currentIndex ? (
-        <QuestionSkeleton />
-      ) : questions[currentIndex] ? (
-        <QuestionCard
-          question={questions[currentIndex]}
-          onAnswer={handleAnswer}
-          questionNumber={currentIndex + 1}
-          totalQuestions={TOTAL_QUESTIONS}
-        />
-      ) : null}
+      <div className="animate-fade-in">
+        {isLoading && questions.length <= currentIndex ? (
+          <QuestionSkeleton />
+        ) : questions[currentIndex] ? (
+          <QuestionCard
+            question={questions[currentIndex]}
+            onAnswer={handleAnswer}
+            questionNumber={currentIndex + 1}
+            totalQuestions={TOTAL_QUESTIONS}
+          />
+        ) : null}
+      </div>
     </div>
   );
 }

@@ -32,10 +32,10 @@ export const TranscriptPanel = memo(function TranscriptPanel({ entries }: Transc
               className={`max-w-[85%] rounded-2xl px-4 py-2 text-sm ${
                 entry.isUser
                   ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted text-foreground'
+                  : 'glass'
               }`}
             >
-              <p className="text-xs font-medium mb-0.5 opacity-70">
+              <p className="text-xs font-medium mb-0.5 opacity-70 font-mono">
                 {entry.isUser ? 'You' : 'Lumina'}
               </p>
               {entry.text}

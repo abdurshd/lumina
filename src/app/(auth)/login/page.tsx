@@ -3,14 +3,14 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { useAuth } from '@/contexts/auth-context';
+import { useAuthStore } from '@/stores/auth-store';
 import { LoadingButton } from '@/components/shared/loading-button';
 import { ErrorAlert } from '@/components/shared/error-alert';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sparkles } from 'lucide-react';
 
 export default function LoginPage() {
-  const { user, loading, signInWithGoogle } = useAuth();
+  const { user, loading, signInWithGoogle } = useAuthStore();
   const router = useRouter();
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,20 +51,26 @@ export default function LoginPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent glow-amber-sm" />
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 px-4">
-      <Card className="w-full max-w-md">
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 relative overflow-hidden">
+      {/* Floating background orbs */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+        <div className="absolute -top-32 left-1/4 h-96 w-96 rounded-full bg-primary/[0.05] blur-3xl animate-float" />
+        <div className="absolute bottom-1/4 -right-20 h-80 w-80 rounded-full bg-secondary/[0.04] blur-3xl animate-float" style={{ animationDelay: '-3s' }} />
+      </div>
+
+      <Card className="w-full max-w-md glass-heavy glow-amber animate-fade-in-up">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
-            <Sparkles className="h-8 w-8 text-primary" />
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 glow-amber-sm">
+            <Sparkles className="h-8 w-8 text-primary animate-pulse-glow" />
           </div>
-          <CardTitle className="text-2xl">Welcome to Lumina</CardTitle>
+          <CardTitle className="text-2xl text-gradient-gold">Welcome to Lumina</CardTitle>
           <CardDescription>
             Discover your hidden talents through AI-powered analysis of your digital footprint
           </CardDescription>
@@ -76,7 +82,7 @@ export default function LoginPage() {
             onClick={handleLogin}
             loading={isSigningIn}
             loadingText="Signing in..."
-            className="w-full"
+            className="w-full glow-amber-sm"
             size="lg"
           >
             <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">

@@ -22,7 +22,7 @@ export function SessionControls({
 }: SessionControlsProps) {
   if (!isConnected && !isConnecting) {
     return (
-      <Button onClick={onConnect} size="lg" className="gap-2">
+      <Button onClick={onConnect} size="lg" className="gap-2 glow-amber">
         <Video className="h-5 w-5" />
         Start Session
       </Button>
@@ -40,21 +40,21 @@ export function SessionControls({
 
   return (
     <div className="flex items-center gap-3">
-      <div className="flex items-center gap-2 rounded-full bg-muted px-4 py-2">
+      <div className="flex items-center gap-2 rounded-full glass px-4 py-2">
         {isMicActive ? (
-          <Mic className="h-4 w-4 text-green-500" />
+          <Mic className="h-4 w-4 text-emerald-400" />
         ) : (
-          <MicOff className="h-4 w-4 text-red-500" />
+          <MicOff className="h-4 w-4 text-red-400" />
         )}
-        <span className="text-xs">{isMicActive ? 'Mic on' : 'Mic off'}</span>
+        <span className="text-xs font-mono">{isMicActive ? 'Mic on' : 'Mic off'}</span>
       </div>
-      <div className="flex items-center gap-2 rounded-full bg-muted px-4 py-2">
+      <div className="flex items-center gap-2 rounded-full glass px-4 py-2">
         {isCamActive ? (
-          <Video className="h-4 w-4 text-green-500" />
+          <Video className="h-4 w-4 text-emerald-400" />
         ) : (
-          <VideoOff className="h-4 w-4 text-red-500" />
+          <VideoOff className="h-4 w-4 text-red-400" />
         )}
-        <span className="text-xs">{isCamActive ? 'Cam on' : 'Cam off'}</span>
+        <span className="text-xs font-mono">{isCamActive ? 'Cam on' : 'Cam off'}</span>
       </div>
       <Button onClick={onDisconnect} variant="destructive" size="icon" className="h-12 w-12 rounded-full">
         <PhoneOff className="h-5 w-5" />

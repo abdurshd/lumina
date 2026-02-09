@@ -31,16 +31,16 @@ export const ConnectorCard = memo(function ConnectorCard({
   disabledReason,
 }: ConnectorCardProps) {
   return (
-    <Card className={isConnected ? 'border-green-500/30' : ''}>
+    <Card className={`glass transition-all duration-300 ${isConnected ? 'border-emerald-500/20' : 'hover:glow-amber-sm'}`}>
       <CardHeader className="flex flex-row items-start gap-4">
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
           {icon}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <CardTitle className="text-lg">{title}</CardTitle>
+            <CardTitle className="text-lg font-sans">{title}</CardTitle>
             {isConnected && (
-              <Badge variant="default" className="bg-green-600 hover:bg-green-700">
+              <Badge variant="default" className="bg-emerald-500/80 hover:bg-emerald-500/90 border-emerald-500/30">
                 <CheckCircle2 className="mr-1 h-3 w-3" />
                 Connected
               </Badge>
