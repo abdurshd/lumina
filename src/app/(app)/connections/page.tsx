@@ -11,7 +11,8 @@ import { useGmailMutation, useChatGPTMutation, useAnalyzeMutation } from '@/hook
 import { ConnectorCard } from '@/components/connections/connector-card';
 import { PageHeader, LoadingButton, ErrorAlert } from '@/components/shared';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plug, Mail, Upload, ArrowRight, Sparkles } from 'lucide-react';
+import { Plug, Mail, Upload, ArrowRight } from 'lucide-react';
+import { LuminaIcon } from '@/components/icons/lumina-icon';
 
 interface DataSource {
   data: string;
@@ -184,7 +185,7 @@ export default function ConnectionsPage() {
         <Card className="mt-8 glass animate-fade-in-up">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 font-sans">
-              <Sparkles className="h-5 w-5 text-primary" />
+              <LuminaIcon className="h-5 w-5 text-primary" />
               Ready to Analyze
             </CardTitle>
             <CardDescription>
@@ -206,7 +207,7 @@ export default function ConnectionsPage() {
                 onClick={analyzeData}
                 loading={analyzeMutation.isPending}
                 loadingText="Analyzing your data with AI..."
-                icon={Sparkles}
+                icon={LuminaIcon}
                 className="w-full"
               >
                 Analyze Data

@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import {
-  Sparkles,
   ArrowRight,
   Plug,
   Brain,
@@ -11,6 +10,7 @@ import {
   FileText,
   Shield,
 } from 'lucide-react';
+import { LuminaIcon } from '@/components/icons/lumina-icon';
 import { ThemeToggle } from '@/components/layout/theme-toggle';
 
 const features = [
@@ -50,7 +50,7 @@ export default function LandingPage() {
       <header className="sticky top-0 z-40 bg-background/90 backdrop-blur-sm border-b-2 border-overlay-subtle">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-2.5">
-            <Sparkles className="h-6 w-6 text-primary" />
+            <LuminaIcon className="h-6 w-6 text-primary" />
             <span className="text-xl font-bold text-gradient-gold">Lumina</span>
           </div>
           <div className="flex items-center gap-2">
@@ -65,7 +65,7 @@ export default function LandingPage() {
       {/* Hero - Remotion-style centered with bold type */}
       <section className="relative mx-auto max-w-5xl px-6 py-28 text-center">
         <div className="mb-8 inline-flex items-center gap-2 rounded-full bg-primary/10 border-2 border-primary/20 px-5 py-2 text-sm font-bold text-primary uppercase tracking-wide animate-fade-in-up">
-          <Sparkles className="h-4 w-4" />
+          <LuminaIcon className="h-4 w-4" />
           Powered by Gemini AI
         </div>
         <h1 className="text-5xl font-bold tracking-tight sm:text-7xl animate-fade-in-up" style={{ animationDelay: '100ms' }}>
@@ -143,7 +143,7 @@ export default function LandingPage() {
       <section className="mx-auto max-w-4xl px-6 py-20 text-center relative">
         <div className="relative glass-heavy p-14 overflow-hidden">
           <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 border-2 border-primary/20">
-            <Sparkles className="h-8 w-8 text-primary" />
+            <LuminaIcon className="h-8 w-8 text-primary" />
           </div>
           <h2 className="text-3xl font-bold mb-4">
             Ready to <span className="text-primary">discover</span> your hidden talents?
@@ -163,7 +163,7 @@ export default function LandingPage() {
       <footer className="border-t-2 border-overlay-subtle py-10">
         <div className="mx-auto max-w-6xl px-6 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" />
+            <LuminaIcon className="h-4 w-4 text-primary" />
             <span className="text-sm font-bold">Lumina</span>
           </div>
           <div className="flex items-center gap-4 text-sm text-muted-foreground">

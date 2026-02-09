@@ -14,7 +14,8 @@ import { StrengthsGrid } from '@/components/report/strengths-grid';
 import { EmptyState, LoadingButton, ErrorAlert, ReportSkeleton } from '@/components/shared';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, Target, Lightbulb, Rocket, Eye } from 'lucide-react';
+import { Target, Lightbulb, Rocket, Eye } from 'lucide-react';
+import { LuminaIcon } from '@/components/icons/lumina-icon';
 
 export default function ReportPage() {
   const { user } = useAuthStore();
@@ -78,7 +79,7 @@ export default function ReportPage() {
           />
         )}
         <EmptyState
-          icon={Sparkles}
+          icon={LuminaIcon}
           title="Generate Your Talent Report"
           description="Lumina will analyze all your assessment data to create a comprehensive talent discovery report."
           action={
@@ -86,7 +87,7 @@ export default function ReportPage() {
               onClick={generateReport}
               loading={reportMutation.isPending}
               loadingText="Generating your report (this may take a minute)..."
-              icon={Sparkles}
+              icon={LuminaIcon}
               size="lg"
               className=""
             >
@@ -133,7 +134,7 @@ export default function ReportPage() {
       {/* Strengths */}
       <div className="mb-8 animate-fade-in-up" style={{ animationDelay: '200ms' }}>
         <h2 className="flex items-center gap-2 text-xl font-bold mb-4">
-          <Sparkles className="h-5 w-5 text-primary" />
+          <LuminaIcon className="h-5 w-5 text-primary" />
           <span className="text-primary">Top</span> Strengths
         </h2>
         <StrengthsGrid strengths={report.topStrengths} />

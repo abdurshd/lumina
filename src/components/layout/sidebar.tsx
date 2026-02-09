@@ -11,8 +11,8 @@ import {
   Video,
   FileText,
   LogOut,
-  Sparkles,
 } from 'lucide-react';
+import { LuminaIcon } from '@/components/icons/lumina-icon';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/layout/theme-toggle';
@@ -32,7 +32,7 @@ export function Sidebar() {
   return (
     <aside className="flex h-full w-64 flex-col bg-sidebar border-r-2 border-overlay-subtle">
       <div className="flex items-center gap-2.5 px-6 py-5">
-        <Sparkles className="h-6 w-6 text-primary" />
+        <LuminaIcon className="h-6 w-6 text-primary" />
         <span className="text-xl font-bold text-gradient-gold">Lumina</span>
       </div>
       <div className="h-[2px] bg-overlay-subtle" />

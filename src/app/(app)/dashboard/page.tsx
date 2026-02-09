@@ -4,7 +4,8 @@ import { useAuthStore } from '@/stores/auth-store';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StatusBadge, StageCardSkeleton } from '@/components/shared';
-import { Plug, Brain, Video, FileText, ChevronRight, Sparkles } from 'lucide-react';
+import { Plug, Brain, Video, FileText, ChevronRight } from 'lucide-react';
+import { LuminaIcon } from '@/components/icons/lumina-icon';
 import Link from 'next/link';
 import type { AssessmentStage } from '@/types';
 
@@ -27,7 +28,7 @@ export default function DashboardPage() {
       <div className="mb-8 animate-fade-in-up">
         <div className="flex items-center gap-3 mb-2">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 border-2 border-primary/20">
-            <Sparkles className="h-5 w-5 text-primary" />
+            <LuminaIcon className="h-5 w-5 text-primary" />
           </div>
           <h1 className="text-3xl font-bold">
             Welcome back{profile?.displayName ? `, ${profile.displayName.split(' ')[0]}` : ''}

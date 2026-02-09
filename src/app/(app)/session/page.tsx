@@ -19,7 +19,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Send, Brain } from 'lucide-react';
+import { Send, Brain } from 'lucide-react';
+import { LuminaIcon } from '@/components/icons/lumina-icon';
 
 export default function SessionPage() {
   const {
@@ -112,7 +113,7 @@ export default function SessionPage() {
   return (
     <div className="mx-auto max-w-6xl px-6 py-10">
       <PageHeader
-        icon={Sparkles}
+        icon={LuminaIcon}
         title="Live Session"
         description="Have a conversation with your AI career counselor"
       >
