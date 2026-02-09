@@ -343,6 +343,29 @@ export interface AgentDecision {
   metadata?: Record<string, string | number | boolean>;
 }
 
+// --- Correlated Insight Types ---
+
+export interface CorrelatedInsight {
+  /** Human-readable title of the pattern */
+  title: string;
+  /** Detailed description of the cross-source pattern */
+  description: string;
+  /** Dimensions this pattern affects */
+  dimensions: string[];
+  /** Evidence sources contributing to this pattern */
+  evidenceSources: {
+    sourceType: 'data_source' | 'quiz' | 'session';
+    sourceName: string;
+    excerpt: string;
+  }[];
+  /** Strength of the correlation 0-100 */
+  correlationStrength: number;
+  /** Is this expected or a hidden pattern? */
+  surpriseFactor: 'expected' | 'moderate' | 'surprising' | 'very_surprising';
+  /** Convergent (sources agree) or divergent (sources disagree) */
+  patternType: 'convergent' | 'divergent' | 'hidden_talent';
+}
+
 // --- Behavioral Timeline Types ---
 
 export type BehavioralCategory = SessionInsight['category'];

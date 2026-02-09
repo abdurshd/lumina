@@ -290,7 +290,7 @@ Expose via the `/api/agent/evaluate` endpoint.
 ### Task 2.3 — Cross-Stage Evidence Correlation Agent
 
 ```
-STATUS: [ ]
+STATUS: [x]
 LOCK: UNLOCKED
 PRIORITY: MEDIUM
 DEPENDS ON: 2.1
