@@ -6,8 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { ChevronRight, ChevronDown, ThumbsUp, ThumbsDown, Info } from 'lucide-react';
-import { staggerContainer, staggerItem, smoothTransition, reducedMotionVariants } from '@/lib/motion';
+import { ChevronRight, ThumbsUp, ThumbsDown, Info } from 'lucide-react';
+import { staggerContainer, staggerItem, smoothTransition, reducedMotionVariants, collapseExpand, fadeInScale, snappySpring } from '@/lib/motion';
+import { AnimatedCounter } from '@/components/motion/animated-counter';
 import type { CareerPath, CareerRecommendation } from '@/types';
 
 interface CareerPathsProps {
@@ -62,8 +63,13 @@ export const CareerPaths = memo(function CareerPaths({ paths, recommendations, o
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2 flex-wrap min-w-0">
                       <CardTitle className="text-lg font-sans">{rec.clusterId}</CardTitle>
-                      <Badge variant="outline" className="font-mono text-xs">{rec.matchScore}% match</Badge>
-                      <span className="text-xs text-muted-foreground font-mono">{rec.confidence}% conf</span>
+                      <Badge variant="outline" className="font-mono text-xs">
+                        <AnimatedCounter value={rec.matchScore} suffix="%" />
+                        {' '}match
+                      </Badge>
+                      <span className="text-xs text-muted-foreground font-mono">
+                        <AnimatedCounter value={rec.confidence} suffix="%" /> conf
+                      </span>
                     </div>
                   </div>
                   <Progress value={rec.matchScore} className="h-3" />
@@ -85,7 +91,15 @@ export const CareerPaths = memo(function CareerPaths({ paths, recommendations, o
                       <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide mb-1">Skills to build:</p>
                       <div className="flex flex-wrap gap-1.5">
                         {rec.skillsToBuild.map((skill, j) => (
-                          <Badge key={j} variant="secondary" className="text-xs">{skill}</Badge>
+                          <motion.div
+                            key={j}
+                            variants={shouldReduceMotion ? undefined : fadeInScale}
+                            initial="hidden"
+                            animate="visible"
+                            transition={{ delay: j * 0.04 }}
+                          >
+                            <Badge variant="secondary" className="text-xs">{skill}</Badge>
+                          </motion.div>
                         ))}
                       </div>
                     </div>
@@ -135,11 +149,11 @@ export const CareerPaths = memo(function CareerPaths({ paths, recommendations, o
                 <div className="flex items-center gap-2 shrink-0">
                   {path.confidence != null && (
                     <span className="text-xs text-muted-foreground font-mono">
-                      {path.confidence}% conf
+                      <AnimatedCounter value={path.confidence} suffix="%" /> conf
                     </span>
                   )}
                   <Badge variant={path.match >= 85 ? 'default' : 'secondary'}>
-                    {path.match}% match
+                    <AnimatedCounter value={path.match} suffix="%" /> match
                   </Badge>
                 </div>
               </div>
@@ -176,15 +190,20 @@ export const CareerPaths = memo(function CareerPaths({ paths, recommendations, o
                   >
                     <Info className="h-3 w-3" />
                     Why am I seeing this?
-                    {expandedIndex === i ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                    <motion.span
+                      animate={{ rotate: expandedIndex === i ? 90 : 0 }}
+                      transition={snappySpring}
+                    >
+                      <ChevronRight className="h-3 w-3" />
+                    </motion.span>
                   </button>
-                  <AnimatePresence>
+                  <AnimatePresence initial={false}>
                     {expandedIndex === i && (
                       <motion.div
-                        initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, height: 0 }}
-                        transition={{ duration: 0.2 }}
+                        initial="hidden"
+                        animate="visible"
+                        exit="hidden"
+                        variants={shouldReduceMotion ? reducedMotionVariants : collapseExpand}
                         className="overflow-hidden"
                       >
                         <div className="mt-2 space-y-1 pl-4 border-l-2 border-primary/20">
@@ -201,47 +220,66 @@ export const CareerPaths = memo(function CareerPaths({ paths, recommendations, o
               {/* Feedback buttons */}
               {onFeedback && (
                 <div className="mt-3 flex items-center gap-2">
-                  {feedbackGiven[i] ? (
-                    <span className="text-xs text-muted-foreground">
-                      {feedbackGiven[i] === 'agree' ? 'Thanks for your feedback!' : 'We\'ll refine this recommendation.'}
-                    </span>
-                  ) : showReasonFor === i ? (
-                    <div className="flex items-center gap-2 w-full">
-                      <input
-                        type="text"
-                        value={feedbackReason}
-                        onChange={(e) => setFeedbackReason(e.target.value)}
-                        placeholder="Why does this not fit? (optional)"
-                        className="flex-1 rounded-md border bg-transparent px-2 py-1 text-xs"
-                      />
-                      <Button size="sm" variant="outline" onClick={() => submitDisagree(i)}>
-                        Submit
-                      </Button>
-                    </div>
-                  ) : (
-                    <>
-                      <motion.div whileTap={shouldReduceMotion ? undefined : { scale: 0.85 }}>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-7 px-2 text-xs"
-                          onClick={() => handleFeedback(i, 'agree')}
-                        >
-                          <ThumbsUp className="h-3 w-3 mr-1" /> Good match
+                  <AnimatePresence mode="wait">
+                    {feedbackGiven[i] ? (
+                      <motion.span
+                        key="feedback-text"
+                        className="text-xs text-muted-foreground"
+                        initial={shouldReduceMotion ? false : { opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={smoothTransition}
+                      >
+                        {feedbackGiven[i] === 'agree' ? 'Thanks for your feedback!' : 'We\'ll refine this recommendation.'}
+                      </motion.span>
+                    ) : showReasonFor === i ? (
+                      <motion.div
+                        key="reason-input"
+                        className="flex items-center gap-2 w-full"
+                        initial={shouldReduceMotion ? false : { opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.15 }}
+                      >
+                        <input
+                          type="text"
+                          value={feedbackReason}
+                          onChange={(e) => setFeedbackReason(e.target.value)}
+                          placeholder="Why does this not fit? (optional)"
+                          className="flex-1 rounded-md border bg-transparent px-2 py-1 text-xs"
+                        />
+                        <Button size="sm" variant="outline" onClick={() => submitDisagree(i)}>
+                          Submit
                         </Button>
                       </motion.div>
-                      <motion.div whileTap={shouldReduceMotion ? undefined : { scale: 0.85 }}>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-7 px-2 text-xs"
-                          onClick={() => handleFeedback(i, 'disagree')}
-                        >
-                          <ThumbsDown className="h-3 w-3 mr-1" /> Not for me
-                        </Button>
+                    ) : (
+                      <motion.div
+                        key="feedback-buttons"
+                        className="flex items-center gap-2"
+                        exit={shouldReduceMotion ? { opacity: 0 } : { scale: 0.8, opacity: 0 }}
+                        transition={{ duration: 0.15 }}
+                      >
+                        <motion.div whileTap={shouldReduceMotion ? undefined : { scale: 0.85 }}>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 px-2 text-xs"
+                            onClick={() => handleFeedback(i, 'agree')}
+                          >
+                            <ThumbsUp className="h-3 w-3 mr-1" /> Good match
+                          </Button>
+                        </motion.div>
+                        <motion.div whileTap={shouldReduceMotion ? undefined : { scale: 0.85 }}>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 px-2 text-xs"
+                            onClick={() => handleFeedback(i, 'disagree')}
+                          >
+                            <ThumbsDown className="h-3 w-3 mr-1" /> Not for me
+                          </Button>
+                        </motion.div>
                       </motion.div>
-                    </>
-                  )}
+                    )}
+                  </AnimatePresence>
                 </div>
               )}
             </CardContent>

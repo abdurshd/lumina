@@ -34,9 +34,24 @@ export function PageHeader({ icon: Icon, title, description, children }: PageHea
             </motion.div>
             {title}
           </h1>
-          <p className="mt-2 text-muted-foreground ml-[52px]">{description}</p>
+          <motion.p
+            className="mt-2 text-muted-foreground ml-[52px]"
+            initial={shouldReduceMotion ? false : { opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ ...smoothTransition, delay: 0.2 }}
+          >
+            {description}
+          </motion.p>
         </div>
-        {children}
+        {children && (
+          <motion.div
+            initial={shouldReduceMotion ? false : { opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ ...smoothTransition, delay: 0.3 }}
+          >
+            {children}
+          </motion.div>
+        )}
       </div>
     </motion.div>
   );

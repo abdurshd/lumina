@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, useReducedMotion } from 'framer-motion';
-import { scaleIn, reducedMotionVariants } from '@/lib/motion';
+import { scaleIn, smoothTransition, reducedMotionVariants } from '@/lib/motion';
 import type { LucideIcon } from 'lucide-react';
 
 interface EmptyStateProps {
@@ -31,7 +31,15 @@ export function EmptyState({ icon: Icon, title, description, action }: EmptyStat
       </motion.div>
       <h2 className="text-xl font-bold mb-2">{title}</h2>
       <p className="max-w-md text-muted-foreground mb-6">{description}</p>
-      {action}
+      {action && (
+        <motion.div
+          initial={shouldReduceMotion ? false : { opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ ...smoothTransition, delay: 0.3 }}
+        >
+          {action}
+        </motion.div>
+      )}
     </motion.div>
   );
 }

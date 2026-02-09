@@ -23,9 +23,9 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Settings, Trash2, Database, Shield, ChevronDown, ChevronRight, User, Link2Off } from 'lucide-react';
+import { Settings, Trash2, Database, Shield, ChevronRight, User, Link2Off } from 'lucide-react';
 import { StaggerList, StaggerItem } from '@/components/motion/stagger-list';
-import { staggerContainer, staggerItem, reducedMotionVariants } from '@/lib/motion';
+import { staggerContainer, staggerItem, reducedMotionVariants, collapseExpand, snappySpring, smoothTransition } from '@/lib/motion';
 
 const DATA_SOURCES = [
   { key: 'dataInsights', label: 'Data Analysis', description: 'Gmail, ChatGPT, Drive, Notion analysis results' },
@@ -150,23 +150,41 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium">Display Name</p>
-                  {isEditingName ? (
-                    <div className="flex items-center gap-2 mt-1">
-                      <Input
-                        value={displayName}
-                        onChange={(e) => setDisplayName(e.target.value)}
-                        className="h-8 w-60"
-                      />
-                      <Button size="sm" onClick={handleSaveName} disabled={updateProfileMutation.isPending}>
-                        Save
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => { setIsEditingName(false); setDisplayName(profile?.displayName ?? ''); }}>
-                        Cancel
-                      </Button>
-                    </div>
-                  ) : (
-                    <p className="text-xs text-muted-foreground">{profile?.displayName}</p>
-                  )}
+                  <AnimatePresence mode="wait">
+                    {isEditingName ? (
+                      <motion.div
+                        key="edit"
+                        className="flex items-center gap-2 mt-1"
+                        initial={shouldReduceMotion ? false : { opacity: 0, y: -4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -4 }}
+                        transition={smoothTransition}
+                      >
+                        <Input
+                          value={displayName}
+                          onChange={(e) => setDisplayName(e.target.value)}
+                          className="h-8 w-60"
+                        />
+                        <Button size="sm" onClick={handleSaveName} disabled={updateProfileMutation.isPending}>
+                          Save
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => { setIsEditingName(false); setDisplayName(profile?.displayName ?? ''); }}>
+                          Cancel
+                        </Button>
+                      </motion.div>
+                    ) : (
+                      <motion.p
+                        key="display"
+                        className="text-xs text-muted-foreground"
+                        initial={shouldReduceMotion ? false : { opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0 }}
+                        transition={{ duration: 0.15 }}
+                      >
+                        {profile?.displayName}
+                      </motion.p>
+                    )}
+                  </AnimatePresence>
                 </div>
                 {!isEditingName && (
                   <Button variant="ghost" size="sm" onClick={() => setIsEditingName(true)}>
@@ -268,7 +286,12 @@ export default function SettingsPage() {
               >
                 <Shield className="h-5 w-5 text-primary" />
                 <CardTitle className="font-sans flex-1">What Data We Have</CardTitle>
-                {showDataSection ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                <motion.span
+                  animate={{ rotate: showDataSection ? 90 : 0 }}
+                  transition={snappySpring}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </motion.span>
               </button>
               <CardDescription>
                 View and manage individual data categories.
@@ -280,22 +303,8 @@ export default function SettingsPage() {
                   initial="hidden"
                   animate="visible"
                   exit="hidden"
-                  variants={
-                    shouldReduceMotion
-                      ? reducedMotionVariants
-                      : {
-                          hidden: { opacity: 0, height: 0 },
-                          visible: {
-                            opacity: 1,
-                            height: 'auto',
-                            transition: {
-                              height: { duration: 0.3, ease: 'easeOut' },
-                              opacity: { duration: 0.2, delay: 0.1 },
-                              staggerChildren: 0.05,
-                            },
-                          },
-                        }
-                  }
+                  variants={shouldReduceMotion ? reducedMotionVariants : collapseExpand}
+                  className="overflow-hidden"
                 >
                   <CardContent>
                     <motion.div

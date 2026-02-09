@@ -1,11 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/auth-store';
-import { staggerContainer, staggerItem, smoothTransition } from '@/lib/motion';
+import { staggerContainer, staggerItem, smoothTransition, hoverRotateIcon, morphTransition } from '@/lib/motion';
 import {
   LayoutDashboard,
   Plug,
@@ -44,6 +45,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const { profile, signOut } = useAuthStore();
   const shouldReduceMotion = useReducedMotion();
+  const [hoveredHref, setHoveredHref] = useState<string | null>(null);
 
   return (
     <aside className="flex h-full w-64 flex-col bg-sidebar border-r-2 border-overlay-subtle">
@@ -57,6 +59,7 @@ export function Sidebar() {
         initial="hidden"
         animate="visible"
         variants={shouldReduceMotion ? undefined : staggerContainer}
+        onMouseLeave={() => setHoveredHref(null)}
       >
         {navItems.map((item) => {
           const isActive = pathname === item.href;
@@ -68,8 +71,9 @@ export function Sidebar() {
                   'relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold transition-colors duration-200',
                   isActive
                     ? 'bg-primary/10 text-primary border-2 border-primary/20 shadow-[0_2px_0_oklch(70.4%_0.14_182.503/0.1)]'
-                    : 'text-muted-foreground hover:bg-overlay-subtle hover:text-foreground border-2 border-transparent'
+                    : 'text-muted-foreground hover:text-foreground border-2 border-transparent'
                 )}
+                onMouseEnter={() => setHoveredHref(item.href)}
               >
                 {isActive && (
                   <motion.div
@@ -78,13 +82,26 @@ export function Sidebar() {
                     transition={smoothTransition}
                   />
                 )}
+                <AnimatePresence>
+                  {!isActive && hoveredHref === item.href && !shouldReduceMotion && (
+                    <motion.div
+                      layoutId="sidebar-hover"
+                      className="absolute inset-0 rounded-xl bg-overlay-subtle"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={morphTransition}
+                    />
+                  )}
+                </AnimatePresence>
                 <motion.span
-                  whileHover={shouldReduceMotion ? undefined : { rotate: 5, scale: 1.1 }}
-                  transition={smoothTransition}
+                  className="relative z-10"
+                  whileHover={shouldReduceMotion ? undefined : hoverRotateIcon.whileHover}
+                  transition={hoverRotateIcon.transition}
                 >
                   <item.icon className="h-4 w-4" />
                 </motion.span>
-                {item.label}
+                <span className="relative z-10">{item.label}</span>
               </Link>
             </motion.div>
           );

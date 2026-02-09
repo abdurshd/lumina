@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { LuminaIcon } from '@/components/icons/lumina-icon';
 import { ArrowRight, ArrowLeft, Shield, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { smoothTransition, staggerContainer, staggerItem, popIn, reducedMotionVariants } from '@/lib/motion';
+import { smoothTransition, staggerContainer, staggerItem, popIn, reducedMotionVariants, heavySpring, snappySpring } from '@/lib/motion';
 
 const DATA_SOURCE_OPTIONS = [
   { id: 'gmail', label: 'Gmail', description: 'Analyze sent emails for communication patterns' },
@@ -87,6 +87,23 @@ export default function OnboardingPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-6 py-16">
+      {/* Step progress indicator */}
+      <div className="flex justify-center gap-3 mb-8">
+        {[0, 1, 2].map((s) => (
+          <div key={s} className="relative h-2 w-8 rounded-full bg-overlay-light">
+            {step === s && (
+              <motion.div
+                layoutId="onboarding-step"
+                className="absolute inset-0 rounded-full bg-primary"
+                transition={shouldReduceMotion ? { duration: 0 } : heavySpring}
+              />
+            )}
+            {step > s && (
+              <div className="absolute inset-0 rounded-full bg-primary/50" />
+            )}
+          </div>
+        ))}
+      </div>
       <AnimatePresence mode="wait" custom={direction}>
         {step === 0 && (
           <motion.div
@@ -302,6 +319,12 @@ export default function OnboardingPage() {
                           <motion.div
                             whileHover={shouldReduceMotion ? {} : { scale: 1.05 }}
                             whileTap={shouldReduceMotion ? {} : { scale: 0.95 }}
+                            animate={
+                              selectedSources.includes(source.id) && !shouldReduceMotion
+                                ? { scale: [1, 1.15, 1] }
+                                : undefined
+                            }
+                            transition={snappySpring}
                           >
                             <Checkbox
                               checked={selectedSources.includes(source.id)}

@@ -7,7 +7,8 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Compass, Heart, Zap, BookOpen, Settings } from 'lucide-react';
 import { QUIZ_MODULES, type QuizModuleConfig } from '@/lib/quiz/module-config';
-import { staggerContainer, staggerItem, smoothTransition, popIn } from '@/lib/motion';
+import { staggerContainer, staggerItem, smoothTransition, snappySpring } from '@/lib/motion';
+import { AnimatedCounter } from '@/components/motion/animated-counter';
 import type { QuizModuleProgress, QuizModuleId } from '@/types';
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -78,9 +79,9 @@ function ModuleCard({ module, progress, onSelect }: ModuleCardProps) {
             </div>
             {isCompleted && (
               <motion.div
-                variants={prefersReducedMotion ? undefined : popIn}
-                initial="hidden"
-                animate="visible"
+                initial={prefersReducedMotion ? false : { scale: 0, opacity: 0 }}
+                animate={prefersReducedMotion ? { opacity: 1 } : { scale: [0, 1.2, 1], opacity: 1 }}
+                transition={snappySpring}
               >
                 <Badge variant="default" className="text-[10px]">Done</Badge>
               </motion.div>
@@ -92,7 +93,11 @@ function ModuleCard({ module, progress, onSelect }: ModuleCardProps) {
           <p className="text-xs text-muted-foreground mb-3">{module.description}</p>
           <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-1">
             <span>{module.questionCount} questions</span>
-            {progress && <span>{progress.answeredCount}/{progress.totalCount}</span>}
+            {progress && (
+              <span>
+                <AnimatedCounter value={progress.answeredCount} />/{progress.totalCount}
+              </span>
+            )}
           </div>
           <Progress value={progressPercent} className="h-1.5" />
         </CardContent>

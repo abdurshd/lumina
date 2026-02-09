@@ -20,6 +20,25 @@ export const gentleSpring: Transition = {
   damping: 20,
 };
 
+export const snappySpring: Transition = {
+  type: 'spring',
+  stiffness: 500,
+  damping: 30,
+};
+
+export const heavySpring: Transition = {
+  type: 'spring',
+  stiffness: 600,
+  damping: 35,
+};
+
+export const morphTransition: Transition = {
+  type: 'spring',
+  stiffness: 350,
+  damping: 28,
+  mass: 0.8,
+};
+
 // --- Variants ---
 
 export const fadeIn: Variants = {
@@ -119,6 +138,54 @@ export const shake: Variants = {
   },
 };
 
+// --- Additional Variants ---
+
+export const fadeInScale: Variants = {
+  hidden: { opacity: 0, scale: 0.92 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: snappySpring,
+  },
+};
+
+export const slideInFromBottom: Variants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: smoothTransition,
+  },
+  exit: { opacity: 0, y: -8, transition: { duration: 0.15 } },
+};
+
+export const subtleSlideLeft: Variants = {
+  hidden: { opacity: 0, x: -12 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: smoothTransition,
+  },
+};
+
+export const subtleSlideRight: Variants = {
+  hidden: { opacity: 0, x: 12 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: smoothTransition,
+  },
+};
+
+export const collapseExpand: Variants = {
+  hidden: { height: 0, opacity: 0 },
+  visible: {
+    height: 'auto',
+    opacity: 1,
+    transition: morphTransition,
+  },
+};
+
 // --- Hover / Tap presets (use spread syntax) ---
 
 export const scaleOnHover = {
@@ -141,6 +208,23 @@ export const hoverNudge = {
   whileHover: { x: 4 },
   transition: smoothTransition,
 };
+
+export const hoverScaleSubtle = {
+  whileHover: { scale: 1.015 },
+  whileTap: { scale: 0.985 },
+  transition: snappySpring,
+};
+
+export const hoverRotateIcon = {
+  whileHover: { rotate: 8, scale: 1.15 },
+  transition: smoothTransition,
+};
+
+// --- Helpers ---
+
+export function staggerDelay(index: number, base = 0.04) {
+  return { delay: index * base };
+}
 
 // --- Reduced motion helper ---
 

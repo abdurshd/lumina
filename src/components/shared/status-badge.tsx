@@ -3,6 +3,7 @@
 import { motion, useReducedMotion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, Lock, Circle } from 'lucide-react';
+import { snappySpring } from '@/lib/motion';
 import type { StageStatus } from '@/types';
 
 interface StatusBadgeProps {
@@ -23,10 +24,28 @@ export function StatusBadge({ status }: StatusBadgeProps) {
     <motion.span
       initial={shouldReduceMotion ? false : { scale: 0.8, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
-      transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+      transition={snappySpring}
     >
       <Badge variant={variant} className={className}>
-        <Icon className="mr-1 h-3 w-3" />
+        <motion.span
+          className="mr-1 inline-flex"
+          animate={
+            status === 'completed' && !shouldReduceMotion
+              ? { scale: [1, 1.2, 1] }
+              : status === 'active' && !shouldReduceMotion
+              ? { opacity: [0.5, 1, 0.5] }
+              : undefined
+          }
+          transition={
+            status === 'completed'
+              ? { duration: 0.4, delay: 0.2 }
+              : status === 'active'
+              ? { duration: 2, repeat: Infinity, ease: 'easeInOut' }
+              : undefined
+          }
+        >
+          <Icon className="h-3 w-3" />
+        </motion.span>
         {label}
       </Badge>
     </motion.span>
