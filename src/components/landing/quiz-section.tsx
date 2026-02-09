@@ -20,7 +20,7 @@ export function QuizSection() {
     const containerRef = useRef<HTMLDivElement>(null);
 
     return (
-        <section id="quiz" ref={containerRef} className="bg-[#050505] py-32 relative overflow-hidden">
+        <section id="quiz" ref={containerRef} className="bg-background py-32 relative overflow-hidden">
             <div className="container mx-auto px-6 relative z-10">
                 <div className="flex flex-col lg:flex-row items-center gap-20">
 
@@ -34,7 +34,7 @@ export function QuizSection() {
                             className="mb-12"
                         >
                             <span className="text-primary font-bold uppercase tracking-[0.3em] text-[10px] mb-4 block">Adaptive Intelligence</span>
-                            <h2 className="text-5xl sm:text-7xl font-black tracking-tighter text-white mb-8 leading-[0.9]">
+                            <h2 className="text-5xl sm:text-7xl font-black tracking-tighter text-foreground mb-8 leading-[0.9]">
                                 Neural <br /> <span className="text-primary">Profiling</span>
                             </h2>
                             <p className="text-xl text-muted-foreground font-light leading-relaxed max-w-xl">
@@ -57,7 +57,7 @@ export function QuizSection() {
                                             <mod.icon className="h-6 w-6" />
                                         </div>
                                         <div className="flex-1">
-                                            <h4 className="text-white font-black text-lg tracking-tight uppercase group-hover:text-primary transition-colors">{mod.title}</h4>
+                                            <h4 className="text-foreground font-black text-lg tracking-tight uppercase group-hover:text-primary transition-colors">{mod.title}</h4>
                                             <p className="text-sm text-muted-foreground font-light">{mod.desc}</p>
                                         </div>
                                         <ArrowRight className="h-5 w-5 text-muted-foreground/30 group-hover:text-primary group-hover:translate-x-1 transition-all" />

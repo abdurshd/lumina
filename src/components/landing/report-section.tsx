@@ -18,7 +18,7 @@ export function ReportSection() {
     const sectionRef = useRef<HTMLDivElement>(null);
 
     return (
-        <section id="report" ref={sectionRef} className="bg-[#050505] py-32 relative overflow-hidden">
+        <section id="report" ref={sectionRef} className="bg-background py-32 relative overflow-hidden">
             <div className="container mx-auto px-6 relative z-10">
                 <div className="text-center max-w-3xl mx-auto mb-20">
                     <motion.div
@@ -28,7 +28,7 @@ export function ReportSection() {
                         transition={{ duration: 1, ease: "easeOut" }}
                     >
                         <span className="text-primary font-bold uppercase tracking-[0.3em] text-[10px] mb-4 block">Final Synthesis</span>
-                        <h2 className="text-5xl sm:text-8xl font-black tracking-tighter text-white mb-8 leading-[0.9]">
+                        <h2 className="text-5xl sm:text-8xl font-black tracking-tighter text-foreground mb-8 leading-[0.9]">
                             Talent <br /> <span className="text-primary">Manifesto</span>
                         </h2>
                         <p className="text-xl text-muted-foreground font-light leading-relaxed">
@@ -46,7 +46,7 @@ export function ReportSection() {
                     className="mb-32 relative perspective-3000"
                 >
                     <div className="absolute -inset-20 bg-primary/5 rounded-full blur-[150px] -z-10 animate-pulse-glow" />
-                    <div className="glass-premium rounded-[48px] overflow-hidden border-primary/20 p-4 shadow-[0_0_50px_oklch(75%_0.18_200/0.15)] bg-[#0A0A0A]/80">
+                    <div className="glass-premium rounded-[48px] overflow-hidden border-primary/20 p-4 shadow-[0_0_50px_oklch(75%_0.18_200/0.15)] bg-background/80">
                         <ReportMockup />
                     </div>
 
@@ -69,7 +69,7 @@ export function ReportSection() {
                                 <div className="h-20 w-20 mx-auto rounded-3xl bg-primary/5 flex items-center justify-center mb-8 border border-primary/20 text-primary group-hover:bg-primary/20 group-hover:scale-110 group-hover:shadow-[0_0_30px_oklch(75%_0.18_200/0.3)] transition-all duration-500">
                                     <item.icon className="h-10 w-10" />
                                 </div>
-                                <h3 className="text-2xl font-black mb-4 tracking-tight text-white uppercase group-hover:text-primary transition-colors">{item.title}</h3>
+                                <h3 className="text-2xl font-black mb-4 tracking-tight text-foreground uppercase group-hover:text-primary transition-colors">{item.title}</h3>
                                 <p className="text-muted-foreground font-light leading-relaxed">{item.text}</p>
                             </div>
                         </motion.div>

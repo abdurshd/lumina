@@ -21,7 +21,7 @@ export function HowItWorksSection() {
     const xSpring = useSpring(x, { stiffness: 100, damping: 30 });
 
     return (
-        <section ref={targetRef} className="relative h-[400vh] bg-[#050505]">
+        <section ref={targetRef} className="relative h-[400vh] bg-background">
             <div className="sticky top-0 flex h-screen items-center overflow-hidden">
                 {/* Section Header (Fixed) */}
                 <div className="absolute top-20 left-10 md:left-20 z-20">
@@ -32,7 +32,7 @@ export function HowItWorksSection() {
                         transition={{ duration: 0.8 }}
                     >
                         <span className="text-primary font-bold uppercase tracking-[0.3em] text-[10px] mb-4 block">Methodology</span>
-                        <h2 className="text-4xl sm:text-6xl font-black tracking-tighter text-white">How Lumina Works</h2>
+                        <h2 className="text-4xl sm:text-6xl font-black tracking-tighter text-foreground">How Lumina Works</h2>
                     </motion.div>
                 </div>
 
@@ -48,14 +48,14 @@ export function HowItWorksSection() {
                         >
                             <div className="absolute inset-0 glass-premium rounded-3xl p-10 flex flex-col justify-end transition-all duration-500 group-hover:border-primary/50 group-hover:bg-primary/[0.02]">
                                 <div className="absolute top-0 right-0 p-10">
-                                    <span className="text-8xl font-black text-white/5 tracking-tighter transition-all duration-500 group-hover:text-primary/10">
+                                    <span className="text-8xl font-black text-foreground/5 tracking-tighter transition-all duration-500 group-hover:text-primary/10">
                                         {step.id}
                                     </span>
                                 </div>
 
                                 <div className="relative z-10">
                                     <div className="w-12 h-1 bg-primary/30 mb-6 transition-all duration-500 group-hover:w-24 group-hover:bg-primary" />
-                                    <h3 className="text-3xl md:text-5xl font-black text-white mb-6 tracking-tighter leading-none uppercase">
+                                    <h3 className="text-3xl md:text-5xl font-black text-foreground mb-6 tracking-tighter leading-none uppercase">
                                         {step.title}
                                     </h3>
                                     <p className="text-lg text-muted-foreground leading-relaxed max-w-sm font-light">
@@ -76,7 +76,7 @@ export function HowItWorksSection() {
                 </motion.div>
 
                 {/* Progress Bar (Bottom) */}
-                <div className="absolute bottom-20 left-10 right-10 md:left-20 md:right-20 h-px bg-white/5">
+                <div className="absolute bottom-20 left-10 right-10 md:left-20 md:right-20 h-px bg-foreground/5">
                     <motion.div
                         className="h-full bg-primary shadow-[0_0_15px_oklch(75%_0.18_200)]"
                         style={{ scaleX: scrollYProgress, transformOrigin: "left" }}

@@ -57,6 +57,17 @@ If a task has been locked for >2 hours with no progress, it can be force-unlocke
 
 ---
 
+## Immediate Stability Fixes (Completed)
+
+- [x] Add App Router error boundaries and custom 404 experience
+  - `src/app/global-error.tsx`
+  - `src/app/error.tsx`
+  - `src/app/(app)/error.tsx`
+  - `src/app/(auth)/error.tsx`
+  - `src/app/not-found.tsx`
+
+---
+
 ## Phase 1: Agent Infrastructure (Foundation)
 
 > Everything else depends on this. Build the core agent orchestrator, confidence system, and decision log before touching any existing features.

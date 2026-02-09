@@ -9,14 +9,14 @@ import { FloatingParticles } from './floating-particles';
 
 export function CTASection() {
     return (
-        <section className="relative w-full py-32 sm:py-48 overflow-hidden flex items-center justify-center bg-[#050505]">
+        <section className="relative w-full py-32 sm:py-48 overflow-hidden flex items-center justify-center bg-background">
             {/* Background elements */}
             <div className="absolute inset-0 z-0">
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/10 blur-[150px] rounded-full opacity-50" />
                 <FloatingParticles count={6} className="z-0 opacity-30" />
 
                 {/* Futuristic Grid Overlay */}
-                <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)]" />
+                <div className="absolute inset-0 bg-[linear-gradient(to_right,oklch(75%_0.18_200/0.05)_1px,transparent_1px),linear-gradient(to_bottom,oklch(75%_0.18_200/0.05)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)]" />
             </div>
 
             <div className="container mx-auto px-6 relative z-10">
@@ -39,9 +39,9 @@ export function CTASection() {
                             <LuminaIcon className="h-12 w-12 text-primary" />
                         </motion.div>
 
-                        <h2 className="text-5xl sm:text-7xl md:text-8xl font-black mb-8 tracking-tighter text-white leading-[0.85] uppercase">
+                        <h2 className="text-5xl sm:text-7xl md:text-8xl font-black mb-8 tracking-tighter text-foreground leading-[0.85] uppercase">
                             Illuminate Your <br />
-                            <span className="text-primary group-hover:text-white transition-colors duration-700">Potential</span>
+                            <span className="text-primary group-hover:text-foreground transition-colors duration-700">Potential</span>
                         </h2>
 
                         <p className="text-xl sm:text-2xl text-muted-foreground mb-12 max-w-2xl mx-auto font-light leading-relaxed">

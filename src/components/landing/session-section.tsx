@@ -19,7 +19,7 @@ export function SessionSection() {
     const sectionRef = useRef<HTMLDivElement>(null);
 
     return (
-        <section id="session" ref={sectionRef} className="bg-[#050505] py-32 relative overflow-hidden">
+        <section id="session" ref={sectionRef} className="bg-background py-32 relative overflow-hidden">
             <div className="container mx-auto px-6 relative z-10">
                 <div className="flex flex-col lg:flex-row items-center gap-24">
 
@@ -54,12 +54,12 @@ export function SessionSection() {
                             className="mb-12"
                         >
                             <span className="text-primary font-bold uppercase tracking-[0.3em] text-[10px] mb-4 block">Biometric Synthesis</span>
-                            <h2 className="text-5xl sm:text-7xl font-black tracking-tighter text-white mb-8 leading-[0.9]">
+                            <h2 className="text-5xl sm:text-7xl font-black tracking-tighter text-foreground mb-8 leading-[0.9]">
                                 Live AI <br /> <span className="text-primary">Synergy</span>
                             </h2>
                             <p className="text-xl text-muted-foreground font-light leading-relaxed max-w-xl">
                                 Engage in a high-fidelity vocal exchange with our neural counselor.
-                                It doesn't just hear your words; it perceives the architecture of your ambition.
+                                It doesn&apos;t just hear your words; it perceives the architecture of your ambition.
                             </p>
                         </motion.div>
 
@@ -78,7 +78,7 @@ export function SessionSection() {
                                                 <feature.icon className="h-7 w-7" />
                                             </div>
                                             <div>
-                                                <h3 className="text-white font-black text-lg tracking-tight uppercase mb-2 group-hover:text-primary transition-colors">{feature.title}</h3>
+                                                <h3 className="text-foreground font-black text-lg tracking-tight uppercase mb-2 group-hover:text-primary transition-colors">{feature.title}</h3>
                                                 <p className="text-sm text-muted-foreground font-light leading-relaxed">{feature.text}</p>
                                             </div>
                                         </div>

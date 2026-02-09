@@ -33,7 +33,7 @@ export function DataAnalysisSection() {
 
 
     return (
-        <section className="bg-[#050505] py-24 relative overflow-hidden">
+        <section className="bg-background py-24 relative overflow-hidden transition-colors duration-300">
             <div className="container mx-auto px-6 relative z-10">
                 <div className="flex flex-col lg:flex-row items-center gap-16 mb-24">
                     <motion.div
@@ -44,7 +44,7 @@ export function DataAnalysisSection() {
                         className="lg:w-1/2"
                     >
                         <span className="text-primary font-bold uppercase tracking-[0.3em] text-[10px] mb-4 block">Neural Mapping</span>
-                        <h2 className="text-5xl sm:text-7xl font-black tracking-tighter text-white mb-8 leading-[0.9]">
+                        <h2 className="text-5xl sm:text-7xl font-black tracking-tighter text-foreground mb-8 leading-[0.9]">
                             Digital <br /> <span className="text-primary">Archeology</span>
                         </h2>
                         <p className="text-xl text-muted-foreground font-light leading-relaxed max-w-xl">
@@ -66,11 +66,11 @@ export function DataAnalysisSection() {
                                 loop
                                 muted
                                 playsInline
-                                className="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-luminosity"
+                                className="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-luminosity dark:opacity-60 dark:mix-blend-luminosity opacity-80 mix-blend-multiply"
                             >
                                 <source src="/hero-bg.mp4" type="video/mp4" />
                             </video>
-                            <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent opacity-80" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-80" />
                             <div className="absolute inset-0 bg-primary/5 mix-blend-overlay" />
 
                             {/* Futuristic reticle overlay */}
@@ -95,7 +95,7 @@ export function DataAnalysisSection() {
                                 <div className="mb-8 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/5 border border-primary/20 text-primary transition-all duration-500 group-hover:scale-110 group-hover:bg-primary/20 group-hover:shadow-[0_0_20px_oklch(75%_0.18_200/0.3)]">
                                     <source.icon className="h-8 w-8" />
                                 </div>
-                                <h3 className="text-2xl font-black mb-4 tracking-tighter text-white uppercase">{source.title}</h3>
+                                <h3 className="text-2xl font-black mb-4 tracking-tighter text-foreground uppercase">{source.title}</h3>
                                 <p className="text-muted-foreground leading-relaxed font-light">{source.description}</p>
                             </div>
                         </motion.div>
@@ -108,7 +108,7 @@ export function DataAnalysisSection() {
                             <Shield className="h-7 w-7" />
                         </div>
                         <div>
-                            <h4 className="text-xl font-bold mb-2 tracking-tight text-white uppercase">Vault-Grade Security</h4>
+                            <h4 className="text-xl font-bold mb-2 tracking-tight text-foreground uppercase">Vault-Grade Security</h4>
                             <p className="text-muted-foreground font-light text-sm leading-relaxed">
                                 Our analysis engine operates in a zero-persistence environment. Your raw data is processed in isolated memory and purged instantly. Only the semantic bridges remain.
                             </p>

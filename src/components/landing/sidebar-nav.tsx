@@ -68,7 +68,7 @@ export function SidebarNav() {
                                         "group flex items-center gap-4 transition-all duration-500 text-left",
                                         activeSection === section.id
                                             ? "text-primary"
-                                            : "text-white/20 hover:text-white/50"
+                                            : "text-muted-foreground/40 hover:text-foreground/80"
                                     )}
                                 >
                                     <span className={cn(

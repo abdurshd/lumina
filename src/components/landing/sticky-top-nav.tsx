@@ -39,7 +39,7 @@ export function StickyTopNav() {
                         <LuminaIcon className="h-9 w-9 text-primary transition-transform duration-500 group-hover:rotate-[360deg]" />
                         <div className="absolute inset-0 bg-primary/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-full" />
                     </div>
-                    <span className="font-black text-2xl tracking-tighter text-white uppercase">Lumina</span>
+                    <span className="font-black text-2xl tracking-tighter text-foreground uppercase">Lumina</span>
                 </Link>
 
                 {/* Desktop Nav */}
@@ -73,23 +73,23 @@ export function StickyTopNav() {
                     <ThemeToggle />
                     <Sheet>
                         <SheetTrigger asChild>
-                            <Button variant="ghost" size="icon" className="text-white hover:bg-white/10">
+                            <Button variant="ghost" size="icon" className="text-foreground hover:bg-foreground/10">
                                 <Menu className="h-7 w-7" />
                                 <span className="sr-only">Toggle menu</span>
                             </Button>
                         </SheetTrigger>
-                        <SheetContent side="right" className="w-full sm:w-[400px] border-l border-primary/20 bg-[#050505] p-0">
-                            <div className="flex flex-col h-full bg-[#050505] p-10">
+                        <SheetContent side="right" className="w-full sm:w-[400px] border-l border-primary/20 bg-background p-0">
+                            <div className="flex flex-col h-full bg-background p-10">
                                 <Link href="/" className="flex items-center gap-3 mb-16">
                                     <LuminaIcon className="h-10 w-10 text-primary" />
-                                    <span className="font-black text-3xl tracking-tighter text-white uppercase">Lumina</span>
+                                    <span className="font-black text-3xl tracking-tighter text-foreground uppercase">Lumina</span>
                                 </Link>
                                 <nav className="flex flex-col gap-8">
                                     {NAV_LINKS.map((link) => (
                                         <Link
                                             key={link.name}
                                             href={link.href}
-                                            className="text-4xl font-black tracking-tighter text-white/50 hover:text-primary transition-all duration-300 hover:pl-4"
+                                            className="text-4xl font-black tracking-tighter text-muted-foreground hover:text-primary transition-all duration-300 hover:pl-4"
                                         >
                                             {link.name}
                                         </Link>

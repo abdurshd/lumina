@@ -45,19 +45,19 @@ export function HeroSection() {
         style={{ y: backgroundY, scale }}
         className="absolute inset-0 z-0"
       >
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,255,255,0.1),transparent_70%)]" />
+        <div className="absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent opacity-70 dark:opacity-100" />
 
         {/* Futuristic Grid/Neural Map Placeholder */}
-        <div className="absolute inset-0 opacity-10" style={{
+        <div className="absolute inset-0 opacity-10 dark:opacity-20" style={{
           backgroundImage: `radial-gradient(var(--primary) 1px, transparent 1px)`,
           backgroundSize: '40px 40px'
         }} />
 
-        <FloatingParticles count={6} className="opacity-30" />
+        <FloatingParticles count={6} className="opacity-30 dark:opacity-40" />
 
         {/* Subtle Glow Orbs */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-primary/5 rounded-full blur-[120px] animate-pulse-glow" />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-[120px] animate-pulse dark:bg-primary/10 bg-primary/20" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-primary/5 rounded-full blur-[120px] animate-pulse-glow dark:bg-primary/5 bg-primary/10" />
       </motion.div>
 
       {/* Content Overlay */}

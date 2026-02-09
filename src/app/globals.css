@@ -63,13 +63,51 @@
 
 :root {
   --radius: 12px;
+
+  /* Light Theme Defaults */
+  --background: #ffffff;
+  --foreground: #050505;
+  --card: rgba(255, 255, 255, 0.7);
+  --card-foreground: #09090b;
+  --popover: #ffffff;
+  --popover-foreground: #09090b;
+  --primary: oklch(60% 0.18 200);
+  /* Darker Cyan for Light Mode readability */
+  --primary-foreground: #ffffff;
+  --primary-dark: oklch(50% 0.18 200);
+  --secondary: #f4f4f5;
+  --secondary-foreground: #18181b;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --accent: oklch(60% 0.18 200 / 0.1);
+  --accent-foreground: #18181b;
+  --destructive: #ef4444;
+  --destructive-dark: #b91c1c;
+  --border: #e4e4e7;
+  --input: #e4e4e7;
+  --ring: oklch(60% 0.18 200);
+
+  --font-premium: "Inter", system-ui, sans-serif;
+
+  /* Glassmorphism Variables - Light */
+  --glass-bg: rgba(255, 255, 255, 0.6);
+  --glass-border: rgba(0, 0, 0, 0.1);
+  --glass-reflection: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.1) 100%);
+
+  /* Custom Overlays - Light */
+  --overlay-subtle: rgba(0, 0, 0, 0.05);
+  --overlay-strong: rgba(0, 0, 0, 0.8);
+}
+
+.dark {
   --background: #050505;
   --foreground: #ffffff;
   --card: rgba(18, 18, 18, 0.7);
   --card-foreground: #ffffff;
   --popover: #0a0a0a;
   --popover-foreground: #ffffff;
-  --primary: oklch(75% 0.18 200); /* Premium Electric Cyan */
+  --primary: oklch(75% 0.18 200);
+  /* Premium Electric Cyan */
   --primary-foreground: #000;
   --primary-dark: oklch(65% 0.18 200);
   --secondary: #1a1a1a;
@@ -83,57 +121,125 @@
   --border: rgba(255, 255, 255, 0.1);
   --input: rgba(255, 255, 255, 0.05);
   --ring: oklch(75% 0.18 200);
-  
-  --font-premium: "Inter", system-ui, sans-serif;
-  
-  /* Glassmorphism Variables */
+
+  /* Glassmorphism Variables - Dark */
   --glass-bg: rgba(255, 255, 255, 0.03);
   --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-reflection: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 50%, rgba(255,255,255,0.05) 100%);
+  --glass-reflection: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0.05) 100%);
+
+  /* Custom Overlays - Dark */
+  --overlay-subtle: rgba(255, 255, 255, 0.05);
+  --overlay-strong: rgba(0, 0, 0, 0.8);
 }
 
 /* -- Keyframes ------------------------------ */
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px oklch(75% 0.18 200 / 0.2); }
-  50% { box-shadow: 0 0 40px oklch(75% 0.18 200 / 0.4); }
+
+  0%,
+  100% {
+    box-shadow: 0 0 20px oklch(75% 0.18 200 / 0.2);
+  }
+
+  50% {
+    box-shadow: 0 0 40px oklch(75% 0.18 200 / 0.4);
+  }
 }
 
 @keyframes audioBar {
-  0%, 100% { transform: scaleY(0.3); }
-  50% { transform: scaleY(1); }
+
+  0%,
+  100% {
+    transform: scaleY(0.3);
+  }
+
+  50% {
+    transform: scaleY(1);
+  }
 }
 
 @keyframes lumina-beam-flow {
-  from { stroke-dashoffset: 4.5; }
-  to { stroke-dashoffset: 0; }
+  from {
+    stroke-dashoffset: 4.5;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 
 @keyframes lumina-ray-flow {
-  from { stroke-dashoffset: 6; }
-  to { stroke-dashoffset: 0; }
+  from {
+    stroke-dashoffset: 6;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 
 /* -- SVG scene animation keyframes ---------- */
 
 @keyframes svg-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-20px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-20px);
+  }
 }
+
 @keyframes svg-drift {
-  0% { transform: translate(0,0); }
-  25% { transform: translate(10px,-8px); }
-  50% { transform: translate(-5px,12px); }
-  75% { transform: translate(-12px,-6px); }
-  100% { transform: translate(0,0); }
+  0% {
+    transform: translate(0, 0);
+  }
+
+  25% {
+    transform: translate(10px, -8px);
+  }
+
+  50% {
+    transform: translate(-5px, 12px);
+  }
+
+  75% {
+    transform: translate(-12px, -6px);
+  }
+
+  100% {
+    transform: translate(0, 0);
+  }
 }
+
 @keyframes svg-pulse-node {
-  0%, 100% { opacity: 0.3; r: 3; }
-  50% { opacity: 0.9; r: 5; }
+
+  0%,
+  100% {
+    opacity: 0.3;
+    r: 3;
+  }
+
+  50% {
+    opacity: 0.9;
+    r: 5;
+  }
 }
+
 @keyframes svg-glow-pulse {
-  0%, 100% { filter: blur(4px); opacity: 0.4; }
-  50% { filter: blur(8px); opacity: 0.7; }
+
+  0%,
+  100% {
+    filter: blur(4px);
+    opacity: 0.4;
+  }
+
+  50% {
+    filter: blur(8px);
+    opacity: 0.7;
+  }
 }
 
 /* -- Base ----------------------------------- */
@@ -142,13 +248,20 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
-    @apply bg-background text-foreground font-sans antialiased selection:bg-primary/30 selection:text-white;
-    background-image: 
+    @apply bg-background text-foreground font-sans antialiased selection:bg-primary/30 selection:text-foreground;
+  }
+
+  .dark body {
+    background-image:
       radial-gradient(at 0% 0%, oklch(75% 0.18 200 / 0.05) 0, transparent 50%),
       radial-gradient(at 100% 100%, oklch(75% 0.18 200 / 0.05) 0, transparent 50%);
   }
-  h1, h2, h3 {
+
+  h1,
+  h2,
+  h3 {
     @apply font-bold tracking-tight;
     font-family: var(--font-premium);
   }
@@ -165,7 +278,7 @@
     position: relative;
     overflow: hidden;
   }
-  
+
   .glass-premium::before {
     content: "";
     position: absolute;
@@ -176,17 +289,17 @@
   }
 
   .text-glow {
-    text-shadow: 0 0 15px oklch(75% 0.18 200 / 0.5);
+    text-shadow: 0 0 15px var(--accent);
   }
 
   /* Premium Motion Buttons */
   .btn-premium {
     @apply relative px-8 py-4 rounded-xl font-bold transition-all duration-300 overflow-hidden;
-    background: linear-gradient(135deg, var(--primary) 0%, oklch(65% 0.18 200) 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
     color: #000;
-    box-shadow: 0 4px 15px oklch(75% 0.18 200 / 0.3);
+    box-shadow: 0 4px 15px var(--accent);
   }
-  
+
   .btn-premium:hover {
     @apply -translate-y-1;
     box-shadow: 0 8px 25px oklch(75% 0.18 200 / 0.5);
@@ -202,7 +315,7 @@
     background: transparent;
     color: var(--primary);
   }
-  
+
   .btn-premium-outline:hover {
     @apply bg-primary/10 border-primary/60 -translate-y-1;
     box-shadow: 0 8px 25px oklch(75% 0.18 200 / 0.1);
@@ -221,6 +334,7 @@
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
