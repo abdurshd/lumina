@@ -25,7 +25,8 @@ import { CareerPaths } from '@/components/report/career-paths';
 import { StrengthsGrid } from '@/components/report/strengths-grid';
 import { ReportHistory } from '@/components/report/report-history';
 import { ThoughtChain } from '@/components/report/thought-chain';
-import { EmptyState, LoadingButton, ErrorAlert, ReportSkeleton } from '@/components/shared';
+import { EmptyState, LoadingButton, ErrorAlert } from '@/components/shared';
+import { ConstellationLoader } from '@/components/loaders';
 import { ScrollReveal } from '@/components/motion/scroll-reveal';
 import { staggerContainer, staggerItem, fadeInUp, scaleIn, reducedMotionVariants } from '@/lib/motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -144,8 +145,8 @@ export default function ReportPage() {
 
   if (reportQuery.isLoading) {
     return (
-      <div className="mx-auto max-w-4xl px-4 sm:px-6 py-8 sm:py-10">
-        <ReportSkeleton />
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 py-8 sm:py-10 flex items-center justify-center min-h-[60vh]">
+        <ConstellationLoader size={160} label="Loading your report..." />
       </div>
     );
   }

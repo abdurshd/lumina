@@ -106,7 +106,14 @@
 
   /* Custom Overlays - Light */
   --overlay-subtle: rgba(0, 0, 0, 0.05);
+  --overlay-light: rgba(0, 0, 0, 0.08);
+  --overlay-medium: rgba(0, 0, 0, 0.16);
+  --overlay-heavy: rgba(0, 0, 0, 0.24);
   --overlay-strong: rgba(0, 0, 0, 0.8);
+  --shadow-subtle: rgba(0, 0, 0, 0.08);
+  --shadow-light: rgba(0, 0, 0, 0.14);
+  --disabled-bg: rgba(0, 0, 0, 0.08);
+  --disabled-text: rgba(0, 0, 0, 0.38);
 }
 
 .dark {
@@ -149,7 +156,14 @@
 
   /* Custom Overlays - Dark */
   --overlay-subtle: rgba(255, 255, 255, 0.05);
+  --overlay-light: rgba(255, 255, 255, 0.12);
+  --overlay-medium: rgba(255, 255, 255, 0.2);
+  --overlay-heavy: rgba(255, 255, 255, 0.28);
   --overlay-strong: rgba(0, 0, 0, 0.8);
+  --shadow-subtle: rgba(0, 0, 0, 0.45);
+  --shadow-light: rgba(0, 0, 0, 0.65);
+  --disabled-bg: rgba(255, 255, 255, 0.08);
+  --disabled-text: rgba(255, 255, 255, 0.35);
 }
 
 /* -- Keyframes ------------------------------ */
@@ -259,6 +273,101 @@
   50% {
     filter: blur(8px);
     opacity: 0.7;
+  }
+}
+
+/* -- Loader animation keyframes ------------- */
+
+@keyframes loader-node-pulse {
+  0%, 100% { opacity: 0.3; r: 3; }
+  50% { opacity: 1; r: 5; }
+}
+
+@keyframes loader-signal-travel {
+  0% { stroke-dashoffset: 20; opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { stroke-dashoffset: 0; opacity: 0; }
+}
+
+@keyframes loader-orbit {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes loader-fade-sequence {
+  0%, 20% { opacity: 0; }
+  30%, 70% { opacity: 1; }
+  80%, 100% { opacity: 0; }
+}
+
+@keyframes loader-constellation-draw {
+  from { stroke-dashoffset: 100; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes loader-constellation-star {
+  0% { opacity: 0; r: 0; }
+  50% { opacity: 1; r: 3; }
+  100% { opacity: 0.8; r: 2.5; }
+}
+
+@keyframes loader-particle-rise {
+  0% { opacity: 0; }
+  20% { opacity: 0.8; }
+  80% { opacity: 0.8; }
+  100% { opacity: 0; }
+}
+
+@keyframes loader-core-breathe {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+
+@keyframes loader-bar-breathe {
+  0%, 100% { transform: scaleY(0.3); }
+  50% { transform: scaleY(1); }
+}
+
+@keyframes loader-bar-glow {
+  0%, 100% { filter: drop-shadow(0 0 2px rgba(34, 211, 238, 0.3)); }
+  50% { filter: drop-shadow(0 0 6px rgba(34, 211, 238, 0.6)); }
+}
+
+@keyframes loader-ring-expand {
+  0% { opacity: 0.6; r: 8; }
+  100% { opacity: 0; r: 40; }
+}
+
+/* Loader animation classes */
+.loader-node-pulse { animation: loader-node-pulse 1.5s ease-in-out infinite; }
+.loader-signal-travel { animation: loader-signal-travel 2s linear infinite; }
+.loader-orbit { animation: loader-orbit 4s linear infinite; }
+.loader-orbit-reverse { animation: loader-orbit 3s linear infinite reverse; }
+.loader-fade-sequence { animation: loader-fade-sequence 2s ease-in-out infinite; }
+.loader-constellation-draw { animation: loader-constellation-draw 2s ease-out forwards; }
+.loader-constellation-star { animation: loader-constellation-star 1s ease-out forwards; }
+.loader-particle-rise { animation: loader-particle-rise 1.5s linear infinite; }
+.loader-core-breathe { animation: loader-core-breathe 2s ease-in-out infinite; }
+.loader-bar-breathe { animation: loader-bar-breathe 1.2s ease-in-out infinite; }
+.loader-bar-glow { animation: loader-bar-glow 2s ease-in-out infinite; }
+.loader-ring-expand { animation: loader-ring-expand 2s ease-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .loader-node-pulse,
+  .loader-signal-travel,
+  .loader-orbit,
+  .loader-orbit-reverse,
+  .loader-fade-sequence,
+  .loader-constellation-draw,
+  .loader-constellation-star,
+  .loader-particle-rise,
+  .loader-core-breathe,
+  .loader-bar-breathe,
+  .loader-bar-glow,
+  .loader-ring-expand {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }
 

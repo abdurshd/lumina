@@ -49,30 +49,16 @@ export async function POST(req: NextRequest) {
 
     const now = Date.now();
     const expireTime = new Date(now + 30 * 60 * 1000).toISOString();
-    const newSessionExpireTime = new Date(now + 25 * 60 * 1000).toISOString();
     const uses = 20;
 
-    const token = await ai.authTokens.create({
-      config: {
-        expireTime,
-        newSessionExpireTime,
-        uses,
-        liveConnectConstraints: {
-          model: liveModel,
-        },
-      },
-    });
-
-    if (!token.name) {
-      return errorResponse('Failed to mint ephemeral token', ErrorCode.GEMINI_ERROR, 502);
-    }
-
+    // TODO: restore ephemeral token after debugging config issue
+    // For now, pass the raw API key to use the standard BidiGenerateContent
+    // endpoint to isolate whether the issue is the constrained endpoint or the config.
     return NextResponse.json({
-      token: token.name,
+      token: resolvedKey.apiKey,
       apiVersion: 'v1alpha',
       model: liveModel,
       expireTime,
-      newSessionExpireTime,
       uses,
     });
   } catch (error) {

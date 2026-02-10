@@ -124,7 +124,6 @@ interface EphemeralTokenResponse {
   apiVersion: 'v1alpha' | 'v1';
   model: string;
   expireTime: string;
-  newSessionExpireTime: string;
   uses: number;
 }
 

@@ -2,7 +2,8 @@
 
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Mic, MicOff, Video, VideoOff, PhoneOff, Loader2 } from 'lucide-react';
+import { Mic, MicOff, Video, VideoOff, PhoneOff } from 'lucide-react';
+import { WaveformLoader } from '@/components/loaders';
 import { snappySpring } from '@/lib/motion';
 
 interface SessionControlsProps {
@@ -48,17 +49,10 @@ export function SessionControls({
           animate={{ opacity: 1, scale: 1 }}
           exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.95 }}
           transition={snappySpring}
+          className="flex flex-col items-center gap-2"
         >
-          <Button disabled size="lg" className="gap-2">
-            <motion.span
-              initial={shouldReduceMotion ? false : { scale: 0, rotate: -90 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={snappySpring}
-            >
-              <Loader2 className="h-5 w-5 animate-spin" />
-            </motion.span>
-            Connecting...
-          </Button>
+          <WaveformLoader size={100} />
+          <p className="text-sm text-muted-foreground animate-pulse">Connecting...</p>
         </motion.div>
       )}
 

@@ -20,6 +20,7 @@ import {
 } from '@/hooks/use-api-mutations';
 import { ConnectorCard } from '@/components/connections/connector-card';
 import { PageHeader, LoadingButton, ErrorAlert } from '@/components/shared';
+import { DataFlowLoader } from '@/components/loaders';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plug, ArrowRight } from 'lucide-react';
 import { LuminaIcon } from '@/components/icons/lumina-icon';
@@ -417,11 +418,14 @@ export default function ConnectionsPage() {
                 >
                   Continue to Quiz
                 </LoadingButton>
+              ) : analyzeMutation.isPending ? (
+                <div className="flex items-center justify-center py-4">
+                  <DataFlowLoader size={140} label="Analyzing your data with AI..." />
+                </div>
               ) : (
                 <LoadingButton
                   onClick={analyzeData}
-                  loading={analyzeMutation.isPending}
-                  loadingText="Analyzing your data with AI..."
+                  loading={false}
                   icon={LuminaIcon}
                   className="w-full"
                 >

@@ -12,7 +12,8 @@ import { QUIZ_MODULES } from '@/lib/quiz/module-config';
 import { ModuleSelector } from '@/components/quiz/module-selector';
 import { ModuleQuizFlow } from '@/components/quiz/module-quiz-flow';
 import { QuestionCard } from '@/components/quiz/question-card';
-import { PageHeader, LoadingButton, ErrorAlert, EmptyState, QuestionSkeleton } from '@/components/shared';
+import { PageHeader, LoadingButton, ErrorAlert, EmptyState } from '@/components/shared';
+import { QuizLoader } from '@/components/loaders';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -238,15 +239,8 @@ export default function QuizPage() {
 
   if (isScoring) {
     return (
-      <div className="mx-auto max-w-2xl px-4 sm:px-6 py-8 sm:py-12">
-        <EmptyState
-          icon={Brain}
-          title="Scoring Your Answers..."
-          description="Lumina is analyzing your responses across multiple talent dimensions."
-          action={
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          }
-        />
+      <div className="mx-auto max-w-2xl px-4 sm:px-6 py-8 sm:py-12 flex items-center justify-center min-h-[60vh]">
+        <QuizLoader size={140} label="Analyzing your responses across multiple talent dimensions..." />
       </div>
     );
   }
@@ -311,7 +305,9 @@ export default function QuizPage() {
 
       <div className="animate-fade-in">
         {quizMutation.isPending && questions.length <= currentIndex ? (
-          <QuestionSkeleton />
+          <div className="flex items-center justify-center py-12">
+            <QuizLoader size={120} label="Preparing your questions..." />
+          </div>
         ) : questions[currentIndex] ? (
           <QuestionCard
             question={questions[currentIndex]}

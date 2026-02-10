@@ -66,6 +66,8 @@ export class LiveSessionManager {
   private autoReconnectDisabled = false;
   private pendingUserTurns: string[] = [];
   private _connected = false;
+  private lastConnectTime = 0;
+  private rapidDisconnectCount = 0;
 
   constructor(callbacks: LiveSessionCallbacks) {
     this.callbacks = callbacks;
@@ -115,8 +117,9 @@ export class LiveSessionManager {
     });
 
     try {
+      // DEBUG: testing with tools added
       const config: Parameters<typeof client.live.connect>[0]["config"] = {
-        responseModalities: [Modality.AUDIO, Modality.TEXT],
+        responseModalities: [Modality.AUDIO],
         speechConfig: {
           voiceConfig: {
             prebuiltVoiceConfig: {
@@ -143,16 +146,19 @@ export class LiveSessionManager {
       const callbacks: Parameters<typeof client.live.connect>[0]["callbacks"] = {
         onopen: () => {
           this._connected = true;
+          this.lastConnectTime = Date.now();
           this.callbacks.onConnectionChange(true);
         },
         onmessage: (message: LiveServerMessage) => {
           this.handleMessage(message);
         },
         onerror: (e: ErrorEvent) => {
+          console.error('[LiveSession] WebSocket error', e.message, e);
           this._connected = false;
           this.callbacks.onError(new Error(e.message || "WebSocket error"));
         },
-        onclose: () => {
+        onclose: (e: CloseEvent) => {
+          console.error(`[LiveSession] WebSocket closed code=${e.code} reason="${e.reason}" wasClean=${e.wasClean} wasConnected=${this._connected}`);
           const wasConnected = this._connected;
           this._connected = false;
           this.session = null;
@@ -354,6 +360,23 @@ export class LiveSessionManager {
       !this.apiKey ||
       !this.dataContext
     ) return;
+
+    // Detect rapid disconnect loops (connection drops within 5s of opening)
+    const now = Date.now();
+    if (now - this.lastConnectTime < 5_000) {
+      this.rapidDisconnectCount++;
+      if (this.rapidDisconnectCount >= 3) {
+        this.autoReconnectDisabled = true;
+        this.callbacks.onConnectionChange(false);
+        this.callbacks.onError(
+          new Error("Connection keeps dropping immediately — check model/config compatibility"),
+        );
+        return;
+      }
+    } else {
+      this.rapidDisconnectCount = 0;
+    }
+
     this.isReconnecting = true;
     this._connected = false;
 

@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useCallback, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/auth-store';
 import { useAssessmentStore } from '@/stores/assessment-store';
@@ -10,7 +10,8 @@ import { FetchError } from '@/lib/fetch-client';
 import { useQuizMutation, useQuizScoreMutation } from '@/hooks/use-api-mutations';
 import { getModuleConfig } from '@/lib/quiz/module-config';
 import { QuestionCard } from '@/components/quiz/question-card';
-import { LoadingButton, ErrorAlert, QuestionSkeleton, EmptyState } from '@/components/shared';
+import { LoadingButton, ErrorAlert, EmptyState } from '@/components/shared';
+import { QuizLoader } from '@/components/loaders';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Brain, CheckCircle } from 'lucide-react';
@@ -34,12 +35,15 @@ export function ModuleQuizFlow({ moduleId, onBack, onComplete }: ModuleQuizFlowP
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const [isScoring, setIsScoring] = useState(false);
+  const [isFetchingQuestions, setIsFetchingQuestions] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const fetchSequenceRef = useRef(0);
 
   const quizMutation = useQuizMutation();
   const quizScoreMutation = useQuizScoreMutation();
   const requestQuizQuestions = quizMutation.mutate;
   const scoreQuizAnswers = quizScoreMutation.mutate;
+  const currentQuestion = questions[currentIndex] ?? null;
 
   const dataContext = useMemo(
     () => dataInsights.length > 0
@@ -68,19 +72,46 @@ export function ModuleQuizFlow({ moduleId, onBack, onComplete }: ModuleQuizFlowP
     });
   }, [moduleConfig.questionCount, moduleConfig.dimensions, moduleId, updateModuleProgress]);
 
-  // Fetch questions for this module
-  useEffect(() => {
+  const fetchModuleQuestions = useCallback(() => {
+    const fetchId = ++fetchSequenceRef.current;
     setError(null);
+    setIsFetchingQuestions(true);
+
     requestQuizQuestions({ dataContext, previousAnswers: [], batchIndex: 0, moduleId } as Parameters<typeof requestQuizQuestions>[0], {
       onSuccess: (result) => {
+        if (fetchId !== fetchSequenceRef.current) return;
         applyQuestions(result.questions);
+        setIsFetchingQuestions(false);
       },
       onError: (err) => {
+        if (fetchId !== fetchSequenceRef.current) return;
         const message = err instanceof FetchError ? err.message : 'Failed to load questions';
         setError(message);
+        setIsFetchingQuestions(false);
       },
     });
-  }, [moduleId, dataContext, requestQuizQuestions, applyQuestions]);
+  }, [dataContext, moduleId, requestQuizQuestions, applyQuestions]);
+
+  // Fetch questions for this module
+  useEffect(() => {
+    fetchModuleQuestions();
+    return () => {
+      fetchSequenceRef.current += 1;
+    };
+  }, [moduleId, fetchModuleQuestions]);
+
+  useEffect(() => {
+    if (questions.length === 0) return;
+    if (currentIndex >= 0 && currentIndex < questions.length && questions[currentIndex]) return;
+
+    const firstValidIndex = questions.findIndex((q) => Boolean(q && typeof q.question === 'string'));
+    if (firstValidIndex >= 0) {
+      setCurrentIndex(firstValidIndex);
+      return;
+    }
+
+    setError('Question data was inconsistent. Reloading this module can resolve it.');
+  }, [questions, currentIndex]);
 
   const handleAnswer = useCallback(async (answer: string | number) => {
     const currentQ = questions[currentIndex];
@@ -103,7 +134,11 @@ export function ModuleQuizFlow({ moduleId, onBack, onComplete }: ModuleQuizFlowP
       // Module complete — score and save
       setIsScoring(true);
 
-      if (!user) return;
+      if (!user) {
+        setIsScoring(false);
+        setError('Please sign in again to save your quiz progress.');
+        return;
+      }
 
       try {
         // Save module-specific answers merged with all answers
@@ -155,15 +190,8 @@ export function ModuleQuizFlow({ moduleId, onBack, onComplete }: ModuleQuizFlowP
 
   if (isScoring) {
     return (
-      <div className="mx-auto max-w-2xl px-6 py-12">
-        <EmptyState
-          icon={Brain}
-          title="Scoring Your Answers..."
-          description={`Analyzing your ${moduleConfig.label.toLowerCase()} responses.`}
-          action={
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          }
-        />
+      <div className="mx-auto max-w-2xl px-6 py-12 flex items-center justify-center min-h-[60vh]">
+        <QuizLoader size={140} label="Analyzing your responses..." />
       </div>
     );
   }
@@ -213,79 +241,58 @@ export function ModuleQuizFlow({ moduleId, onBack, onComplete }: ModuleQuizFlowP
         <ErrorAlert
           message={error}
           onRetry={() => {
-            setError(null);
-            requestQuizQuestions({ dataContext, previousAnswers: [], batchIndex: 0, moduleId } as Parameters<typeof requestQuizQuestions>[0], {
-              onSuccess: (result) => {
-                applyQuestions(result.questions);
-              },
-              onError: (err) => setError(err instanceof FetchError ? err.message : 'Failed to load questions'),
-            });
+            fetchModuleQuestions();
           }}
           className="mb-6"
         />
       )}
 
-      <AnimatePresence mode="wait">
-        {quizMutation.isPending && questions.length === 0 ? (
-          <motion.div
-            key="skeleton"
-            variants={prefersReducedMotion ? undefined : fadeInUp}
-            initial="hidden"
-            animate="visible"
-            exit="hidden"
-          >
-            <QuestionSkeleton />
-          </motion.div>
-        ) : questions[currentIndex] ? (
-          <motion.div
-            key={currentIndex}
-            variants={prefersReducedMotion ? undefined : fadeInUp}
-            initial="hidden"
-            animate="visible"
-            exit="hidden"
-            transition={smoothTransition}
-          >
-            <QuestionCard
-              question={questions[currentIndex]}
-              onAnswer={handleAnswer}
-              questionNumber={currentIndex + 1}
-              totalQuestions={questions.length}
-            />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="empty"
-            variants={prefersReducedMotion ? undefined : fadeInUp}
-            initial="hidden"
-            animate="visible"
-            exit="hidden"
-          >
-            <EmptyState
-              icon={Brain}
-              title="No Questions Loaded"
-              description="We couldn’t load quiz questions for this module. Retry to continue."
-              action={(
-                <LoadingButton
-                  onClick={() => {
-                    setError(null);
-                    requestQuizQuestions(
-                      { dataContext, previousAnswers: [], batchIndex: 0, moduleId } as Parameters<typeof requestQuizQuestions>[0],
-                      {
-                        onSuccess: (result) => {
-                          applyQuestions(result.questions);
-                        },
-                        onError: (err) => setError(err instanceof FetchError ? err.message : 'Failed to load questions'),
-                      },
-                    );
-                  }}
-                >
-                  Retry
-                </LoadingButton>
-              )}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {isFetchingQuestions && questions.length === 0 ? (
+        <motion.div
+          variants={prefersReducedMotion ? undefined : fadeInUp}
+          initial="hidden"
+          animate="visible"
+          className="flex items-center justify-center py-12"
+        >
+          <QuizLoader size={120} label="Preparing your questions..." />
+        </motion.div>
+      ) : currentQuestion ? (
+        <motion.div
+          key={currentQuestion.id}
+          variants={prefersReducedMotion ? undefined : fadeInUp}
+          initial="hidden"
+          animate="visible"
+          transition={smoothTransition}
+        >
+          <QuestionCard
+            question={currentQuestion}
+            onAnswer={handleAnswer}
+            questionNumber={currentIndex + 1}
+            totalQuestions={questions.length}
+          />
+        </motion.div>
+      ) : (
+        <motion.div
+          variants={prefersReducedMotion ? undefined : fadeInUp}
+          initial="hidden"
+          animate="visible"
+        >
+          <EmptyState
+            icon={Brain}
+            title="No Questions Loaded"
+            description="We couldn’t load quiz questions for this module. Retry to continue."
+            action={(
+              <LoadingButton
+                onClick={() => {
+                  fetchModuleQuestions();
+                }}
+              >
+                Retry
+              </LoadingButton>
+            )}
+          />
+        </motion.div>
+      )}
     </div>
   );
 }
