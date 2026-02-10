@@ -33,6 +33,7 @@ function buildDefaultProfile(user: User, accessToken?: string | null): UserProfi
     byokEnabled: false,
     byokMonthlyBudgetUsd: 25,
     byokHardStop: false,
+    byokPlatformAccess: false,
   };
 }
 

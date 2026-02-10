@@ -1,7 +1,7 @@
 export const maxDuration = 60;
 
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyAuth, errorResponse, ErrorCode, safeParseJson, GeminiError } from '@/lib/api-helpers';
+import { verifyAuth, errorResponse, ErrorCode, safeParseJson, GeminiError, getClientByokApiKey } from '@/lib/api-helpers';
 import { getGeminiClientForUser } from '@/lib/gemini/client';
 import { GEMINI_MODELS } from '@/lib/gemini/models';
 import { REFLECTION_ANALYSIS_PROMPT } from '@/lib/gemini/prompts';
@@ -55,6 +55,7 @@ export async function POST(req: NextRequest) {
     const { client, keySource } = await getGeminiClientForUser({
       uid,
       model: GEMINI_MODELS.FAST,
+      clientProvidedApiKey: getClientByokApiKey(req),
     });
     const promptText = `${REFLECTION_ANALYSIS_PROMPT}\n\nUser reflection:\n"${content}"${challengeId ? `\n\n(This reflection is related to challenge ID: ${challengeId})` : ''}`;
 
@@ -145,6 +146,9 @@ export async function POST(req: NextRequest) {
       );
     }
     const message = error instanceof Error ? error.message : 'Unknown error';
+    if (message.includes('BYOK required')) {
+      return errorResponse(message, ErrorCode.FORBIDDEN, 403);
+    }
     if (message.includes('budget exceeded')) {
       return errorResponse(
         'Monthly Gemini budget exceeded. Update BYOK settings or wait for next cycle.',

@@ -4,6 +4,7 @@ import {
   errorResponse,
   ErrorCode,
   safeParseJson,
+  getClientByokApiKey,
 } from "@/lib/api-helpers";
 import { getGeminiClientForUser } from "@/lib/gemini/client";
 import { GEMINI_MODELS } from "@/lib/gemini/models";
@@ -149,6 +150,7 @@ Return valid JSON with this shape:
     const { client, keySource } = await getGeminiClientForUser({
       uid: authResult.uid,
       model: GEMINI_MODELS.FAST,
+      clientProvidedApiKey: getClientByokApiKey(req),
     });
 
     const response = await client.models.generateContent({
@@ -200,6 +202,14 @@ Return valid JSON with this shape:
     questions = validated.questions;
   } catch (error) {
     generationError = error instanceof Error ? error : new Error(String(error));
+  }
+
+  if (generationError?.message.includes('BYOK required')) {
+    return errorResponse(
+      generationError.message,
+      ErrorCode.FORBIDDEN,
+      403,
+    );
   }
 
   if (!questions || questions.length === 0) {

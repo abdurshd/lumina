@@ -11,6 +11,7 @@ import { useCorpusDocumentsQuery } from '@/hooks/use-api-queries';
 import { disconnectNotion } from '@/lib/firebase/firestore';
 import { FetchError, apiFetch } from '@/lib/fetch-client';
 import { apiClient } from '@/lib/api/client';
+import { clearLocalByokApiKey, hasLocalByokApiKey, setLocalByokApiKey } from '@/lib/byok/local-storage';
 import { PageHeader, LoadingButton } from '@/components/shared';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -80,19 +81,23 @@ export default function SettingsPage() {
   const [byokMonthlyBudgetUsd, setByokMonthlyBudgetUsd] = useState<number>(profile?.byokMonthlyBudgetUsd ?? 25);
   const [byokHardStop, setByokHardStop] = useState<boolean>(profile?.byokHardStop ?? false);
   const [byokSpendUsd, setByokSpendUsd] = useState<number>(0);
+  const [byokPlatformOverrideEnabled, setByokPlatformOverrideEnabled] = useState<boolean>(profile?.byokPlatformAccess ?? false);
+  const [hasLocalEncryptedByok, setHasLocalEncryptedByok] = useState<boolean>(false);
   const [loadingByok, setLoadingByok] = useState(false);
   const [savingByok, setSavingByok] = useState(false);
 
   useEffect(() => {
     if (!user) return;
     setLoadingByok(true);
-    apiClient.user.getByok()
-      .then((byok) => {
+    Promise.all([apiClient.user.getByok(), hasLocalByokApiKey(user.uid)])
+      .then(([byok, hasLocalKey]) => {
         setByokEnabled(byok.enabled);
         setByokKeyLast4(byok.keyLast4);
         setByokMonthlyBudgetUsd(byok.monthlyBudgetUsd);
         setByokHardStop(byok.hardStop);
         setByokSpendUsd(byok.estimatedMonthlySpendUsd);
+        setByokPlatformOverrideEnabled(byok.platformOverrideEnabled);
+        setHasLocalEncryptedByok(hasLocalKey);
       })
       .catch(() => undefined)
       .finally(() => setLoadingByok(false));
@@ -216,11 +221,23 @@ export default function SettingsPage() {
   const handleSaveByokPolicy = useCallback(async () => {
     setSavingByok(true);
     try {
-      await apiClient.user.updateByok({
+      const response = await apiClient.user.updateByok({
         enabled: byokEnabled,
         monthlyBudgetUsd: byokMonthlyBudgetUsd,
         hardStop: byokHardStop,
       });
+      setByokEnabled(response.enabled);
+      setByokKeyLast4(response.keyLast4);
+      setByokMonthlyBudgetUsd(response.monthlyBudgetUsd);
+      setByokHardStop(response.hardStop);
+      setByokSpendUsd(response.estimatedMonthlySpendUsd);
+      setByokPlatformOverrideEnabled(response.platformOverrideEnabled);
+      if (!response.enabled && user) {
+        clearLocalByokApiKey(user.uid);
+        setHasLocalEncryptedByok(false);
+      } else if (user) {
+        setHasLocalEncryptedByok(await hasLocalByokApiKey(user.uid));
+      }
       await refreshProfile();
       toast.success('BYOK policy saved.');
     } catch (err) {
@@ -229,35 +246,59 @@ export default function SettingsPage() {
     } finally {
       setSavingByok(false);
     }
-  }, [byokEnabled, byokMonthlyBudgetUsd, byokHardStop, refreshProfile]);
+  }, [byokEnabled, byokMonthlyBudgetUsd, byokHardStop, refreshProfile, user]);
 
   const handleSaveByokKey = useCallback(async () => {
-    if (!byokKeyInput.trim()) return;
+    if (!byokKeyInput.trim() || !user) return;
     setSavingByok(true);
     try {
-      await apiClient.user.updateByok({
-        apiKey: byokKeyInput.trim(),
+      const normalizedKey = byokKeyInput.trim();
+      const response = await apiClient.user.updateByok({
+        apiKey: normalizedKey,
         enabled: true,
       });
-      setByokKeyLast4(byokKeyInput.trim().slice(-4));
+
+      if (response.platformOverrideEnabled) {
+        clearLocalByokApiKey(user.uid);
+        setHasLocalEncryptedByok(false);
+      } else {
+        const stored = await setLocalByokApiKey(user.uid, normalizedKey);
+        setHasLocalEncryptedByok(stored);
+        if (!stored) {
+          toast.warning('Saved on server, but local encrypted storage is unavailable in this browser.');
+        }
+      }
+
+      setByokEnabled(response.enabled);
+      setByokKeyLast4(response.keyLast4);
+      setByokMonthlyBudgetUsd(response.monthlyBudgetUsd);
+      setByokHardStop(response.hardStop);
+      setByokSpendUsd(response.estimatedMonthlySpendUsd);
+      setByokPlatformOverrideEnabled(response.platformOverrideEnabled);
       setByokKeyInput('');
-      setByokEnabled(true);
       await refreshProfile();
-      toast.success('BYOK key saved securely.');
+      toast.success(response.platformOverrideEnabled ? 'Platform access code accepted.' : 'BYOK key saved securely.');
     } catch (err) {
       const message = err instanceof FetchError ? err.message : 'Failed to save BYOK key';
       toast.error(message);
     } finally {
       setSavingByok(false);
     }
-  }, [byokKeyInput, refreshProfile]);
+  }, [byokKeyInput, refreshProfile, user]);
 
   const handleClearByokKey = useCallback(async () => {
+    if (!user) return;
     setSavingByok(true);
     try {
-      await apiClient.user.updateByok({ clearKey: true });
-      setByokKeyLast4(null);
-      setByokEnabled(false);
+      const response = await apiClient.user.updateByok({ clearKey: true });
+      clearLocalByokApiKey(user.uid);
+      setHasLocalEncryptedByok(false);
+      setByokEnabled(response.enabled);
+      setByokKeyLast4(response.keyLast4);
+      setByokMonthlyBudgetUsd(response.monthlyBudgetUsd);
+      setByokHardStop(response.hardStop);
+      setByokSpendUsd(response.estimatedMonthlySpendUsd);
+      setByokPlatformOverrideEnabled(response.platformOverrideEnabled);
       await refreshProfile();
       toast.success('BYOK key removed.');
     } catch (err) {
@@ -266,7 +307,7 @@ export default function SettingsPage() {
     } finally {
       setSavingByok(false);
     }
-  }, [refreshProfile]);
+  }, [refreshProfile, user]);
 
   const formatBytes = (bytes: number): string => {
     if (bytes === 0) return '0 B';
@@ -553,20 +594,45 @@ export default function SettingsPage() {
                   </div>
                   <div className="space-y-2">
                     <p className="text-sm font-medium">API key</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {byokPlatformOverrideEnabled && (
+                        <Badge variant="secondary">Platform key access enabled</Badge>
+                      )}
+                      {byokKeyLast4 && (
+                        <Badge variant="outline">Server key ending in {byokKeyLast4}</Badge>
+                      )}
+                      {hasLocalEncryptedByok && (
+                        <Badge variant="outline">Encrypted local key ready</Badge>
+                      )}
+                    </div>
                     <Input
                       type="password"
                       value={byokKeyInput}
                       onChange={(e) => setByokKeyInput(e.target.value)}
-                      placeholder={byokKeyLast4 ? `Saved key ending in ${byokKeyLast4}` : 'Paste your Gemini API key'}
+                      placeholder={
+                        byokPlatformOverrideEnabled
+                          ? 'Platform access code is active'
+                          : byokKeyLast4
+                            ? `Saved key ending in ${byokKeyLast4}`
+                            : 'Paste your Gemini API key'
+                      }
                     />
                     <div className="flex items-center gap-2">
                       <LoadingButton size="sm" onClick={handleSaveByokKey} loading={savingByok} disabled={!byokKeyInput.trim()}>
                         Save Key
                       </LoadingButton>
-                      <Button size="sm" variant="outline" onClick={handleClearByokKey} disabled={savingByok || !byokKeyLast4}>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleClearByokKey}
+                        disabled={savingByok || (!byokKeyLast4 && !hasLocalEncryptedByok && !byokPlatformOverrideEnabled)}
+                      >
                         Remove Key
                       </Button>
                     </div>
+                    <p className="text-xs text-muted-foreground">
+                      Your key is encrypted before local browser storage and sent only to your own authenticated API requests.
+                    </p>
                   </div>
                   <div className="space-y-2">
                     <p className="text-sm font-medium">Monthly budget (USD estimate)</p>

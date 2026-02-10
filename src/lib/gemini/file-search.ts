@@ -1,4 +1,5 @@
-import { getGeminiClient } from '@/lib/gemini/client';
+import { getGeminiClientForUser } from '@/lib/gemini/client';
+import { GEMINI_MODELS } from '@/lib/gemini/models';
 import {
   getUserProfile,
   saveCorpusDocument,
@@ -51,9 +52,14 @@ export async function addDocumentToCorpus(
   corpusName: string,
   uid: string,
   content: string,
-  metadata: { title: string; source: string }
+  metadata: { title: string; source: string },
+  clientProvidedApiKey?: string,
 ): Promise<CorpusDocument> {
-  const client = getGeminiClient();
+  const { client } = await getGeminiClientForUser({
+    uid,
+    model: GEMINI_MODELS.FAST,
+    clientProvidedApiKey,
+  });
   const docId = generateDocId(uid);
 
   // Upload content as a file via the Gemini Files API
@@ -98,9 +104,14 @@ export async function removeDocumentFromCorpus(
   _corpusName: string,
   documentName: string,
   uid: string,
-  docId: string
+  docId: string,
+  clientProvidedApiKey?: string,
 ): Promise<void> {
-  const client = getGeminiClient();
+  const { client } = await getGeminiClientForUser({
+    uid,
+    model: GEMINI_MODELS.FAST,
+    clientProvidedApiKey,
+  });
 
   // Delete from Gemini Files API
   try {
@@ -125,9 +136,14 @@ export async function removeDocumentFromCorpus(
  */
 export async function deleteUserCorpus(
   _corpusName: string,
-  uid: string
+  uid: string,
+  clientProvidedApiKey?: string,
 ): Promise<void> {
-  const client = getGeminiClient();
+  const { client } = await getGeminiClientForUser({
+    uid,
+    model: GEMINI_MODELS.FAST,
+    clientProvidedApiKey,
+  });
 
   // Get all documents in the corpus from Firestore
   const documents = await getCorpusDocuments(uid);

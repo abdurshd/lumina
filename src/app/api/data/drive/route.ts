@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyAuth, errorResponse, ErrorCode } from '@/lib/api-helpers';
+import { verifyAuth, errorResponse, ErrorCode, getClientByokApiKey } from '@/lib/api-helpers';
 import { fetchDriveData } from '@/lib/data/drive';
 import { buildIngestionResponse } from '@/lib/data/ingestion';
 import { ensureSourceConsent } from '@/lib/data/consent';
@@ -49,6 +49,7 @@ export async function POST(req: NextRequest) {
         source: 'drive',
         rawData: ingestion.data,
         existingProfile,
+        clientProvidedApiKey: getClientByokApiKey(req),
       });
     } catch (err) {
       console.error('[Drive Agent Analysis]', err instanceof Error ? err.message : err);

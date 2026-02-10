@@ -7,6 +7,7 @@ export type GeminiKeySource = 'platform' | 'byok';
 export interface ByokStatus {
   enabled: boolean;
   keyLast4?: string;
+  platformOverrideEnabled?: boolean;
   monthlyBudgetUsd: number;
   hardStop: boolean;
   estimatedMonthlySpendUsd: number;
@@ -47,6 +48,10 @@ const MODEL_COST_MULTIPLIER: Record<GeminiModelId, number> = {
 // Conservative defaults used only for on-platform estimation and budgeting.
 const EST_INPUT_USD_PER_1M = 0.4;
 const EST_OUTPUT_USD_PER_1M = 1.2;
+
+export function isByokEnforcedForDeployment(): boolean {
+  return process.env.NODE_ENV === 'production' || process.env.ENFORCE_BYOK === 'true';
+}
 
 export async function setUserByokSecret(uid: string, apiKey: string): Promise<{ last4: string }> {
   const secret = getEncryptionSecret();
@@ -159,17 +164,24 @@ export async function resolveGeminiKeyForUser(params: {
   uid?: string;
   model: GeminiModelId;
   fallbackApiKey: string;
+  clientProvidedApiKey?: string;
 }): Promise<{
   apiKey: string;
   keySource: GeminiKeySource;
   status: ByokStatus;
 }> {
+  const enforceByok = isByokEnforcedForDeployment();
+
   if (!params.uid) {
+    if (enforceByok) {
+      throw new Error('BYOK required for this deployment.');
+    }
     return {
       apiKey: params.fallbackApiKey,
       keySource: 'platform',
       status: {
         enabled: false,
+        platformOverrideEnabled: false,
         monthlyBudgetUsd: DEFAULT_BUDGET_USD,
         hardStop: false,
         estimatedMonthlySpendUsd: 0,
@@ -185,21 +197,31 @@ export async function resolveGeminiKeyForUser(params: {
     byokKeyLast4?: string;
     byokMonthlyBudgetUsd?: number;
     byokHardStop?: boolean;
+    byokPlatformAccess?: boolean;
   };
 
   const monthlyBudgetUsd = userData.byokMonthlyBudgetUsd ?? DEFAULT_BUDGET_USD;
   const hardStop = userData.byokHardStop ?? false;
   const budgetExceeded = usage.estimatedSpendUsd >= monthlyBudgetUsd;
+  const platformOverrideEnabled = (userData.byokPlatformAccess ?? false) && (userData.byokEnabled ?? false);
   const status: ByokStatus = {
     enabled: userData.byokEnabled ?? false,
-    keyLast4: userData.byokKeyLast4,
+    keyLast4: userData.byokKeyLast4?.trim() || undefined,
+    platformOverrideEnabled,
     monthlyBudgetUsd,
     hardStop,
     estimatedMonthlySpendUsd: usage.estimatedSpendUsd,
     budgetExceeded,
   };
 
+  if (platformOverrideEnabled) {
+    return { apiKey: params.fallbackApiKey, keySource: 'platform', status };
+  }
+
   if (!status.enabled) {
+    if (enforceByok) {
+      throw new Error('BYOK required: add your Gemini API key in Settings.');
+    }
     return { apiKey: params.fallbackApiKey, keySource: 'platform', status };
   }
 
@@ -207,12 +229,23 @@ export async function resolveGeminiKeyForUser(params: {
     throw new Error('BYOK monthly budget exceeded (hard stop enabled).');
   }
 
+  const clientProvidedApiKey = sanitizeClientProvidedApiKey(params.clientProvidedApiKey);
+  if (clientProvidedApiKey) {
+    return { apiKey: clientProvidedApiKey, keySource: 'byok', status };
+  }
+
   const byokKey = await getUserByokApiKey(params.uid);
   if (!byokKey) {
+    if (enforceByok) {
+      throw new Error('BYOK required: no saved key found for this account.');
+    }
     return { apiKey: params.fallbackApiKey, keySource: 'platform', status };
   }
 
   if (budgetExceeded && !hardStop) {
+    if (enforceByok) {
+      return { apiKey: byokKey, keySource: 'byok', status };
+    }
     return { apiKey: params.fallbackApiKey, keySource: 'platform', status };
   }
 
@@ -235,6 +268,13 @@ function getMonthKey(): string {
   const year = now.getUTCFullYear();
   const month = String(now.getUTCMonth() + 1).padStart(2, '0');
   return `${year}_${month}`;
+}
+
+function sanitizeClientProvidedApiKey(value?: string): string | undefined {
+  if (!value) return undefined;
+  const normalized = value.trim();
+  if (normalized.length < 20) return undefined;
+  return normalized;
 }
 
 function getEncryptionSecret(): string {

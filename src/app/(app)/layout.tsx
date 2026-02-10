@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { useAuthStore } from '@/stores/auth-store';
+import { hasLocalByokApiKey } from '@/lib/byok/local-storage';
 import { ErrorBoundary } from '@/components/shared';
 import { Sidebar, MobileSidebar } from '@/components/layout/sidebar';
 import { MobileHeader } from '@/components/layout/mobile-header';
@@ -20,6 +21,7 @@ const MobileDecisionLog = dynamic(
 );
 
 const NAV_ROUTES = ['/dashboard', '/profile', '/connections', '/quiz', '/session', '/report', '/evolution', '/settings'] as const;
+const BYOK_ENFORCED = process.env.NODE_ENV === 'production' || process.env.NEXT_PUBLIC_ENFORCE_BYOK === 'true';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const user = useAuthStore((state) => state.user);
@@ -40,6 +42,33 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       router.push('/onboarding');
     }
   }, [loading, profile, pathname, router]);
+
+  useEffect(() => {
+    if (!BYOK_ENFORCED || loading || !user || !profile) return;
+    if (pathname === '/onboarding' || pathname === '/settings') return;
+
+    let cancelled = false;
+
+    const verifyByokAccess = async () => {
+      const hasServerByok = profile.byokEnabled && (Boolean(profile.byokKeyLast4) || Boolean(profile.byokPlatformAccess));
+      if (hasServerByok) return;
+
+      if (!profile.byokEnabled) {
+        router.replace('/settings?byok_required=1');
+        return;
+      }
+
+      const hasLocalByok = await hasLocalByokApiKey(user.uid);
+      if (!cancelled && !hasLocalByok) {
+        router.replace('/settings?byok_required=1');
+      }
+    };
+
+    void verifyByokAccess();
+    return () => {
+      cancelled = true;
+    };
+  }, [loading, user, profile, pathname, router]);
 
   useEffect(() => {
     if (!user) return;

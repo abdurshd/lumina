@@ -118,8 +118,9 @@ export async function correlateEvidence(params: {
   quizScores: QuizScore[];
   sessionInsights: SessionInsight[];
   signals: UserSignal[];
+  clientProvidedApiKey?: string;
 }): Promise<{ insights: CorrelatedInsight[]; summary: string }> {
-  const { uid, dataInsights, quizScores, sessionInsights, signals } = params;
+  const { uid, dataInsights, quizScores, sessionInsights, signals, clientProvidedApiKey } = params;
 
   // Build structured evidence
   const dataSummary = buildDataSummary(dataInsights);
@@ -169,6 +170,7 @@ Respond with valid JSON matching this schema:
   const { client, keySource } = await getGeminiClientForUser({
     uid,
     model: GEMINI_MODELS.DEEP,
+    clientProvidedApiKey,
   });
 
   const response = await client.models.generateContent({

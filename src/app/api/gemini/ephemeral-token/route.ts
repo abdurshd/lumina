@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyAuth, errorResponse, ErrorCode } from '@/lib/api-helpers';
+import { verifyAuth, errorResponse, ErrorCode, getClientByokApiKey } from '@/lib/api-helpers';
 import { GoogleGenAI } from '@google/genai';
 import { GEMINI_MODELS, toLiveApiModelName } from '@/lib/gemini/models';
 import { getAdminDb } from '@/lib/firebase/admin';
@@ -39,6 +39,7 @@ export async function POST(req: NextRequest) {
       uid: authResult.uid,
       model: GEMINI_MODELS.LIVE,
       fallbackApiKey: platformApiKey,
+      clientProvidedApiKey: getClientByokApiKey(req),
     });
 
     const ai = new GoogleGenAI({
@@ -51,11 +52,19 @@ export async function POST(req: NextRequest) {
     const expireTime = new Date(now + 30 * 60 * 1000).toISOString();
     const uses = 20;
 
-    // TODO: restore ephemeral token after debugging config issue
-    // For now, pass the raw API key to use the standard BidiGenerateContent
-    // endpoint to isolate whether the issue is the constrained endpoint or the config.
+    const authToken = await ai.authTokens.create({
+      config: {
+        expireTime,
+        uses,
+        liveConnectConstraints: {
+          model: liveModel,
+        },
+        lockAdditionalFields: [],
+      },
+    });
+
     return NextResponse.json({
-      token: resolvedKey.apiKey,
+      token: authToken.name,
       apiVersion: 'v1alpha',
       model: liveModel,
       expireTime,
@@ -63,6 +72,9 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
+    if (message.includes('BYOK required')) {
+      return errorResponse(message, ErrorCode.FORBIDDEN, 403);
+    }
     if (message.includes('budget exceeded')) {
       return errorResponse(
         'Monthly Gemini budget exceeded. Update your BYOK settings or wait for next billing cycle.',

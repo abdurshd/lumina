@@ -38,6 +38,7 @@ export interface UserProfile {
   byokKeyLast4?: string;
   byokMonthlyBudgetUsd?: number;
   byokHardStop?: boolean;
+  byokPlatformAccess?: boolean;
   corpusName?: string;
 }
 

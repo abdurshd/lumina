@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyAuth, errorResponse, ErrorCode } from '@/lib/api-helpers';
+import { verifyAuth, errorResponse, ErrorCode, getClientByokApiKey } from '@/lib/api-helpers';
 import { getOrCreateUserCorpus, addDocumentToCorpus } from '@/lib/gemini/file-search';
 import { z } from 'zod';
 
@@ -38,11 +38,17 @@ export async function POST(req: NextRequest) {
     const document = await addDocumentToCorpus(corpusName, authResult.uid, content, {
       title,
       source,
-    });
+    }, getClientByokApiKey(req));
 
     return NextResponse.json({ success: true, documentId: document.id });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
+    if (message.includes('BYOK required')) {
+      return errorResponse(message, ErrorCode.FORBIDDEN, 403);
+    }
+    if (message.includes('budget exceeded')) {
+      return errorResponse(message, ErrorCode.RATE_LIMITED, 429);
+    }
     console.error('[Corpus Upload Error]', message);
     return errorResponse('Failed to upload document', ErrorCode.INTERNAL_ERROR, 500);
   }

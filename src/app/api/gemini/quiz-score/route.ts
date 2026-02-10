@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyAuth, errorResponse, ErrorCode, safeParseJson } from '@/lib/api-helpers';
+import { verifyAuth, errorResponse, ErrorCode, safeParseJson, getClientByokApiKey } from '@/lib/api-helpers';
 import { getGeminiClientForUser } from '@/lib/gemini/client';
 import { GEMINI_MODELS } from '@/lib/gemini/models';
 import { QUIZ_SCORING_PROMPT } from '@/lib/gemini/prompts';
@@ -121,6 +121,7 @@ export async function POST(req: NextRequest) {
       const { client, keySource } = await getGeminiClientForUser({
         uid: authResult.uid,
         model: GEMINI_MODELS.FAST,
+        clientProvidedApiKey: getClientByokApiKey(req),
       });
 
       const context = freetextToScore.map((ft) =>
@@ -195,6 +196,10 @@ Return strict JSON:
         }
       }
     } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      if (message.includes('BYOK required')) {
+        return errorResponse(message, ErrorCode.FORBIDDEN, 403);
+      }
       console.error('[Quiz Scoring Error]', error);
     }
   }

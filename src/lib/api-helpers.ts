@@ -37,6 +37,14 @@ export async function verifyAuth(req: NextRequest): Promise<{ uid: string } | nu
   }
 }
 
+/** Optional BYOK key forwarded from the client on each request */
+export function getClientByokApiKey(req: NextRequest): string | undefined {
+  const headerValue = req.headers.get('x-lumina-byok-key');
+  if (!headerValue) return undefined;
+  const normalized = headerValue.trim();
+  return normalized.length >= 20 ? normalized : undefined;
+}
+
 /** Create a typed error response */
 export function errorResponse(
   message: string,

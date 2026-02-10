@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyAuth, errorResponse, ErrorCode } from '@/lib/api-helpers';
+import { verifyAuth, errorResponse, ErrorCode, getClientByokApiKey } from '@/lib/api-helpers';
 import { parseClaudeExport } from '@/lib/data/claude-app';
 import { buildIngestionResponse } from '@/lib/data/ingestion';
 import { ensureSourceConsent } from '@/lib/data/consent';
@@ -59,6 +59,7 @@ export async function POST(req: NextRequest) {
         source: 'claude_app',
         rawData: ingestion.data,
         existingProfile,
+        clientProvidedApiKey: getClientByokApiKey(req),
       });
     } catch (err) {
       console.error('[Claude App Agent Analysis]', err instanceof Error ? err.message : err);

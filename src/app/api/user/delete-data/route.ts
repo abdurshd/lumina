@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyAuth, errorResponse, ErrorCode } from '@/lib/api-helpers';
+import { verifyAuth, errorResponse, ErrorCode, getClientByokApiKey } from '@/lib/api-helpers';
 import {
   deleteAssessmentData,
   resetStages,
@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (connectorSources.length > 0) {
-      await revokeConnectorSources(authResult.uid, connectorSources);
+      await revokeConnectorSources(authResult.uid, connectorSources, getClientByokApiKey(req));
     }
 
     return NextResponse.json({
@@ -75,12 +75,22 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
+    if (message.includes('BYOK required')) {
+      return errorResponse(message, ErrorCode.FORBIDDEN, 403);
+    }
+    if (message.includes('budget exceeded')) {
+      return errorResponse(message, ErrorCode.RATE_LIMITED, 429);
+    }
     console.error('[Delete Data Error]', message);
     return errorResponse('Failed to delete data', ErrorCode.INTERNAL_ERROR, 500);
   }
 }
 
-async function revokeConnectorSources(uid: string, sources: ConnectorSource[]): Promise<void> {
+async function revokeConnectorSources(
+  uid: string,
+  sources: ConnectorSource[],
+  clientProvidedApiKey?: string,
+): Promise<void> {
   const sourceSet = new Set(sources);
   const profile = await getUserProfile(uid);
 
@@ -106,6 +116,12 @@ async function revokeConnectorSources(uid: string, sources: ConnectorSource[]): 
   const corpusDocs = await getCorpusDocuments(uid);
   for (const corpusDoc of corpusDocs) {
     if (!sourceSet.has(corpusDoc.source as ConnectorSource)) continue;
-    await removeDocumentFromCorpus(profile.corpusName, corpusDoc.documentName, uid, corpusDoc.id);
+    await removeDocumentFromCorpus(
+      profile.corpusName,
+      corpusDoc.documentName,
+      uid,
+      corpusDoc.id,
+      clientProvidedApiKey,
+    );
   }
 }

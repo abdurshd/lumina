@@ -48,6 +48,7 @@ interface ReportRequest {
   quizConfidence?: QuizDimensionSummary;
   computedProfile?: ComputedProfile;
   constraints?: UserConstraints;
+  background?: boolean;
 }
 
 interface RegenerateReportRequest {
@@ -89,6 +90,17 @@ interface ByokUpdateRequest {
   hardStop?: boolean;
 }
 
+interface ByokStatusResponse {
+  enabled: boolean;
+  keyLast4: string | null;
+  platformOverrideEnabled: boolean;
+  monthlyBudgetUsd: number;
+  hardStop: boolean;
+  estimatedMonthlySpendUsd: number;
+  budgetExceeded: boolean;
+  byokRequired: boolean;
+}
+
 // Response types
 interface DataSourceResponse {
   source: 'gmail' | 'drive' | 'notion' | 'chatgpt' | 'file_upload' | 'gemini_app' | 'claude_app';
@@ -125,6 +137,22 @@ interface EphemeralTokenResponse {
   model: string;
   expireTime: string;
   uses: number;
+}
+
+type ReportJobStatus = 'queued' | 'running' | 'completed' | 'failed';
+
+interface ReportJobStatusResponse {
+  job: {
+    jobId: string;
+    status: ReportJobStatus;
+    createdAt: number;
+    updatedAt: number;
+    startedAt?: number;
+    completedAt?: number;
+    failedAt?: number;
+    error?: string | null;
+    reportHeadline?: string;
+  } | null;
 }
 
 export const apiClient = {
@@ -205,6 +233,15 @@ export const apiClient = {
         body: JSON.stringify(req),
       }),
 
+    startReportJob: (req: Omit<ReportRequest, 'background'>) =>
+      apiFetch<{ jobId: string; status: ReportJobStatus }>('/api/gemini/report', {
+        method: 'POST',
+        body: JSON.stringify({ ...req, background: true }),
+      }),
+
+    reportJobStatus: () =>
+      apiFetch<ReportJobStatusResponse>('/api/gemini/report'),
+
     ephemeralToken: () =>
       apiFetch<EphemeralTokenResponse>('/api/gemini/ephemeral-token', {
         method: 'POST',
@@ -243,17 +280,10 @@ export const apiClient = {
       }),
 
     getByok: () =>
-      apiFetch<{
-        enabled: boolean;
-        keyLast4: string | null;
-        monthlyBudgetUsd: number;
-        hardStop: boolean;
-        estimatedMonthlySpendUsd: number;
-        budgetExceeded: boolean;
-      }>('/api/user/byok'),
+      apiFetch<ByokStatusResponse>('/api/user/byok'),
 
     updateByok: (req: ByokUpdateRequest) =>
-      apiFetch<{ success: boolean }>('/api/user/byok', {
+      apiFetch<{ success: boolean } & ByokStatusResponse>('/api/user/byok', {
         method: 'POST',
         body: JSON.stringify(req),
       }),

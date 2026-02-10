@@ -5,6 +5,7 @@ import {
   ErrorCode,
   safeParseJson,
   GeminiError,
+  getClientByokApiKey,
 } from "@/lib/api-helpers";
 import { getGeminiClientForUser } from "@/lib/gemini/client";
 import { GEMINI_MODELS } from "@/lib/gemini/models";
@@ -53,6 +54,7 @@ export async function POST(req: NextRequest) {
     const { client, keySource } = await getGeminiClientForUser({
       uid: authResult.uid,
       model: GEMINI_MODELS.FAST,
+      clientProvidedApiKey: getClientByokApiKey(req),
     });
 
     const contextParts: string[] = [];
@@ -125,6 +127,13 @@ export async function POST(req: NextRequest) {
       );
     }
     const message = error instanceof Error ? error.message : "Unknown error";
+    if (message.includes('BYOK required')) {
+      return errorResponse(
+        message,
+        ErrorCode.FORBIDDEN,
+        403,
+      );
+    }
     if (message.includes("budget exceeded")) {
       return errorResponse(
         "Monthly Gemini budget exceeded. Update BYOK settings or wait for next cycle.",

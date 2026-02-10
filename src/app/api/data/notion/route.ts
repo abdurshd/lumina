@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyAuth, errorResponse, ErrorCode } from '@/lib/api-helpers';
+import { verifyAuth, errorResponse, ErrorCode, getClientByokApiKey } from '@/lib/api-helpers';
 import { fetchNotionData } from '@/lib/data/notion';
 import { buildIngestionResponse } from '@/lib/data/ingestion';
 import { ensureSourceConsent } from '@/lib/data/consent';
@@ -49,6 +49,7 @@ export async function POST(req: NextRequest) {
         source: 'notion',
         rawData: ingestion.data,
         existingProfile,
+        clientProvidedApiKey: getClientByokApiKey(req),
       });
     } catch (err) {
       console.error('[Notion Agent Analysis]', err instanceof Error ? err.message : err);

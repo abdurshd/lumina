@@ -1,4 +1,5 @@
 import { auth } from '@/lib/firebase/config';
+import { getLocalByokApiKey } from '@/lib/byok/local-storage';
 
 /** Standard error shape returned from our API routes */
 export interface ApiError {
@@ -40,6 +41,10 @@ export async function apiFetch<T>(
     try {
       const token = await user.getIdToken();
       headers['Authorization'] = `Bearer ${token}`;
+      const byokKey = await getLocalByokApiKey(user.uid);
+      if (byokKey && byokKey.trim().length >= 20) {
+        headers['x-lumina-byok-key'] = byokKey;
+      }
     } catch {
       throw new FetchError('Authentication expired. Please sign in again.', 401, 'AUTH_EXPIRED');
     }

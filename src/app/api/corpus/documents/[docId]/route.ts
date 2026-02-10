@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyAuth, errorResponse, ErrorCode } from '@/lib/api-helpers';
+import { verifyAuth, errorResponse, ErrorCode, getClientByokApiKey } from '@/lib/api-helpers';
 import { getUserProfile, getCorpusDocuments } from '@/lib/firebase/firestore';
 import { removeDocumentFromCorpus } from '@/lib/gemini/file-search';
 
@@ -34,12 +34,19 @@ export async function DELETE(
       profile.corpusName,
       targetDoc.documentName,
       authResult.uid,
-      docId
+      docId,
+      getClientByokApiKey(req),
     );
 
     return NextResponse.json({ success: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
+    if (message.includes('BYOK required')) {
+      return errorResponse(message, ErrorCode.FORBIDDEN, 403);
+    }
+    if (message.includes('budget exceeded')) {
+      return errorResponse(message, ErrorCode.RATE_LIMITED, 429);
+    }
     console.error('[Corpus Delete Document Error]', message);
     return errorResponse('Failed to delete document', ErrorCode.INTERNAL_ERROR, 500);
   }

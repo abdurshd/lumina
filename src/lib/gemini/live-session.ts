@@ -117,9 +117,8 @@ export class LiveSessionManager {
     });
 
     try {
-      // DEBUG: testing with tools added
       const config: Parameters<typeof client.live.connect>[0]["config"] = {
-        responseModalities: [Modality.AUDIO, Modality.TEXT],
+        responseModalities: [Modality.AUDIO],
         speechConfig: {
           voiceConfig: {
             prebuiltVoiceConfig: {
@@ -153,12 +152,10 @@ export class LiveSessionManager {
           this.handleMessage(message);
         },
         onerror: (e: ErrorEvent) => {
-          console.error('[LiveSession] WebSocket error', e.message, e);
           this._connected = false;
           this.callbacks.onError(new Error(e.message || "WebSocket error"));
         },
         onclose: (e: CloseEvent) => {
-          console.error(`[LiveSession] WebSocket closed code=${e.code} reason="${e.reason}" wasClean=${e.wasClean} wasConnected=${this._connected}`);
           const wasConnected = this._connected;
           this._connected = false;
           this.session = null;
@@ -243,22 +240,22 @@ export class LiveSessionManager {
           this.insights.push(insight);
           this.callbacks.onInsight(insight);
           this.session?.sendToolResponse({
-            functionResponses: [{ id: fc.id!, response: { success: true } }],
+            functionResponses: [{ id: fc.id!, name: fc.name!, response: { success: "true" } }],
           });
         } else if (fc.name === "fetchUserProfile") {
           if (this.callbacks.onProfileRequested) {
             this.callbacks.onProfileRequested().then((profileData) => {
               this.session?.sendToolResponse({
-                functionResponses: [{ id: fc.id!, response: { profile: profileData } }],
+                functionResponses: [{ id: fc.id!, name: fc.name!, response: { profile: profileData } }],
               });
             }).catch(() => {
               this.session?.sendToolResponse({
-                functionResponses: [{ id: fc.id!, response: { error: "Failed to fetch profile" } }],
+                functionResponses: [{ id: fc.id!, name: fc.name!, response: { error: "Failed to fetch profile" } }],
               });
             });
           } else {
             this.session?.sendToolResponse({
-              functionResponses: [{ id: fc.id!, response: { error: "Profile not available" } }],
+              functionResponses: [{ id: fc.id!, name: fc.name!, response: { error: "Profile not available" } }],
             });
           }
         } else if (fc.name === "saveSignal") {
@@ -272,14 +269,14 @@ export class LiveSessionManager {
           };
           this.callbacks.onSignal?.(signal);
           this.session?.sendToolResponse({
-            functionResponses: [{ id: fc.id!, response: { success: true } }],
+            functionResponses: [{ id: fc.id!, name: fc.name!, response: { success: "true" } }],
           });
         } else if (fc.name === "startQuizModule") {
           const moduleId = String(args.moduleId ?? "") as QuizModuleId;
           const reason = String(args.reason ?? "");
           this.callbacks.onQuizModuleSuggested?.(moduleId, reason);
           this.session?.sendToolResponse({
-            functionResponses: [{ id: fc.id!, response: { success: true, message: "Quiz module suggestion shown to user" } }],
+            functionResponses: [{ id: fc.id!, name: fc.name!, response: { success: "true", message: "Quiz module suggestion shown to user" } }],
           });
         } else if (fc.name === "scheduleNextStep") {
           const step: NextStepSuggestion = {
@@ -289,7 +286,7 @@ export class LiveSessionManager {
           };
           this.callbacks.onNextStepScheduled?.(step);
           this.session?.sendToolResponse({
-            functionResponses: [{ id: fc.id!, response: { success: true } }],
+            functionResponses: [{ id: fc.id!, name: fc.name!, response: { success: "true" } }],
           });
         } else if (fc.name === "evaluateConfidence") {
           // Return current confidence profile to the model
@@ -301,10 +298,11 @@ export class LiveSessionManager {
             this.session?.sendToolResponse({
               functionResponses: [{
                 id: fc.id!,
+                name: fc.name!,
                 response: {
-                  overallConfidence: profile.overallConfidence,
+                  overallConfidence: String(profile.overallConfidence),
                   dimensions: dimSummary,
-                  lastUpdated: profile.lastUpdated,
+                  lastUpdated: String(profile.lastUpdated),
                 },
               }],
             });
@@ -312,6 +310,7 @@ export class LiveSessionManager {
             this.session?.sendToolResponse({
               functionResponses: [{
                 id: fc.id!,
+                name: fc.name!,
                 response: { error: "Confidence profile not available yet" },
               }],
             });
@@ -326,7 +325,7 @@ export class LiveSessionManager {
           };
           this.callbacks.onAgentReasoning?.(entry);
           this.session?.sendToolResponse({
-            functionResponses: [{ id: fc.id!, response: { success: true, message: "Reasoning logged" } }],
+            functionResponses: [{ id: fc.id!, name: fc.name!, response: { success: "true", message: "Reasoning logged" } }],
           });
         }
       }

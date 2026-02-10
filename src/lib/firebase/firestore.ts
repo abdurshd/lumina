@@ -290,6 +290,7 @@ export async function updateUserProfile(
       | 'byokKeyLast4'
       | 'byokMonthlyBudgetUsd'
       | 'byokHardStop'
+      | 'byokPlatformAccess'
     >
   >
 ): Promise<void> {

@@ -11,6 +11,7 @@ export function getGeminiClient(): GoogleGenAI {
 export async function getGeminiClientForUser(params: {
   uid?: string;
   model: GeminiModelId;
+  clientProvidedApiKey?: string;
 }): Promise<{
   client: GoogleGenAI;
   keySource: GeminiKeySource;
@@ -23,6 +24,7 @@ export async function getGeminiClientForUser(params: {
     uid: params.uid,
     model: params.model,
     fallbackApiKey: platformKey,
+    clientProvidedApiKey: params.clientProvidedApiKey,
   });
 
   return {

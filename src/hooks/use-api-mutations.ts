@@ -73,6 +73,12 @@ export function useReportMutation() {
   });
 }
 
+export function useStartReportJobMutation() {
+  return useMutation({
+    mutationFn: apiClient.gemini.startReportJob,
+  });
+}
+
 export function useEphemeralTokenMutation() {
   return useMutation({
     mutationFn: apiClient.gemini.ephemeralToken,

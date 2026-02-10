@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyAuth, errorResponse, ErrorCode } from '@/lib/api-helpers';
+import { verifyAuth, errorResponse, ErrorCode, getClientByokApiKey } from '@/lib/api-helpers';
 import { parseUploadedFile, isSupportedMimeType } from '@/lib/data/file-upload';
 import { buildIngestionResponse } from '@/lib/data/ingestion';
 import { ensureSourceConsent } from '@/lib/data/consent';
@@ -64,6 +64,7 @@ export async function POST(req: NextRequest) {
       const { client, keySource } = await getGeminiClientForUser({
         uid: authResult.uid,
         model: GEMINI_MODELS.FAST,
+        clientProvidedApiKey: getClientByokApiKey(req),
       });
       payload = await parseUploadedFile(buffer, mimeType, { client });
       await trackGeminiUsage({
@@ -98,6 +99,7 @@ export async function POST(req: NextRequest) {
         source: 'file_upload',
         rawData: ingestion.data,
         existingProfile,
+        clientProvidedApiKey: getClientByokApiKey(req),
       });
     } catch (err) {
       console.error('[File Upload Agent Analysis]', err instanceof Error ? err.message : err);
@@ -106,6 +108,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ...ingestion, agentAnalysis });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to process file';
+    if (message.includes('BYOK required')) {
+      return errorResponse(message, ErrorCode.FORBIDDEN, 403);
+    }
     console.error('[File Upload Error]', message);
     return errorResponse(message, ErrorCode.INTERNAL_ERROR, 500);
   }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { verifyAuth, errorResponse, ErrorCode } from '@/lib/api-helpers';
+import { verifyAuth, errorResponse, ErrorCode, getClientByokApiKey } from '@/lib/api-helpers';
 import { correlateEvidence } from '@/lib/agent/correlator';
 import type { DataInsight, QuizScore, SessionInsight, UserSignal } from '@/types';
 
@@ -93,11 +93,15 @@ export async function POST(req: NextRequest) {
       quizScores: parsed.data.quizScores as QuizScore[],
       sessionInsights: parsed.data.sessionInsights as SessionInsight[],
       signals: parsed.data.signals as UserSignal[],
+      clientProvidedApiKey: getClientByokApiKey(req),
     });
 
     return NextResponse.json(result);
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Correlation failed';
+    if (message.includes('BYOK required')) {
+      return errorResponse(message, ErrorCode.FORBIDDEN, 403);
+    }
     return errorResponse(message, ErrorCode.INTERNAL_ERROR, 500);
   }
 }

@@ -13,12 +13,11 @@ import {
   getSessionInsights,
   getQuizScores,
   getConstraints,
-  saveComputedProfile,
-  saveCareerRecommendations,
 } from '@/lib/firebase/firestore';
 import { buildComputedProfile } from '@/lib/career/profile-builder';
 import { FetchError } from '@/lib/fetch-client';
-import { useReportMutation, useFeedbackMutation, useRegenerateReportMutation } from '@/hooks/use-api-mutations';
+import { useFeedbackMutation, useRegenerateReportMutation, useStartReportJobMutation } from '@/hooks/use-api-mutations';
+import { apiClient } from '@/lib/api/client';
 import { useTalentReportQuery } from '@/hooks/use-api-queries';
 import { TalentRadarChart } from '@/components/report/talent-radar-chart';
 import { CareerPaths } from '@/components/report/career-paths';
@@ -40,10 +39,22 @@ export default function ReportPage() {
   const { user } = useAuthStore();
   const { dataInsights, quizAnswers, sessionInsights, constraints, report, setReport, advanceStage } = useAssessmentStore();
 
-  const reportMutation = useReportMutation();
+  const startReportJobMutation = useStartReportJobMutation();
   const feedbackMutation = useFeedbackMutation();
   const regenerateMutation = useRegenerateReportMutation();
   const reportQuery = useTalentReportQuery(user?.uid);
+  const { refetch: refetchTalentReport } = reportQuery;
+  const [reportJob, setReportJob] = useState<{
+    jobId: string;
+    status: 'queued' | 'running' | 'completed' | 'failed';
+    createdAt: number;
+    updatedAt: number;
+    startedAt?: number;
+    completedAt?: number;
+    failedAt?: number;
+    error?: string | null;
+    reportHeadline?: string;
+  } | null>(null);
   const [hasFeedback, setHasFeedback] = useState(false);
   const [regenerateFeedback, setRegenerateFeedback] = useState('');
   const [showRegenerateForm, setShowRegenerateForm] = useState(false);
@@ -55,6 +66,39 @@ export default function ReportPage() {
       setReport(reportQuery.data);
     }
   }, [reportQuery.data, report, setReport]);
+
+  const pollReportJobStatus = useCallback(async () => {
+    if (!user) return;
+    try {
+      const status = await apiClient.gemini.reportJobStatus();
+      const job = status.job;
+      setReportJob(job);
+
+      if (job?.status === 'completed' && !report) {
+        const refreshed = await refetchTalentReport();
+        if (refreshed.data) {
+          setReport(refreshed.data);
+          await advanceStage('report');
+        }
+      }
+    } catch {
+      // Non-fatal polling failures should not block report UI.
+    }
+  }, [user, report, refetchTalentReport, setReport, advanceStage]);
+
+  useEffect(() => {
+    if (!user) return;
+    const initialTimeoutId = window.setTimeout(() => {
+      void pollReportJobStatus();
+    }, 0);
+    const interval = window.setInterval(() => {
+      void pollReportJobStatus();
+    }, 6_000);
+    return () => {
+      window.clearTimeout(initialTimeoutId);
+      window.clearInterval(interval);
+    };
+  }, [user, pollReportJobStatus]);
 
   const generateReport = useCallback(async () => {
     if (!user) return;
@@ -74,37 +118,36 @@ export default function ReportPage() {
           })
         : undefined;
 
-      reportMutation.mutate({
-        dataInsights: insights,
-        quizAnswers: quiz,
-        sessionInsights: session,
-        quizScores: quizScoresData?.dimensionSummary,
-        quizConfidence: quizScoresData?.dimensionConfidence,
-        computedProfile,
-        constraints: resolvedConstraints,
-      }, {
-        onSuccess: async (reportData) => {
-          await saveTalentReport(user.uid, reportData);
-          await saveReportVersion(user.uid, reportData, quizScoresData?.dimensionSummary);
-          if (computedProfile) {
-            await saveComputedProfile(user.uid, computedProfile);
-          }
-          if (reportData.careerRecommendations && reportData.careerRecommendations.length > 0) {
-            await saveCareerRecommendations(user.uid, reportData.careerRecommendations);
-          }
-          setReport(reportData);
-          await advanceStage('report');
-          toast.success('Your talent report is ready!');
+      startReportJobMutation.mutate(
+        {
+          dataInsights: insights,
+          quizAnswers: quiz,
+          sessionInsights: session,
+          quizScores: quizScoresData?.dimensionSummary,
+          quizConfidence: quizScoresData?.dimensionConfidence,
+          computedProfile,
+          constraints: resolvedConstraints,
         },
-        onError: (err) => {
-          const message = err instanceof FetchError ? err.message : 'Report generation failed. Please try again.';
-          toast.error(message);
+        {
+          onSuccess: (job) => {
+            setReportJob({
+              jobId: job.jobId,
+              status: job.status,
+              createdAt: Date.now(),
+              updatedAt: Date.now(),
+            });
+            toast.success('Report generation started. You can leave this page; we will notify you when it is done.');
+          },
+          onError: (err) => {
+            const message = err instanceof FetchError ? err.message : 'Report generation failed. Please try again.';
+            toast.error(message);
+          },
         },
-      });
+      );
     } catch {
       toast.error('Failed to load assessment data.');
     }
-  }, [user, dataInsights, quizAnswers, sessionInsights, constraints, setReport, advanceStage, reportMutation]);
+  }, [user, dataInsights, quizAnswers, sessionInsights, constraints, startReportJobMutation]);
 
   const handleCareerFeedback = useCallback((pathTitle: string, feedback: 'agree' | 'disagree', reason?: string) => {
     feedbackMutation.mutate({ itemType: 'career', itemId: pathTitle, feedback, reason });
@@ -143,6 +186,11 @@ export default function ReportPage() {
     });
   }, [user, regenerateFeedback, regenerateMutation, setReport, dataInsights, quizAnswers, sessionInsights, report]);
 
+  const isReportJobActive = startReportJobMutation.isPending || reportJob?.status === 'queued' || reportJob?.status === 'running';
+  const reportGenerationError =
+    (reportJob?.status === 'failed' ? reportJob.error : undefined)
+    ?? (startReportJobMutation.error instanceof FetchError ? startReportJobMutation.error.message : undefined);
+
   if (reportQuery.isLoading) {
     return (
       <div className="mx-auto max-w-4xl px-4 sm:px-6 py-8 sm:py-10 flex items-center justify-center min-h-[60vh]">
@@ -154,9 +202,9 @@ export default function ReportPage() {
   if (!report) {
     return (
       <div className="mx-auto max-w-2xl px-4 sm:px-6 py-8 sm:py-10">
-        {reportMutation.error && (
+        {reportGenerationError && (
           <ErrorAlert
-            message={reportMutation.error instanceof FetchError ? reportMutation.error.message : 'Report generation failed. Please try again.'}
+            message={reportGenerationError}
             onRetry={generateReport}
             className="mb-6"
           />
@@ -168,8 +216,10 @@ export default function ReportPage() {
           action={
             <LoadingButton
               onClick={generateReport}
-              loading={reportMutation.isPending}
-              loadingText="Generating your report (this may take a minute)..."
+              loading={isReportJobActive}
+              loadingText={reportJob?.status === 'queued'
+                ? 'Queued in cloud...'
+                : 'Generating in cloud (you can leave this page)...'}
               icon={LuminaIcon}
               size="lg"
               className=""
@@ -178,6 +228,11 @@ export default function ReportPage() {
             </LoadingButton>
           }
         />
+        {isReportJobActive && (
+          <p className="mt-4 text-center text-sm text-muted-foreground">
+            Report generation is running in the background. You can continue using the app.
+          </p>
+        )}
       </div>
     );
   }

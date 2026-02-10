@@ -47,8 +47,9 @@ export async function analyzeDataSource(params: {
   source: string;
   rawData: string;
   existingProfile: ConfidenceProfile;
+  clientProvidedApiKey?: string;
 }): Promise<DataAnalysisResult> {
-  const { uid, source, rawData, existingProfile } = params;
+  const { uid, source, rawData, existingProfile, clientProvidedApiKey } = params;
 
   // Build existing confidence context for the prompt
   const confidenceContext = Object.entries(existingProfile.dimensions)
@@ -78,6 +79,7 @@ Respond with valid JSON matching this schema:
   const { client, keySource } = await getGeminiClientForUser({
     uid,
     model: GEMINI_MODELS.FAST,
+    clientProvidedApiKey,
   });
 
   const response = await client.models.generateContent({
