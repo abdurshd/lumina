@@ -119,7 +119,7 @@ export class LiveSessionManager {
     try {
       // DEBUG: testing with tools added
       const config: Parameters<typeof client.live.connect>[0]["config"] = {
-        responseModalities: [Modality.AUDIO],
+        responseModalities: [Modality.AUDIO, Modality.TEXT],
         speechConfig: {
           voiceConfig: {
             prebuiltVoiceConfig: {
