@@ -14,18 +14,21 @@ import {
   useFileUploadMutation,
   useDriveMutation,
   useNotionMutation,
+  useGeminiAppMutation,
+  useClaudeAppMutation,
   useAnalyzeMutation,
 } from '@/hooks/use-api-mutations';
 import { ConnectorCard } from '@/components/connections/connector-card';
 import { PageHeader, LoadingButton, ErrorAlert } from '@/components/shared';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plug, Mail, Upload, FileUp, HardDrive, BookOpen, ArrowRight } from 'lucide-react';
+import { Plug, ArrowRight } from 'lucide-react';
 import { LuminaIcon } from '@/components/icons/lumina-icon';
+import { GmailIcon, ChatGPTIcon, GoogleDriveIcon, NotionIcon, GeminiIcon, ClaudeIcon, FileUploadIcon } from '@/components/icons/brand-icons';
 import { StaggerList, StaggerItem } from '@/components/motion/stagger-list';
 import { fadeInUp, reducedMotionVariants } from '@/lib/motion';
 
 interface DataSource {
-  source: 'gmail' | 'drive' | 'notion' | 'chatgpt' | 'file_upload';
+  source: 'gmail' | 'drive' | 'notion' | 'chatgpt' | 'file_upload' | 'gemini_app' | 'claude_app';
   data: string;
   tokenCount: number;
   metadata: {
@@ -39,8 +42,8 @@ interface DataSource {
   };
 }
 
-const MAX_CHATGPT_SIZE = 50 * 1024 * 1024; // 50MB
-const CHATGPT_TYPES = ['application/json'];
+const MAX_JSON_SIZE = 50 * 1024 * 1024; // 50MB
+const JSON_TYPES = ['application/json'];
 const FILE_UPLOAD_TYPES = ['.pdf', '.txt', '.md', '.html'];
 
 export default function ConnectionsPage() {
@@ -53,12 +56,16 @@ export default function ConnectionsPage() {
   const [error, setError] = useState<string | null>(null);
   const chatgptInputRef = useRef<HTMLInputElement>(null);
   const fileUploadInputRef = useRef<HTMLInputElement>(null);
+  const geminiAppInputRef = useRef<HTMLInputElement>(null);
+  const claudeAppInputRef = useRef<HTMLInputElement>(null);
 
   const gmailMutation = useGmailMutation();
   const chatgptMutation = useChatGPTMutation();
   const fileUploadMutation = useFileUploadMutation();
   const driveMutation = useDriveMutation();
   const notionMutation = useNotionMutation();
+  const geminiAppMutation = useGeminiAppMutation();
+  const claudeAppMutation = useClaudeAppMutation();
   const analyzeMutation = useAnalyzeMutation();
 
   const shouldReduceMotion = useReducedMotion();
@@ -95,15 +102,21 @@ export default function ConnectionsPage() {
     chatgptInputRef.current?.click();
   }, []);
 
-  const onChatGPTFileSelected = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleJsonUpload = useCallback(async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    source: 'chatgpt' | 'gemini_app' | 'claude_app',
+    label: string,
+    mutation: typeof chatgptMutation,
+    inputRef: React.RefObject<HTMLInputElement | null>,
+  ) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!CHATGPT_TYPES.includes(file.type) && !file.name.endsWith('.json')) {
-      toast.error('Please upload a .json file (ChatGPT conversations export).');
+    if (!JSON_TYPES.includes(file.type) && !file.name.endsWith('.json')) {
+      toast.error(`Please upload a .json file (${label} export).`);
       return;
     }
-    if (file.size > MAX_CHATGPT_SIZE) {
+    if (file.size > MAX_JSON_SIZE) {
       toast.error(`File too large (${Math.round(file.size / 1024 / 1024)}MB). Maximum is 50MB.`);
       return;
     }
@@ -112,13 +125,13 @@ export default function ConnectionsPage() {
     try {
       const content = await file.text();
       try { JSON.parse(content); } catch {
-        throw new Error('File is not valid JSON. Please upload your ChatGPT conversations.json export.');
+        throw new Error(`File is not valid JSON. Please upload your ${label} export.`);
       }
 
-      chatgptMutation.mutate({ content }, {
+      mutation.mutate({ content }, {
         onSuccess: (result) => {
-          setDataSources((prev) => ({ ...prev, chatgpt: result }));
-          toast.success(`ChatGPT data loaded! ~${result.tokenCount.toLocaleString()} tokens collected.`);
+          setDataSources((prev) => ({ ...prev, [source]: result }));
+          toast.success(`${label} data loaded! ~${result.tokenCount.toLocaleString()} tokens collected.`);
         },
         onError: (err) => {
           const message = err instanceof FetchError ? err.message : 'Failed to process file';
@@ -131,9 +144,21 @@ export default function ConnectionsPage() {
       setError(message);
       toast.error(message);
     } finally {
-      if (chatgptInputRef.current) chatgptInputRef.current.value = '';
+      if (inputRef.current) inputRef.current.value = '';
     }
-  }, [chatgptMutation]);
+  }, []);
+
+  const onChatGPTFileSelected = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    handleJsonUpload(e, 'chatgpt', 'ChatGPT conversations', chatgptMutation, chatgptInputRef);
+  }, [handleJsonUpload, chatgptMutation]);
+
+  const onGeminiAppFileSelected = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    handleJsonUpload(e, 'gemini_app', 'Gemini conversations', geminiAppMutation, geminiAppInputRef);
+  }, [handleJsonUpload, geminiAppMutation]);
+
+  const onClaudeAppFileSelected = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    handleJsonUpload(e, 'claude_app', 'Claude conversations', claudeAppMutation, claudeAppInputRef);
+  }, [handleJsonUpload, claudeAppMutation]);
 
   const handleFileUpload = useCallback(() => {
     fileUploadInputRef.current?.click();
@@ -245,7 +270,7 @@ export default function ConnectionsPage() {
           <ConnectorCard
             title="Gmail"
             description="Analyze your sent emails to understand communication style and interests"
-            icon={<Mail className="h-6 w-6" />}
+            icon={<GmailIcon className="h-6 w-6" />}
             isConnected={!!dataSources.gmail?.data}
             isLoading={gmailMutation.isPending}
             onConnect={connectGmail}
@@ -258,7 +283,7 @@ export default function ConnectionsPage() {
           <ConnectorCard
             title="ChatGPT"
             description="Upload your ChatGPT conversations.json export to analyze your thinking patterns"
-            icon={<Upload className="h-6 w-6" />}
+            icon={<ChatGPTIcon className="h-6 w-6" />}
             isConnected={!!dataSources.chatgpt?.data}
             isLoading={chatgptMutation.isPending}
             onConnect={handleChatGPTUpload}
@@ -269,9 +294,35 @@ export default function ConnectionsPage() {
 
         <StaggerItem>
           <ConnectorCard
+            title="Gemini"
+            description="Upload your Gemini conversations export to analyze your curiosity patterns"
+            icon={<GeminiIcon className="h-6 w-6" />}
+            isConnected={!!dataSources.gemini_app?.data}
+            isLoading={geminiAppMutation.isPending}
+            onConnect={() => geminiAppInputRef.current?.click()}
+            tokenCount={dataSources.gemini_app?.tokenCount}
+            metadata={dataSources.gemini_app?.metadata}
+          />
+        </StaggerItem>
+
+        <StaggerItem>
+          <ConnectorCard
+            title="Claude"
+            description="Upload your Claude conversations export to analyze your reasoning patterns"
+            icon={<ClaudeIcon className="h-6 w-6" />}
+            isConnected={!!dataSources.claude_app?.data}
+            isLoading={claudeAppMutation.isPending}
+            onConnect={() => claudeAppInputRef.current?.click()}
+            tokenCount={dataSources.claude_app?.tokenCount}
+            metadata={dataSources.claude_app?.metadata}
+          />
+        </StaggerItem>
+
+        <StaggerItem>
+          <ConnectorCard
             title="File Upload"
             description="Upload a resume, portfolio, or writing samples (PDF, TXT, Markdown, HTML)"
-            icon={<FileUp className="h-6 w-6" />}
+            icon={<FileUploadIcon className="h-6 w-6" />}
             isConnected={!!dataSources.file_upload?.data}
             isLoading={fileUploadMutation.isPending}
             onConnect={handleFileUpload}
@@ -284,7 +335,7 @@ export default function ConnectionsPage() {
           <ConnectorCard
             title="Google Drive"
             description="Analyze your Google Docs to uncover writing and work patterns"
-            icon={<HardDrive className="h-6 w-6" />}
+            icon={<GoogleDriveIcon className="h-6 w-6" />}
             isConnected={!!dataSources.drive?.data}
             isLoading={driveMutation.isPending}
             onConnect={connectDrive}
@@ -297,7 +348,7 @@ export default function ConnectionsPage() {
           <ConnectorCard
             title="Notion"
             description="Connect your Notion workspace to analyze notes, journals, and documentation"
-            icon={<BookOpen className="h-6 w-6" />}
+            icon={<NotionIcon className="h-6 w-6" />}
             isConnected={!!dataSources.notion?.data}
             isLoading={notionMutation.isPending}
             onConnect={handleConnectNotion}
@@ -313,6 +364,22 @@ export default function ConnectionsPage() {
           onChange={onChatGPTFileSelected}
           className="hidden"
           aria-label="Upload ChatGPT export file"
+        />
+        <input
+          ref={geminiAppInputRef}
+          type="file"
+          accept=".json,application/json"
+          onChange={onGeminiAppFileSelected}
+          className="hidden"
+          aria-label="Upload Gemini export file"
+        />
+        <input
+          ref={claudeAppInputRef}
+          type="file"
+          accept=".json,application/json"
+          onChange={onClaudeAppFileSelected}
+          className="hidden"
+          aria-label="Upload Claude export file"
         />
         <input
           ref={fileUploadInputRef}

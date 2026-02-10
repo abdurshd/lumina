@@ -17,7 +17,7 @@ const RequestSchema = z.object({
   sources: z.array(z.string()).optional(),
 });
 
-const CONNECTOR_SOURCES = ['gmail', 'drive', 'notion', 'chatgpt', 'file_upload'] as const;
+const CONNECTOR_SOURCES = ['gmail', 'drive', 'notion', 'chatgpt', 'file_upload', 'gemini_app', 'claude_app'] as const;
 const ASSESSMENT_DOC_SOURCES = ['dataInsights', 'quizAnswers', 'quizScores', 'sessionInsights', 'signals', 'talentReport', 'feedback'] as const;
 type ConnectorSource = (typeof CONNECTOR_SOURCES)[number];
 

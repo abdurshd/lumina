@@ -24,25 +24,45 @@ export function QuestionCard({ question, onAnswer, questionNumber, totalQuestion
   const [textValue, setTextValue] = useState('');
   const prefersReducedMotion = useReducedMotion();
 
+  const resolvedType = resolveQuestionType(question);
+  const resolvedQuestion =
+    typeof question.question === 'string' && question.question.trim().length > 0
+      ? question.question
+      : 'Reflect on this prompt and choose the option that fits you best.';
+  const resolvedCategory =
+    typeof question.category === 'string' && question.category.trim().length > 0
+      ? question.category
+      : 'Self-Assessment';
+  const resolvedOptions =
+    resolvedType === 'multiple_choice'
+      ? Array.isArray(question.options) && question.options.length >= 2
+        ? question.options
+        : ['Strongly resonates with me', 'Often true for me', 'Sometimes true for me', 'Rarely true for me']
+      : [];
+  const sliderMin = question.sliderMin ?? 0;
+  const sliderMax = (question.sliderMax ?? 100) > sliderMin ? (question.sliderMax ?? 100) : sliderMin + 100;
+  const sliderMinLabel = question.sliderLabels?.min ?? 'Low';
+  const sliderMaxLabel = question.sliderLabels?.max ?? 'High';
+
   const handleSubmit = () => {
-    if (question.type === 'multiple_choice' && selectedOption) {
+    if (resolvedType === 'multiple_choice' && selectedOption) {
       onAnswer(selectedOption);
-    } else if (question.type === 'slider') {
+    } else if (resolvedType === 'slider') {
       onAnswer(sliderValue);
-    } else if (question.type === 'freetext' && textValue.trim()) {
+    } else if (resolvedType === 'freetext' && textValue.trim()) {
       onAnswer(textValue.trim());
     }
   };
 
   const canSubmit =
-    (question.type === 'multiple_choice' && selectedOption !== null) ||
-    question.type === 'slider' ||
-    (question.type === 'freetext' && textValue.trim().length > 0);
+    (resolvedType === 'multiple_choice' && selectedOption !== null) ||
+    resolvedType === 'slider' ||
+    (resolvedType === 'freetext' && textValue.trim().length > 0);
 
   return (
     <AnimatePresence mode="wait">
       <motion.div
-        key={question.question}
+        key={resolvedQuestion}
         initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: 50 }}
         animate={{ opacity: 1, x: 0 }}
         exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: -50 }}
@@ -51,22 +71,22 @@ export function QuestionCard({ question, onAnswer, questionNumber, totalQuestion
         <Card className="w-full max-w-2xl mx-auto">
           <CardHeader>
             <div className="flex items-center justify-between mb-3">
-              <Badge variant="secondary">{question.category}</Badge>
+              <Badge variant="secondary">{resolvedCategory}</Badge>
               <span className="text-sm text-muted-foreground font-mono font-bold">
                 {questionNumber} of {totalQuestions}
               </span>
             </div>
-            <CardTitle className="text-xl">{question.question}</CardTitle>
+            <CardTitle className="text-xl">{resolvedQuestion}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {question.type === 'multiple_choice' && question.options && (
+            {resolvedType === 'multiple_choice' && (
               <motion.div
                 className="space-y-2"
                 variants={prefersReducedMotion ? undefined : staggerContainer}
                 initial="hidden"
                 animate="visible"
               >
-                {question.options.map((option, i) => {
+                {resolvedOptions.map((option, i) => {
                   const isSelected = selectedOption === option;
                   return (
                     <motion.button
@@ -104,24 +124,24 @@ export function QuestionCard({ question, onAnswer, questionNumber, totalQuestion
               </motion.div>
             )}
 
-            {question.type === 'slider' && (
+            {resolvedType === 'slider' && (
               <div className="space-y-4 py-4">
                 <Slider
                   value={[sliderValue]}
                   onValueChange={([v]) => setSliderValue(v)}
-                  min={question.sliderMin ?? 0}
-                  max={question.sliderMax ?? 100}
+                  min={sliderMin}
+                  max={sliderMax}
                   step={1}
                 />
                 <div className="flex justify-between text-sm text-muted-foreground">
-                  <span>{question.sliderLabels?.min ?? 'Low'}</span>
+                  <span>{sliderMinLabel}</span>
                   <span className="font-bold text-foreground font-mono">{sliderValue}</span>
-                  <span>{question.sliderLabels?.max ?? 'High'}</span>
+                  <span>{sliderMaxLabel}</span>
                 </div>
               </div>
             )}
 
-            {question.type === 'freetext' && (
+            {resolvedType === 'freetext' && (
               <Textarea
                 value={textValue}
                 onChange={(e) => setTextValue(e.target.value)}
@@ -144,4 +164,20 @@ export function QuestionCard({ question, onAnswer, questionNumber, totalQuestion
       </motion.div>
     </AnimatePresence>
   );
+}
+
+function resolveQuestionType(question: QuizQuestion): QuizQuestion['type'] {
+  if (question.type === 'multiple_choice' || question.type === 'slider' || question.type === 'freetext') {
+    return question.type;
+  }
+
+  if (Array.isArray(question.options) && question.options.length > 0) {
+    return 'multiple_choice';
+  }
+
+  if (question.sliderMin !== undefined || question.sliderMax !== undefined) {
+    return 'slider';
+  }
+
+  return 'freetext';
 }

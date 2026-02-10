@@ -59,7 +59,7 @@ export const ConnectorCard = memo(function ConnectorCard({
         className={`transition-colors duration-300 ${isConnected ? "border-primary/30 bg-primary/[0.03]" : "hover:border-overlay-strong"}`}
       >
         <CardHeader className="flex flex-row items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary border-2 border-primary/20">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-background border-2 border-overlay-medium">
             {icon}
           </div>
           <div className="flex-1 min-w-0">

@@ -18,6 +18,8 @@ import { smoothTransition, staggerContainer, staggerItem, popIn, reducedMotionVa
 const DATA_SOURCE_OPTIONS = [
   { id: 'gmail', label: 'Gmail', description: 'Analyze sent emails for communication patterns' },
   { id: 'chatgpt', label: 'ChatGPT Export', description: 'Analyze conversation patterns and interests' },
+  { id: 'gemini_app', label: 'Gemini Conversations', description: 'Analyze Gemini conversations for curiosity patterns' },
+  { id: 'claude_app', label: 'Claude Conversations', description: 'Analyze Claude conversations for reasoning patterns' },
   { id: 'file_upload', label: 'File Uploads', description: 'Upload resumes, portfolios, writing samples' },
   { id: 'drive', label: 'Google Drive', description: 'Analyze Google Docs for work patterns' },
   { id: 'notion', label: 'Notion', description: 'Analyze notes and documentation' },

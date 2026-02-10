@@ -31,6 +31,18 @@ export function useNotionMutation() {
   });
 }
 
+export function useGeminiAppMutation() {
+  return useMutation({
+    mutationFn: apiClient.data.geminiApp,
+  });
+}
+
+export function useClaudeAppMutation() {
+  return useMutation({
+    mutationFn: apiClient.data.claudeApp,
+  });
+}
+
 export function useNotionAuthMutation() {
   return useMutation({
     mutationFn: apiClient.auth.notionCallback,

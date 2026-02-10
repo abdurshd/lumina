@@ -7,7 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Compass, Heart, Zap, BookOpen, Settings } from 'lucide-react';
 import { QUIZ_MODULES, type QuizModuleConfig } from '@/lib/quiz/module-config';
-import { staggerContainer, staggerItem, smoothTransition, snappySpring } from '@/lib/motion';
+import { staggerContainer, staggerItem, smoothTransition } from '@/lib/motion';
 import { AnimatedCounter } from '@/components/motion/animated-counter';
 import type { QuizModuleProgress, QuizModuleId } from '@/types';
 
@@ -81,7 +81,7 @@ function ModuleCard({ module, progress, onSelect }: ModuleCardProps) {
               <motion.div
                 initial={prefersReducedMotion ? false : { scale: 0, opacity: 0 }}
                 animate={prefersReducedMotion ? { opacity: 1 } : { scale: [0, 1.2, 1], opacity: 1 }}
-                transition={snappySpring}
+                transition={{ type: 'tween', duration: 0.4, ease: 'easeOut' }}
               >
                 <Badge variant="default" className="text-[10px]">Done</Badge>
               </motion.div>

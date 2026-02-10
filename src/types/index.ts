@@ -42,7 +42,7 @@ export interface UserProfile {
 }
 
 export interface DataInsight {
-  source: 'gmail' | 'drive' | 'notion' | 'chatgpt' | 'file_upload';
+  source: 'gmail' | 'drive' | 'notion' | 'chatgpt' | 'file_upload' | 'gemini_app' | 'claude_app';
   summary: string;
   themes: string[];
   skills: string[];

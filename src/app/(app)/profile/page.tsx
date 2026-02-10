@@ -43,6 +43,8 @@ const STAGE_CONFIG: { key: AssessmentStage; label: string; icon: typeof Plug }[]
 const CONSENT_SOURCE_LABELS: Record<string, string> = {
   gmail: 'Gmail',
   chatgpt: 'ChatGPT Export',
+  gemini_app: 'Gemini Conversations',
+  claude_app: 'Claude Conversations',
   file_upload: 'File Uploads',
   drive: 'Google Drive',
   notion: 'Notion',

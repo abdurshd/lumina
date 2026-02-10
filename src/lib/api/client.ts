@@ -91,7 +91,7 @@ interface ByokUpdateRequest {
 
 // Response types
 interface DataSourceResponse {
-  source: 'gmail' | 'drive' | 'notion' | 'chatgpt' | 'file_upload';
+  source: 'gmail' | 'drive' | 'notion' | 'chatgpt' | 'file_upload' | 'gemini_app' | 'claude_app';
   data: string;
   tokenCount: number;
   metadata: {
@@ -156,6 +156,18 @@ export const apiClient = {
 
     notion: (req: NotionRequest) =>
       apiFetch<DataSourceResponse>('/api/data/notion', {
+        method: 'POST',
+        body: JSON.stringify(req),
+      }),
+
+    geminiApp: (req: ChatGPTRequest) =>
+      apiFetch<DataSourceResponse>('/api/data/gemini-app', {
+        method: 'POST',
+        body: JSON.stringify(req),
+      }),
+
+    claudeApp: (req: ChatGPTRequest) =>
+      apiFetch<DataSourceResponse>('/api/data/claude-app', {
         method: 'POST',
         body: JSON.stringify(req),
       }),

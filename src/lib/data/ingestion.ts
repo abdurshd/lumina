@@ -1,4 +1,4 @@
-export type IngestionSource = 'gmail' | 'drive' | 'notion' | 'chatgpt' | 'file_upload';
+export type IngestionSource = 'gmail' | 'drive' | 'notion' | 'chatgpt' | 'file_upload' | 'gemini_app' | 'claude_app';
 export type ParseQuality = 'high' | 'medium' | 'low';
 
 export interface IngestionPayload {
@@ -31,6 +31,8 @@ const SOURCE_CHAR_LIMIT: Record<IngestionSource, number> = {
   notion: 180_000,
   chatgpt: 180_000,
   file_upload: 180_000,
+  gemini_app: 180_000,
+  claude_app: 180_000,
 };
 
 export function buildIngestionResponse(

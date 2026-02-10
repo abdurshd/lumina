@@ -38,6 +38,8 @@ export function ModuleQuizFlow({ moduleId, onBack, onComplete }: ModuleQuizFlowP
 
   const quizMutation = useQuizMutation();
   const quizScoreMutation = useQuizScoreMutation();
+  const requestQuizQuestions = quizMutation.mutate;
+  const scoreQuizAnswers = quizScoreMutation.mutate;
 
   const dataContext = useMemo(
     () => dataInsights.length > 0
@@ -46,30 +48,39 @@ export function ModuleQuizFlow({ moduleId, onBack, onComplete }: ModuleQuizFlowP
     [dataInsights]
   );
 
+  const applyQuestions = useCallback((rawQuestions: unknown) => {
+    const normalized = normalizeClientQuestions(rawQuestions, moduleConfig.questionCount, moduleId, moduleConfig.dimensions);
+
+    if (normalized.length === 0) {
+      setError('Unable to load quiz questions. Please retry.');
+      return;
+    }
+
+    setError(null);
+    setQuestions(normalized);
+    setCurrentIndex(0);
+    setAnswers([]);
+    updateModuleProgress({
+      moduleId,
+      status: 'in_progress',
+      answeredCount: 0,
+      totalCount: normalized.length,
+    });
+  }, [moduleConfig.questionCount, moduleConfig.dimensions, moduleId, updateModuleProgress]);
+
   // Fetch questions for this module
   useEffect(() => {
     setError(null);
-    quizMutation.mutate({ dataContext, previousAnswers: [], batchIndex: 0, moduleId } as Parameters<typeof quizMutation.mutate>[0], {
+    requestQuizQuestions({ dataContext, previousAnswers: [], batchIndex: 0, moduleId } as Parameters<typeof requestQuizQuestions>[0], {
       onSuccess: (result) => {
-        if (!result.questions || result.questions.length === 0) {
-          setError('No questions returned. Please try again.');
-          return;
-        }
-        setQuestions(result.questions);
-        updateModuleProgress({
-          moduleId,
-          status: 'in_progress',
-          answeredCount: 0,
-          totalCount: result.questions.length,
-        });
+        applyQuestions(result.questions);
       },
       onError: (err) => {
         const message = err instanceof FetchError ? err.message : 'Failed to load questions';
         setError(message);
       },
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [moduleId]);
+  }, [moduleId, dataContext, requestQuizQuestions, applyQuestions]);
 
   const handleAnswer = useCallback(async (answer: string | number) => {
     const currentQ = questions[currentIndex];
@@ -115,7 +126,7 @@ export function ModuleQuizFlow({ moduleId, onBack, onComplete }: ModuleQuizFlowP
         }
 
         // Score the module
-        quizScoreMutation.mutate({ answers: updatedAnswers, questions }, {
+        scoreQuizAnswers({ answers: updatedAnswers, questions }, {
           onSuccess: async (result) => {
             try {
               await saveQuizScores(user.uid, result.scores, result.dimensionSummary, result.dimensionConfidence);
@@ -140,7 +151,7 @@ export function ModuleQuizFlow({ moduleId, onBack, onComplete }: ModuleQuizFlowP
     } else {
       setCurrentIndex(nextIndex);
     }
-  }, [currentIndex, questions, answers, moduleId, moduleConfig.label, user, allAnswers, setQuizAnswers, updateModuleProgress, setConstraints, quizScoreMutation]);
+  }, [currentIndex, questions, answers, moduleId, moduleConfig.label, user, allAnswers, setQuizAnswers, updateModuleProgress, setConstraints, scoreQuizAnswers]);
 
   if (isScoring) {
     return (
@@ -192,9 +203,9 @@ export function ModuleQuizFlow({ moduleId, onBack, onComplete }: ModuleQuizFlowP
       </div>
 
       <div className="mb-8">
-        <Progress value={(currentIndex / questions.length) * 100} />
+        <Progress value={questions.length > 0 ? (currentIndex / questions.length) * 100 : 0} />
         <p className="mt-1 text-xs text-muted-foreground text-right">
-          {currentIndex + 1} of {questions.length}
+          {questions.length > 0 ? `${currentIndex + 1} of ${questions.length}` : 'Loading questions...'}
         </p>
       </div>
 
@@ -203,8 +214,10 @@ export function ModuleQuizFlow({ moduleId, onBack, onComplete }: ModuleQuizFlowP
           message={error}
           onRetry={() => {
             setError(null);
-            quizMutation.mutate({ dataContext, previousAnswers: [], batchIndex: 0, moduleId } as Parameters<typeof quizMutation.mutate>[0], {
-              onSuccess: (result) => setQuestions(result.questions),
+            requestQuizQuestions({ dataContext, previousAnswers: [], batchIndex: 0, moduleId } as Parameters<typeof requestQuizQuestions>[0], {
+              onSuccess: (result) => {
+                applyQuestions(result.questions);
+              },
               onError: (err) => setError(err instanceof FetchError ? err.message : 'Failed to load questions'),
             });
           }}
@@ -239,10 +252,139 @@ export function ModuleQuizFlow({ moduleId, onBack, onComplete }: ModuleQuizFlowP
               totalQuestions={questions.length}
             />
           </motion.div>
-        ) : null}
+        ) : (
+          <motion.div
+            key="empty"
+            variants={prefersReducedMotion ? undefined : fadeInUp}
+            initial="hidden"
+            animate="visible"
+            exit="hidden"
+          >
+            <EmptyState
+              icon={Brain}
+              title="No Questions Loaded"
+              description="We couldn’t load quiz questions for this module. Retry to continue."
+              action={(
+                <LoadingButton
+                  onClick={() => {
+                    setError(null);
+                    requestQuizQuestions(
+                      { dataContext, previousAnswers: [], batchIndex: 0, moduleId } as Parameters<typeof requestQuizQuestions>[0],
+                      {
+                        onSuccess: (result) => {
+                          applyQuestions(result.questions);
+                        },
+                        onError: (err) => setError(err instanceof FetchError ? err.message : 'Failed to load questions'),
+                      },
+                    );
+                  }}
+                >
+                  Retry
+                </LoadingButton>
+              )}
+            />
+          </motion.div>
+        )}
       </AnimatePresence>
     </div>
   );
+}
+
+const FALLBACK_OPTIONS = [
+  'Strongly resonates with me',
+  'Often true for me',
+  'Sometimes true for me',
+  'Rarely true for me',
+] as const;
+
+function normalizeClientQuestions(
+  rawQuestions: unknown,
+  questionCount: number,
+  moduleId: QuizModuleId,
+  dimensions: string[],
+): QuizQuestion[] {
+  const list = Array.isArray(rawQuestions) ? rawQuestions : [];
+  const normalized: QuizQuestion[] = [];
+
+  for (let i = 0; i < list.length && normalized.length < questionCount; i++) {
+    const raw = list[i];
+    if (!raw || typeof raw !== 'object') continue;
+
+    const candidate = raw as Record<string, unknown>;
+    const fallbackDimension = dimensions[normalized.length % Math.max(dimensions.length, 1)] ?? 'General';
+    const type = normalizeQuestionType(candidate.type);
+
+    const question: QuizQuestion = {
+      id:
+        typeof candidate.id === 'string' && candidate.id.trim().length > 0
+          ? candidate.id.trim()
+          : `${moduleId}_q_${normalized.length + 1}`,
+      type,
+      question:
+        typeof candidate.question === 'string' && candidate.question.trim().length > 0
+          ? candidate.question.trim()
+          : `How strongly do you relate to this ${fallbackDimension.toLowerCase()} statement?`,
+      category:
+        typeof candidate.category === 'string' && candidate.category.trim().length > 0
+          ? candidate.category.trim()
+          : fallbackDimension,
+      dimension:
+        typeof candidate.dimension === 'string' && candidate.dimension.trim().length > 0
+          ? candidate.dimension.trim()
+          : fallbackDimension,
+      moduleId,
+    };
+
+    if (type === 'multiple_choice') {
+      const options = Array.isArray(candidate.options)
+        ? candidate.options
+            .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
+            .slice(0, 4)
+        : [];
+
+      question.options = options.length >= 2 ? options : [...FALLBACK_OPTIONS];
+    }
+
+    if (type === 'slider') {
+      const sliderMin = typeof candidate.sliderMin === 'number' ? candidate.sliderMin : 0;
+      const sliderMax = typeof candidate.sliderMax === 'number' ? candidate.sliderMax : 100;
+      const labels =
+        candidate.sliderLabels && typeof candidate.sliderLabels === 'object'
+          ? (candidate.sliderLabels as Record<string, unknown>)
+          : null;
+
+      question.sliderMin = sliderMin;
+      question.sliderMax = sliderMax > sliderMin ? sliderMax : sliderMin + 100;
+      question.sliderLabels = {
+        min: typeof labels?.min === 'string' && labels.min.trim().length > 0 ? labels.min.trim() : 'Low',
+        max: typeof labels?.max === 'string' && labels.max.trim().length > 0 ? labels.max.trim() : 'High',
+      };
+    }
+
+    normalized.push(question);
+  }
+
+  while (normalized.length < questionCount) {
+    const fallbackDimension = dimensions[normalized.length % Math.max(dimensions.length, 1)] ?? 'General';
+    normalized.push({
+      id: `${moduleId}_fallback_${normalized.length + 1}`,
+      type: 'multiple_choice',
+      question: `How much does this reflect your ${fallbackDimension.toLowerCase()} preference?`,
+      options: [...FALLBACK_OPTIONS],
+      category: fallbackDimension,
+      dimension: fallbackDimension,
+      moduleId,
+    });
+  }
+
+  return normalized;
+}
+
+function normalizeQuestionType(value: unknown): QuizQuestion['type'] {
+  if (value === 'multiple_choice' || value === 'slider' || value === 'freetext') {
+    return value;
+  }
+  return 'multiple_choice';
 }
 
 function extractConstraints(answers: QuizAnswer[], questions: QuizQuestion[]): UserConstraints {

@@ -72,41 +72,38 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   initAuthListener: () => {
     if (get()._listenerInitialized) return () => {};
     set({ _listenerInitialized: true });
-    const redirectResultPromise = getRedirectResult(auth)
-      .then((redirectResult: UserCredential | null) => {
-        const redirectCredential = redirectResult
-          ? GoogleAuthProvider.credentialFromResult(redirectResult)
-          : null;
 
-        return {
-          user: redirectResult?.user ?? null,
-          accessToken: redirectCredential?.accessToken ?? null,
-        };
+    // Capture access token from any pending redirect (fire-and-forget).
+    // This is separate from onAuthStateChanged so auth state is never blocked.
+    getRedirectResult(auth)
+      .then((result: UserCredential | null) => {
+        if (result) {
+          const credential = GoogleAuthProvider.credentialFromResult(result);
+          const accessToken = credential?.accessToken ?? null;
+          if (accessToken) {
+            set({ googleAccessToken: accessToken });
+          }
+        }
       })
       .catch((error) => {
         console.warn('Failed to resolve redirect result', error);
-        return { user: null, accessToken: null };
       });
 
     const unsub = onAuthStateChanged(auth, async (u) => {
-      const redirectResult = await redirectResultPromise;
-      const resolvedUser = u ?? redirectResult.user;
-      const accessToken = redirectResult.accessToken;
+      set({ user: u });
 
-      set({ user: resolvedUser });
-
-      if (resolvedUser) {
+      if (u) {
         try {
-          const profile = await ensureUserProfile(resolvedUser, accessToken);
-          setCachedRetentionMode(resolvedUser.uid, resolveRetentionMode(profile.dataRetentionMode));
+          const token = get().googleAccessToken;
+          const profile = await ensureUserProfile(u, token);
+          setCachedRetentionMode(u.uid, resolveRetentionMode(profile.dataRetentionMode));
           set({
             profile,
-            googleAccessToken: accessToken ?? profile.googleAccessToken ?? null,
+            googleAccessToken: token ?? profile.googleAccessToken ?? null,
           });
         } catch (error) {
-          // Preserve signed-in user state even if profile bootstrap fails.
           console.error('Failed to initialize user profile', error);
-          set({ profile: null, googleAccessToken: accessToken });
+          set({ profile: null });
         }
       } else {
         set({ profile: null, googleAccessToken: null });
@@ -114,7 +111,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ loading: false });
     });
 
-    return unsub;
+    return () => {
+      unsub();
+      set({ _listenerInitialized: false });
+    };
   },
 
   signInWithGoogle: async () => {
@@ -122,10 +122,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     provider.setCustomParameters({ prompt: 'select_account' });
 
     try {
-      // Redirect flow avoids COOP popup/window.closed browser restrictions.
-      await signInWithRedirect(auth, provider);
-    } catch {
-      // Popup fallback for environments where redirect initiation fails.
+      // Popup is the primary flow — works with COOP same-origin-allow-popups
+      // and avoids the fragile redirect + getRedirectResult race condition.
       const result = await signInWithPopup(auth, provider);
       const credential = GoogleAuthProvider.credentialFromResult(result);
       const accessToken = credential?.accessToken ?? null;
@@ -134,6 +132,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const profile = await ensureUserProfile(result.user, accessToken);
       setCachedRetentionMode(result.user.uid, resolveRetentionMode(profile.dataRetentionMode));
       set({ profile });
+    } catch (err: unknown) {
+      const code = (err as { code?: string })?.code;
+      // If popup is blocked by the browser, fall back to redirect flow.
+      if (code === 'auth/popup-blocked') {
+        await signInWithRedirect(auth, provider);
+        return;
+      }
+      throw err;
     }
   },
 

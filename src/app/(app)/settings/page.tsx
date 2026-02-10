@@ -44,6 +44,8 @@ const DATA_SOURCES = [
 const CONSENT_SOURCE_OPTIONS = [
   { id: 'gmail', label: 'Gmail' },
   { id: 'chatgpt', label: 'ChatGPT Export' },
+  { id: 'gemini_app', label: 'Gemini Conversations' },
+  { id: 'claude_app', label: 'Claude Conversations' },
   { id: 'file_upload', label: 'File Uploads' },
   { id: 'drive', label: 'Google Drive' },
   { id: 'notion', label: 'Notion' },
