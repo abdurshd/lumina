@@ -28,8 +28,8 @@ export async function POST(req: NextRequest) {
     return errorResponse('Invalid request body', ErrorCode.BAD_REQUEST, 400);
   }
 
-  const { accessToken } = body;
-  if (!accessToken || typeof accessToken !== 'string') {
+  const accessToken = typeof body.accessToken === 'string' ? body.accessToken.trim() : '';
+  if (!accessToken || accessToken.length < 10 || accessToken.length > 4096) {
     return errorResponse('Missing or invalid access token', ErrorCode.VALIDATION_ERROR, 400);
   }
 

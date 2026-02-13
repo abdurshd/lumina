@@ -16,8 +16,24 @@ export async function POST(req: NextRequest) {
   }
 
   const { code, redirectUri } = body;
-  if (!code || typeof code !== 'string') {
-    return errorResponse('Missing authorization code', ErrorCode.VALIDATION_ERROR, 400);
+  if (!code || typeof code !== 'string' || code.length > 2048) {
+    return errorResponse('Missing or invalid authorization code', ErrorCode.VALIDATION_ERROR, 400);
+  }
+
+  // Validate redirect URI against allowlist to prevent open redirect
+  const ALLOWED_REDIRECT_HOSTS = [
+    'localhost:3000',
+    'lumina-smart.vercel.app',
+  ];
+  if (redirectUri) {
+    try {
+      const parsed = new URL(redirectUri);
+      if (!ALLOWED_REDIRECT_HOSTS.includes(parsed.host)) {
+        return errorResponse('Invalid redirect URI', ErrorCode.VALIDATION_ERROR, 400);
+      }
+    } catch {
+      return errorResponse('Malformed redirect URI', ErrorCode.VALIDATION_ERROR, 400);
+    }
   }
 
   const clientId = process.env.NOTION_CLIENT_ID;

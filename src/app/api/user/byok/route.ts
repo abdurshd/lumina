@@ -11,7 +11,7 @@ import {
 
 const DEFAULT_BUDGET_USD = 25;
 const GEMINI_API_KEY_MIN_LENGTH = 20;
-const PLATFORM_OVERRIDE_CODE = (process.env.BYOK_PLATFORM_OVERRIDE_CODE ?? 'OyoKApQFP').trim();
+const PLATFORM_OVERRIDE_CODE = process.env.BYOK_PLATFORM_OVERRIDE_CODE?.trim() ?? '';
 
 const UpdateSchema = z.object({
   enabled: z.boolean().optional(),
@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (normalizedApiKey) {
-      if (normalizedApiKey === PLATFORM_OVERRIDE_CODE) {
+      if (PLATFORM_OVERRIDE_CODE.length > 0 && normalizedApiKey === PLATFORM_OVERRIDE_CODE) {
         await clearUserByokSecret(authResult.uid);
         updates.byokKeyLast4 = '';
         updates.byokEnabled = true;
