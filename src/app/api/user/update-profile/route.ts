@@ -73,6 +73,7 @@ export async function POST(req: NextRequest) {
     parsed.data.dataRetentionMode !== undefined;
 
   if (consentChanged) {
+    updates.consentGiven = true;
     updates.consentTimestamp = Date.now();
     updates.consentVersion = 2;
   }

@@ -2,6 +2,10 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   devIndicators: false,
+  env: {
+    NEXT_PUBLIC_NOTION_CLIENT_ID:
+      process.env.NEXT_PUBLIC_NOTION_CLIENT_ID ?? process.env.NOTION_CLIENT_ID ?? '',
+  },
   async headers() {
     return [
       {

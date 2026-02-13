@@ -19,21 +19,24 @@ export async function POST(req: NextRequest) {
   if (!code || typeof code !== 'string' || code.length > 2048) {
     return errorResponse('Missing or invalid authorization code', ErrorCode.VALIDATION_ERROR, 400);
   }
+  if (!redirectUri || typeof redirectUri !== 'string' || redirectUri.length > 2048) {
+    return errorResponse('Missing or invalid redirect URI', ErrorCode.VALIDATION_ERROR, 400);
+  }
 
-  // Validate redirect URI against allowlist to prevent open redirect
-  const ALLOWED_REDIRECT_HOSTS = [
-    'localhost:3000',
-    'lumina-smart.vercel.app',
-  ];
-  if (redirectUri) {
-    try {
-      const parsed = new URL(redirectUri);
-      if (!ALLOWED_REDIRECT_HOSTS.includes(parsed.host)) {
-        return errorResponse('Invalid redirect URI', ErrorCode.VALIDATION_ERROR, 400);
-      }
-    } catch {
-      return errorResponse('Malformed redirect URI', ErrorCode.VALIDATION_ERROR, 400);
+  const requestOrigin = req.headers.get('origin') ?? req.nextUrl.origin;
+  try {
+    const parsed = new URL(redirectUri);
+    if (!['http:', 'https:'].includes(parsed.protocol)) {
+      return errorResponse('Invalid redirect URI protocol', ErrorCode.VALIDATION_ERROR, 400);
     }
+    if (parsed.origin !== requestOrigin) {
+      return errorResponse('Invalid redirect URI', ErrorCode.VALIDATION_ERROR, 400);
+    }
+    if (!['/api/auth/notion/callback', '/notion/callback'].includes(parsed.pathname)) {
+      return errorResponse('Invalid redirect URI path', ErrorCode.VALIDATION_ERROR, 400);
+    }
+  } catch {
+    return errorResponse('Malformed redirect URI', ErrorCode.VALIDATION_ERROR, 400);
   }
 
   const clientId = process.env.NOTION_CLIENT_ID;
@@ -64,8 +67,11 @@ export async function POST(req: NextRequest) {
       return errorResponse('Failed to exchange Notion authorization code', ErrorCode.INTERNAL_ERROR, 500);
     }
 
-    const tokenData = await tokenRes.json() as { access_token: string };
+    const tokenData = await tokenRes.json() as { access_token?: string };
     const { access_token } = tokenData;
+    if (!access_token) {
+      return errorResponse('Notion did not return an access token', ErrorCode.INTERNAL_ERROR, 500);
+    }
 
     // Store token in Firestore
     const db = getAdminDb();
@@ -73,7 +79,7 @@ export async function POST(req: NextRequest) {
       notionAccessToken: access_token,
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, accessToken: access_token });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('[Notion OAuth Error]', message);

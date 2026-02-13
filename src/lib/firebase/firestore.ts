@@ -280,6 +280,7 @@ export async function updateUserProfile(
     Pick<
       UserProfile,
       | 'displayName'
+      | 'consentGiven'
       | 'consentSources'
       | 'consentVersion'
       | 'consentTimestamp'

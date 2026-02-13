@@ -1,5 +1,12 @@
-import { getUserProfile, updateUserProfile } from '@/lib/firebase/firestore';
+import 'server-only';
+import { getAdminDb } from '@/lib/firebase/admin';
 import type { IngestionSource } from '@/lib/data/ingestion';
+import type { UserProfile } from '@/types';
+
+async function getUserProfile(uid: string): Promise<UserProfile | null> {
+  const snap = await getAdminDb().collection('users').doc(uid).get();
+  return snap.exists ? (snap.data() as UserProfile) : null;
+}
 
 export async function hasSourceConsent(uid: string, source: IngestionSource): Promise<boolean> {
   const profile = await getUserProfile(uid);
@@ -32,8 +39,13 @@ export async function ensureSourceConsent(uid: string, source: IngestionSource):
 
   if (existing.includes(source)) return true;
 
-  await updateUserProfile(uid, {
-    consentSources: [...existing, source],
-  });
+  await getAdminDb().collection('users').doc(uid).set(
+    {
+      consentSources: [...existing, source],
+      consentTimestamp: Date.now(),
+      consentVersion: 2,
+    },
+    { merge: true },
+  );
   return true;
 }

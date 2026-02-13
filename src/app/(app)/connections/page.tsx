@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef, useMemo } from 'react';
+import { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { motion, useReducedMotion } from 'framer-motion';
@@ -14,6 +14,7 @@ import {
   useFileUploadMutation,
   useDriveMutation,
   useNotionMutation,
+  useNotionAuthMutation,
   useGeminiAppMutation,
   useClaudeAppMutation,
   useAnalyzeMutation,
@@ -27,6 +28,7 @@ import { LuminaIcon } from '@/components/icons/lumina-icon';
 import { GmailIcon, ChatGPTIcon, GoogleDriveIcon, NotionIcon, GeminiIcon, ClaudeIcon, FileUploadIcon } from '@/components/icons/brand-icons';
 import { StaggerList, StaggerItem } from '@/components/motion/stagger-list';
 import { fadeInUp, reducedMotionVariants } from '@/lib/motion';
+import { isNotionOAuthPopupMessage, NOTION_OAUTH_STATE_KEY } from '@/lib/notion/oauth';
 
 interface DataSource {
   source: 'gmail' | 'drive' | 'notion' | 'chatgpt' | 'file_upload' | 'gemini_app' | 'claude_app';
@@ -48,7 +50,7 @@ const JSON_TYPES = ['application/json'];
 const FILE_UPLOAD_TYPES = ['.pdf', '.txt', '.md', '.html'];
 
 export default function ConnectionsPage() {
-  const { user, profile, requestGmailAccess, requestDriveAccess, connectNotion } = useAuthStore();
+  const { user, profile, refreshProfile, requestGmailAccess, requestDriveAccess, connectNotion } = useAuthStore();
   const { setDataInsights, advanceStage } = useAssessmentStore();
   const router = useRouter();
 
@@ -65,6 +67,7 @@ export default function ConnectionsPage() {
   const fileUploadMutation = useFileUploadMutation();
   const driveMutation = useDriveMutation();
   const notionMutation = useNotionMutation();
+  const notionAuthMutation = useNotionAuthMutation();
   const geminiAppMutation = useGeminiAppMutation();
   const claudeAppMutation = useClaudeAppMutation();
   const analyzeMutation = useAnalyzeMutation();
@@ -211,24 +214,78 @@ export default function ConnectionsPage() {
     });
   }, [requestDriveAccess, driveMutation]);
 
+  const ingestNotionToken = useCallback((accessToken: string) => {
+    setError(null);
+    notionMutation.mutate({ accessToken }, {
+      onSuccess: (result) => {
+        setDataSources((prev) => ({ ...prev, notion: result }));
+        toast.success(`Notion connected! ~${result.tokenCount.toLocaleString()} tokens collected.`);
+      },
+      onError: (err) => {
+        const message = err instanceof FetchError ? err.message : 'Failed to connect Notion';
+        setError(message);
+        toast.error(message);
+      },
+    });
+  }, [notionMutation]);
+
   const handleConnectNotion = useCallback(() => {
     if (profile?.notionAccessToken) {
-      setError(null);
-      notionMutation.mutate({ accessToken: profile.notionAccessToken }, {
-        onSuccess: (result) => {
-          setDataSources((prev) => ({ ...prev, notion: result }));
-          toast.success(`Notion connected! ~${result.tokenCount.toLocaleString()} tokens collected.`);
-        },
-        onError: (err) => {
-          const message = err instanceof FetchError ? err.message : 'Failed to connect Notion';
-          setError(message);
-          toast.error(message);
-        },
-      });
-    } else {
-      connectNotion();
+      ingestNotionToken(profile.notionAccessToken);
+      return;
     }
-  }, [profile?.notionAccessToken, connectNotion, notionMutation]);
+
+    const result = connectNotion();
+    if (!result.started && result.reason) {
+      setError(result.reason);
+      toast.error(result.reason);
+    }
+  }, [profile?.notionAccessToken, connectNotion, ingestNotionToken]);
+
+  useEffect(() => {
+    const onNotionMessage = (event: MessageEvent<unknown>) => {
+      if (event.origin !== window.location.origin) return;
+      if (!isNotionOAuthPopupMessage(event.data)) return;
+
+      const message = event.data;
+      if (message.status === 'error') {
+        window.sessionStorage.removeItem(NOTION_OAUTH_STATE_KEY);
+        const detail = message.errorDescription ?? message.error;
+        setError(`Notion authentication failed: ${detail}`);
+        toast.error(`Notion authentication failed: ${detail}`);
+        return;
+      }
+
+      const expectedState = window.sessionStorage.getItem(NOTION_OAUTH_STATE_KEY);
+      if (!expectedState || !message.state || message.state !== expectedState) {
+        window.sessionStorage.removeItem(NOTION_OAUTH_STATE_KEY);
+        setError('Notion authentication could not be verified. Please try again.');
+        toast.error('Notion authentication could not be verified. Please try again.');
+        return;
+      }
+      window.sessionStorage.removeItem(NOTION_OAUTH_STATE_KEY);
+
+      notionAuthMutation.mutate(
+        { code: message.code, redirectUri: message.redirectUri },
+        {
+          onSuccess: async (result) => {
+            await refreshProfile();
+            ingestNotionToken(result.accessToken);
+          },
+          onError: (err) => {
+            const errorMessage = err instanceof FetchError ? err.message : 'Failed to authenticate Notion';
+            setError(errorMessage);
+            toast.error(errorMessage);
+          },
+        }
+      );
+    };
+
+    window.addEventListener('message', onNotionMessage);
+    return () => {
+      window.removeEventListener('message', onNotionMessage);
+    };
+  }, [notionAuthMutation, refreshProfile, ingestNotionToken]);
 
   const analyzeData = useCallback(() => {
     if (connectedCount === 0 || !user) return;
@@ -351,7 +408,7 @@ export default function ConnectionsPage() {
             description="Connect your Notion workspace to analyze notes, journals, and documentation"
             icon={<NotionIcon className="h-6 w-6" />}
             isConnected={!!dataSources.notion?.data}
-            isLoading={notionMutation.isPending}
+            isLoading={notionMutation.isPending || notionAuthMutation.isPending}
             onConnect={handleConnectNotion}
             tokenCount={dataSources.notion?.tokenCount}
             metadata={dataSources.notion?.metadata}

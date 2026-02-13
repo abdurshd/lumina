@@ -24,6 +24,11 @@ interface NotionAuthRequest {
   redirectUri: string;
 }
 
+interface NotionAuthResponse {
+  success: boolean;
+  accessToken: string;
+}
+
 interface AnalyzeRequest {
   dataSources: Record<string, string>;
 }
@@ -202,7 +207,7 @@ export const apiClient = {
 
   auth: {
     notionCallback: (req: NotionAuthRequest) =>
-      apiFetch<{ success: boolean }>('/api/auth/notion', {
+      apiFetch<NotionAuthResponse>('/api/auth/notion', {
         method: 'POST',
         body: JSON.stringify(req),
       }),
