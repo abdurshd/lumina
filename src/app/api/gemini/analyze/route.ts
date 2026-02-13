@@ -106,10 +106,18 @@ export async function POST(req: NextRequest) {
     });
 
     const jsonData = safeParseJson(text);
+    const validationResult = AnalysisResponseSchema.safeParse(jsonData);
+
+    if (!validationResult.success) {
+      console.error("[Analysis Validation Error] Zod issues:", JSON.stringify(validationResult.error.issues, null, 2));
+      console.error("[Analysis Validation Error] Raw Gemini JSON:", JSON.stringify(jsonData, null, 2).slice(0, 2000));
+    }
+
     const validated = AnalysisResponseSchema.parse(jsonData);
 
     return NextResponse.json(validated);
   } catch (error) {
+    console.error("[Analysis Error] Full error:", error instanceof Error ? { name: error.name, message: error.message, stack: error.stack?.split('\n').slice(0, 3).join('\n') } : error);
     if (error instanceof GeminiError) {
       return errorResponse(
         error.message,
@@ -119,7 +127,7 @@ export async function POST(req: NextRequest) {
       );
     }
     if (error instanceof z.ZodError) {
-      console.error("[Analysis Validation Error]", error.issues);
+      console.error("[Analysis Validation Error]", JSON.stringify(error.issues, null, 2));
       return errorResponse(
         "AI returned an unexpected response format. Please try again.",
         ErrorCode.GEMINI_ERROR,

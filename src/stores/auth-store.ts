@@ -210,8 +210,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     provider.setCustomParameters({ prompt: 'select_account' });
 
     try {
-      // Popup is the primary flow — works with COOP same-origin-allow-popups
-      // and avoids the fragile redirect + getRedirectResult race condition.
+      // Popup is the primary flow — requires COOP unsafe-none for cross-origin
+      // Google OAuth popups. Falls back to redirect if popup is blocked.
       const result = await signInWithPopup(auth, provider);
       const credential = GoogleAuthProvider.credentialFromResult(result);
       const accessToken = credential?.accessToken ?? null;

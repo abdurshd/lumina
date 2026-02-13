@@ -9,7 +9,7 @@ function getClientIp(req: NextRequest): string {
   );
 }
 
-function getRateLimitConfig(pathname: string) {
+function getRateLimitConfig(pathname: string, method: string) {
   // Sensitive operations — strictest limits
   if (
     pathname.startsWith('/api/user/delete-data') ||
@@ -29,7 +29,13 @@ function getRateLimitConfig(pathname: string) {
     return RATE_LIMITS.token;
   }
 
-  // AI generation endpoints
+  // Report status polling (GET) is lightweight — use general limit
+  // Only POST (actual generation) needs the strict generation limit
+  if (pathname.startsWith('/api/gemini/report') && method === 'GET') {
+    return RATE_LIMITS.general;
+  }
+
+  // AI generation endpoints (POST only for report)
   if (
     pathname.startsWith('/api/gemini/report') ||
     pathname.startsWith('/api/gemini/regenerate-report') ||
@@ -52,7 +58,7 @@ export function proxy(req: NextRequest) {
   }
 
   const ip = getClientIp(req);
-  const config = getRateLimitConfig(pathname);
+  const config = getRateLimitConfig(pathname, req.method);
   const key = `${ip}:${pathname}`;
   const result = checkRateLimit(key, config);
 
