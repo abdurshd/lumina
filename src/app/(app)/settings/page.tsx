@@ -75,7 +75,7 @@ export default function SettingsPage() {
   const [consentSources, setConsentSources] = useState<string[]>(profile?.consentSources ?? []);
   const [isExporting, setIsExporting] = useState(false);
   const [isDeletingCorpus, setIsDeletingCorpus] = useState(false);
-  const [byokEnabled, setByokEnabled] = useState(profile?.byokEnabled ?? false);
+  const [, setByokEnabled] = useState(profile?.byokEnabled ?? false);
   const [byokKeyInput, setByokKeyInput] = useState('');
   const [byokKeyLast4, setByokKeyLast4] = useState<string | null>(profile?.byokKeyLast4 ?? null);
   const [byokMonthlyBudgetUsd, setByokMonthlyBudgetUsd] = useState<number>(profile?.byokMonthlyBudgetUsd ?? 25);
@@ -222,7 +222,7 @@ export default function SettingsPage() {
     setSavingByok(true);
     try {
       const response = await apiClient.user.updateByok({
-        enabled: byokEnabled,
+        enabled: true,
         monthlyBudgetUsd: byokMonthlyBudgetUsd,
         hardStop: byokHardStop,
       });
@@ -246,7 +246,7 @@ export default function SettingsPage() {
     } finally {
       setSavingByok(false);
     }
-  }, [byokEnabled, byokMonthlyBudgetUsd, byokHardStop, refreshProfile, user]);
+  }, [byokMonthlyBudgetUsd, byokHardStop, refreshProfile, user]);
 
   const handleSaveByokKey = useCallback(async () => {
     if (!byokKeyInput.trim() || !user) return;
@@ -579,10 +579,6 @@ export default function SettingsPage() {
                 <p className="text-sm text-muted-foreground">Loading BYOK settings...</p>
               ) : (
                 <>
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium">Enable BYOK routing</p>
-                    <Switch checked={byokEnabled} onCheckedChange={setByokEnabled} />
-                  </div>
                   <div className="space-y-2">
                     <p className="text-sm font-medium">API key</p>
                     <div className="flex flex-wrap items-center gap-2">

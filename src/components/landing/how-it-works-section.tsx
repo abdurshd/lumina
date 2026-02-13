@@ -2,7 +2,6 @@
 
 import { useRef } from 'react';
 import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
-import { cn } from '@/lib/utils';
 
 const STEPS = [
     { id: '01', title: 'Data Synthesis', desc: 'Securely link your professional footprint across Gmail, Drive, and social vectors.' },

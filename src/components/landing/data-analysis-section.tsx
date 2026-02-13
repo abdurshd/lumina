@@ -3,7 +3,6 @@
 import { Mail, FolderOpen, FileText, MessageSquare, Shield } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-import { DataNetworkScene } from '@/components/landing/svg/data-network-scene';
 import { ScrollReveal } from '@/components/motion/scroll-reveal';
 
 const DATA_SOURCES = [

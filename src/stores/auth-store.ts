@@ -36,7 +36,7 @@ function buildDefaultProfile(user: User, accessToken?: string | null): UserProfi
     },
     googleAccessToken: accessToken ?? undefined,
     dataRetentionMode: 'session_only',
-    byokEnabled: false,
+    byokEnabled: true,
     byokMonthlyBudgetUsd: 25,
     byokHardStop: false,
     byokPlatformAccess: false,

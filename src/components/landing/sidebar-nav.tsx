@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { slideInLeft } from '@/lib/motion';
 
 const SECTIONS = [
     { id: 'hero', label: 'GENESIS', roman: '01' },

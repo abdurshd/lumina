@@ -169,7 +169,8 @@ export class LiveSessionManager {
           this._connected = false;
           this.callbacks.onError(new Error(e.message || "WebSocket error"));
         },
-        onclose: (e: CloseEvent) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        onclose: (_e: CloseEvent) => {
           const wasConnected = this._connected;
           this._connected = false;
           this.session = null;
