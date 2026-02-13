@@ -60,6 +60,15 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     const statusCode = (error as { code?: number }).code;
+    const providerReason = (
+      (error as { response?: { data?: { error?: { errors?: Array<{ reason?: string }> } } } })
+        .response
+        ?.data
+        ?.error
+        ?.errors?.[0]
+        ?.reason ?? ''
+    ).toLowerCase();
+    const normalizedMessage = message.toLowerCase();
 
     if (statusCode === 401 || message.includes('401') || message.includes('invalid_grant')) {
       return errorResponse(
@@ -68,9 +77,25 @@ export async function POST(req: NextRequest) {
         401
       );
     }
-    if (statusCode === 403 || message.includes('403') || message.toLowerCase().includes('insufficient permission')) {
+    if (
+      providerReason.includes('accessnotconfigured') ||
+      normalizedMessage.includes('access not configured') ||
+      normalizedMessage.includes('has not been used in project')
+    ) {
       return errorResponse(
-        'Gmail access not granted. Please sign in with Gmail permissions.',
+        'Gmail API is not enabled for this Google project. Enable the Gmail API in Google Cloud Console and try again.',
+        ErrorCode.FORBIDDEN,
+        403
+      );
+    }
+    if (
+      statusCode === 403 ||
+      message.includes('403') ||
+      normalizedMessage.includes('insufficient permission') ||
+      providerReason.includes('insufficientpermissions')
+    ) {
+      return errorResponse(
+        'Gmail scope is missing. Reconnect Gmail and approve Gmail read permissions in the consent popup.',
         ErrorCode.FORBIDDEN,
         403
       );

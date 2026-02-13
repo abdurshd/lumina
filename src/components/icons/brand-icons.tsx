@@ -1,19 +1,52 @@
-import type { SVGProps } from 'react';
-
 interface BrandIconProps {
   className?: string;
 }
 
+const OFFICIAL_BRAND_ICON_URLS = {
+  gmail: 'https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg',
+  googleDrive: 'https://upload.wikimedia.org/wikipedia/commons/1/12/Google_Drive_icon_%282020%29.svg',
+  gemini: 'https://upload.wikimedia.org/wikipedia/commons/1/1d/Google_Gemini_icon_2025.svg',
+  chatgpt: 'https://upload.wikimedia.org/wikipedia/commons/e/ef/ChatGPT-Logo.svg',
+  fileUpload: 'https://upload.wikimedia.org/wikipedia/commons/d/dc/Google_Files_icon.svg',
+} as const;
+
 export function GmailIcon({ className }: BrandIconProps) {
-  return <img src="/icons/gmail.svg" alt="Gmail" className={className} />;
+  return (
+    <img
+      src={OFFICIAL_BRAND_ICON_URLS.gmail}
+      alt="Gmail"
+      className={className}
+      onError={(event) => {
+        event.currentTarget.src = '/icons/gmail.svg';
+      }}
+    />
+  );
 }
 
 export function ChatGPTIcon({ className }: BrandIconProps) {
-  return <img src="/icons/chatgpt.svg" alt="ChatGPT" className={className} />;
+  return (
+    <img
+      src={OFFICIAL_BRAND_ICON_URLS.chatgpt}
+      alt="ChatGPT"
+      className={className}
+      onError={(event) => {
+        event.currentTarget.src = '/icons/chatgpt.svg';
+      }}
+    />
+  );
 }
 
 export function GoogleDriveIcon({ className }: BrandIconProps) {
-  return <img src="/icons/google-drive.svg" alt="Google Drive" className={className} />;
+  return (
+    <img
+      src={OFFICIAL_BRAND_ICON_URLS.googleDrive}
+      alt="Google Drive"
+      className={className}
+      onError={(event) => {
+        event.currentTarget.src = '/icons/google-drive.svg';
+      }}
+    />
+  );
 }
 
 export function NotionIcon({ className }: BrandIconProps) {
@@ -21,22 +54,28 @@ export function NotionIcon({ className }: BrandIconProps) {
 }
 
 export function GeminiIcon({ className }: BrandIconProps) {
-  return <img src="/icons/gemini.svg" alt="Gemini" className={className} />;
+  return (
+    <img
+      src={OFFICIAL_BRAND_ICON_URLS.gemini}
+      alt="Gemini"
+      className={className}
+      onError={(event) => {
+        event.currentTarget.src = '/icons/gemini.svg';
+      }}
+    />
+  );
 }
 
 export function ClaudeIcon({ className }: BrandIconProps) {
   return <img src="/icons/claude.svg" alt="Claude" className={className} />;
 }
 
-type IconProps = SVGProps<SVGSVGElement>;
-
-export function FileUploadIcon(props: IconProps) {
+export function FileUploadIcon({ className }: BrandIconProps) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-      <polyline points="14 2 14 8 20 8" />
-      <path d="M12 12v6" />
-      <path d="m15 15-3-3-3 3" />
-    </svg>
+    <img
+      src={OFFICIAL_BRAND_ICON_URLS.fileUpload}
+      alt="File Upload"
+      className={className}
+    />
   );
 }

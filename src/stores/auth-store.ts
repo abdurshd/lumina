@@ -54,6 +54,87 @@ async function ensureUserProfile(user: User, accessToken?: string | null): Promi
   return profile;
 }
 
+function extractGrantedScopes(result: UserCredential): string[] {
+  const tokenResponse = (result as unknown as { _tokenResponse?: { oauthScope?: string; scope?: string } })._tokenResponse;
+  const rawScopes = tokenResponse?.oauthScope ?? tokenResponse?.scope ?? '';
+  return rawScopes
+    .split(/\s+/)
+    .map((scope) => scope.trim())
+    .filter((scope) => scope.length > 0);
+}
+
+function hasGrantedScope(result: UserCredential, requiredScope: string): boolean {
+  const scopes = extractGrantedScopes(result);
+  // Some Firebase responses omit scope metadata even when token is valid.
+  // In that case we avoid false negatives and rely on API call validation.
+  if (scopes.length === 0) return true;
+  return scopes.includes(requiredScope);
+}
+
+async function validateTokenScopeWithGoogle(accessToken: string, requiredScope: string): Promise<boolean | null> {
+  try {
+    const response = await fetch(
+      `https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(accessToken)}`,
+      { method: 'GET' },
+    );
+    if (!response.ok) return null;
+    const payload = (await response.json()) as { scope?: string };
+    const scopes = (payload.scope ?? '')
+      .split(/\s+/)
+      .map((scope) => scope.trim())
+      .filter((scope) => scope.length > 0);
+    return scopes.includes(requiredScope);
+  } catch {
+    return null;
+  }
+}
+
+async function requestGoogleScopeAccess(requiredScope: string): Promise<string | null> {
+  const provider = new GoogleAuthProvider();
+  provider.addScope(requiredScope);
+  provider.setCustomParameters({
+    prompt: 'consent',
+    include_granted_scopes: 'true',
+  });
+
+  const runPopupFlow = async () => signInWithPopup(auth, provider);
+
+  try {
+    const firstResult = await runPopupFlow();
+    let credential = GoogleAuthProvider.credentialFromResult(firstResult);
+    let accessToken = credential?.accessToken ?? null;
+    if (!accessToken) return null;
+
+    let granted = hasGrantedScope(firstResult, requiredScope);
+    const tokenInfoGranted = await validateTokenScopeWithGoogle(accessToken, requiredScope);
+    if (tokenInfoGranted !== null) {
+      granted = tokenInfoGranted;
+    }
+
+    if (!granted) {
+      provider.setCustomParameters({
+        prompt: 'consent select_account',
+        include_granted_scopes: 'true',
+      });
+      const retryResult = await runPopupFlow();
+      credential = GoogleAuthProvider.credentialFromResult(retryResult);
+      accessToken = credential?.accessToken ?? null;
+      if (!accessToken) return null;
+
+      let retryGranted = hasGrantedScope(retryResult, requiredScope);
+      const retryTokenInfoGranted = await validateTokenScopeWithGoogle(accessToken, requiredScope);
+      if (retryTokenInfoGranted !== null) {
+        retryGranted = retryTokenInfoGranted;
+      }
+      if (!retryGranted) return null;
+    }
+
+    return accessToken;
+  } catch {
+    return null;
+  }
+}
+
 interface AuthState {
   user: User | null;
   profile: UserProfile | null;
@@ -172,45 +253,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   requestGmailAccess: async () => {
-    const provider = new GoogleAuthProvider();
-    provider.addScope('https://www.googleapis.com/auth/gmail.readonly');
-    provider.setCustomParameters({
-      prompt: 'consent select_account',
-      include_granted_scopes: 'true',
-    });
-
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const credential = GoogleAuthProvider.credentialFromResult(result);
-      const accessToken = credential?.accessToken ?? null;
-      if (accessToken) {
-        set({ googleAccessToken: accessToken });
-      }
-      return accessToken;
-    } catch {
-      return null;
+    const accessToken = await requestGoogleScopeAccess('https://www.googleapis.com/auth/gmail.readonly');
+    if (accessToken) {
+      set({ googleAccessToken: accessToken });
     }
+    return accessToken;
   },
 
   requestDriveAccess: async () => {
-    const provider = new GoogleAuthProvider();
-    provider.addScope('https://www.googleapis.com/auth/drive.readonly');
-    provider.setCustomParameters({
-      prompt: 'consent select_account',
-      include_granted_scopes: 'true',
-    });
-
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const credential = GoogleAuthProvider.credentialFromResult(result);
-      const accessToken = credential?.accessToken ?? null;
-      if (accessToken) {
-        set({ googleAccessToken: accessToken });
-      }
-      return accessToken;
-    } catch {
-      return null;
+    const accessToken = await requestGoogleScopeAccess('https://www.googleapis.com/auth/drive.readonly');
+    if (accessToken) {
+      set({ googleAccessToken: accessToken });
     }
+    return accessToken;
   },
 
   connectNotion: () => {
