@@ -1,6 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth, errorResponse, ErrorCode } from '@/lib/api-helpers';
 import { getAdminDb } from '@/lib/firebase/admin';
+import { NOTION_CALLBACK_PATH } from '@/lib/notion/oauth';
+
+function parseRedirectUri(value: string): URL | null {
+  try {
+    const url = new URL(value);
+    if (!['http:', 'https:'].includes(url.protocol)) return null;
+    if (url.search || url.hash) return null;
+    return url;
+  } catch {
+    return null;
+  }
+}
+
+function canonicalizeUri(url: URL): string {
+  const normalizedPath = url.pathname.length > 1 ? url.pathname.replace(/\/+$/, '') : url.pathname;
+  return `${url.origin}${normalizedPath}`;
+}
 
 export async function POST(req: NextRequest) {
   const authResult = await verifyAuth(req);
@@ -23,20 +40,32 @@ export async function POST(req: NextRequest) {
     return errorResponse('Missing or invalid redirect URI', ErrorCode.VALIDATION_ERROR, 400);
   }
 
-  const requestOrigin = req.headers.get('origin') ?? req.nextUrl.origin;
-  try {
-    const parsed = new URL(redirectUri);
-    if (!['http:', 'https:'].includes(parsed.protocol)) {
-      return errorResponse('Invalid redirect URI protocol', ErrorCode.VALIDATION_ERROR, 400);
-    }
-    if (parsed.origin !== requestOrigin) {
-      return errorResponse('Invalid redirect URI', ErrorCode.VALIDATION_ERROR, 400);
-    }
-    if (!['/api/auth/notion/callback', '/notion/callback'].includes(parsed.pathname)) {
-      return errorResponse('Invalid redirect URI path', ErrorCode.VALIDATION_ERROR, 400);
-    }
-  } catch {
+  const redirect = parseRedirectUri(redirectUri);
+  if (!redirect) {
     return errorResponse('Malformed redirect URI', ErrorCode.VALIDATION_ERROR, 400);
+  }
+  const canonicalRedirectUri = canonicalizeUri(redirect);
+
+  const requestOrigin = req.headers.get('origin') ?? req.nextUrl.origin;
+  const allowedCanonicalUris = new Set<string>();
+
+  for (const candidate of [
+    `${requestOrigin}${NOTION_CALLBACK_PATH}`,
+    `${requestOrigin}${NOTION_CALLBACK_PATH}/`,
+    process.env.NOTION_REDIRECT_URI,
+    process.env.NEXT_PUBLIC_NOTION_REDIRECT_URI,
+  ]) {
+    if (!candidate) continue;
+    const parsed = parseRedirectUri(candidate);
+    if (!parsed) continue;
+    allowedCanonicalUris.add(canonicalizeUri(parsed));
+  }
+
+  if (redirect.pathname.replace(/\/+$/, '') !== NOTION_CALLBACK_PATH) {
+    return errorResponse('Invalid redirect URI path', ErrorCode.VALIDATION_ERROR, 400);
+  }
+  if (!allowedCanonicalUris.has(canonicalRedirectUri)) {
+    return errorResponse('Invalid redirect URI', ErrorCode.VALIDATION_ERROR, 400);
   }
 
   const clientId = process.env.NOTION_CLIENT_ID;
@@ -57,7 +86,7 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         grant_type: 'authorization_code',
         code,
-        redirect_uri: redirectUri,
+        redirect_uri: redirect.toString(),
       }),
     });
 

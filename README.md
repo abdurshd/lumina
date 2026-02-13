@@ -59,6 +59,10 @@ NOTION_CLIENT_SECRET=
 NEXT_PUBLIC_NOTION_CLIENT_ID=
 ```
 
+Firebase Auth local setup checklist:
+- In Firebase Console -> Authentication -> Sign-in method, enable `Google`.
+- In Firebase Console -> Authentication -> Settings -> Authorized domains, add `localhost` and `127.0.0.1`.
+
 ### Development
 
 ```bash

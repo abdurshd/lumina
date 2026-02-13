@@ -12,7 +12,12 @@ import {
 import { auth } from '@/lib/firebase/config';
 import { getUserProfile, createUserProfile } from '@/lib/firebase/firestore';
 import { clearAssessmentSessionCache, clearCachedRetentionMode, resolveRetentionMode, setCachedRetentionMode } from '@/lib/storage/assessment-storage';
-import { createNotionOAuthState, NOTION_OAUTH_STATE_KEY } from '@/lib/notion/oauth';
+import {
+  encodeNotionOAuthState,
+  NOTION_OAUTH_REDIRECT_ORIGIN_KEY,
+  NOTION_OAUTH_STATE_KEY,
+  resolveNotionRedirectUri,
+} from '@/lib/notion/oauth';
 import type { UserProfile } from '@/types';
 import { useAssessmentStore } from './assessment-store';
 
@@ -217,14 +222,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       };
     }
 
-    const redirectUri = `${window.location.origin}/api/auth/notion/callback`;
-    const state = createNotionOAuthState();
-    window.sessionStorage.setItem(NOTION_OAUTH_STATE_KEY, state);
+    const redirectUri = resolveNotionRedirectUri(window.location.origin);
+    const { state, nonce } = encodeNotionOAuthState(window.location.origin, redirectUri);
+    window.sessionStorage.setItem(NOTION_OAUTH_STATE_KEY, nonce);
+    window.sessionStorage.setItem(
+      NOTION_OAUTH_REDIRECT_ORIGIN_KEY,
+      new URL(redirectUri).origin,
+    );
 
     const url = `https://api.notion.com/v1/oauth/authorize?client_id=${encodeURIComponent(clientId)}&response_type=code&owner=user&redirect_uri=${encodeURIComponent(redirectUri)}&state=${encodeURIComponent(state)}`;
     const popup = window.open(url, 'lumina-notion-oauth', 'width=600,height=700');
     if (!popup) {
       window.sessionStorage.removeItem(NOTION_OAUTH_STATE_KEY);
+      window.sessionStorage.removeItem(NOTION_OAUTH_REDIRECT_ORIGIN_KEY);
       return {
         started: false,
         reason: 'Popup was blocked. Please allow popups and try again.',

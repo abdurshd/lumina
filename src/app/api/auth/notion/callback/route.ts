@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { NOTION_OAUTH_MESSAGE_TYPE, type NotionOAuthPopupMessage } from '@/lib/notion/oauth';
+import {
+  decodeNotionOAuthState,
+  NOTION_OAUTH_MESSAGE_TYPE,
+  type NotionOAuthPopupMessage,
+} from '@/lib/notion/oauth';
 
 function escapeJsonForInlineScript(value: unknown): string {
   return JSON.stringify(value).replace(/</g, '\\u003c');
@@ -11,7 +15,9 @@ export async function GET(req: NextRequest) {
   const state = searchParams.get('state');
   const error = searchParams.get('error');
   const errorDescription = searchParams.get('error_description');
-  const redirectUri = `${req.nextUrl.origin}/api/auth/notion/callback`;
+  const decodedState = decodeNotionOAuthState(state);
+  const redirectUri = decodedState?.redirectUri ?? `${req.nextUrl.origin}${req.nextUrl.pathname}`;
+  const targetOrigin = decodedState?.openerOrigin ?? req.nextUrl.origin;
 
   const payload: NotionOAuthPopupMessage = error || !code
     ? {
@@ -29,7 +35,7 @@ export async function GET(req: NextRequest) {
       };
 
   const safePayload = escapeJsonForInlineScript(payload);
-  const safeOrigin = escapeJsonForInlineScript(req.nextUrl.origin);
+  const safeOrigin = escapeJsonForInlineScript(targetOrigin);
 
   const html = `<!doctype html>
 <html lang="en">

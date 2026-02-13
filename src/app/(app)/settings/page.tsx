@@ -384,100 +384,91 @@ export default function SettingsPage() {
           </Card>
         </StaggerItem>
 
-        {/* Privacy & Consent */}
-        <StaggerItem>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 font-sans">
-                <Shield className="h-5 w-5 text-primary" />
-                Privacy & Consent
-              </CardTitle>
-              <CardDescription>
-                Update which data sources you consent to. Changes take effect immediately.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {CONSENT_SOURCE_OPTIONS.map((source) => (
-                  <label key={source.id} className="flex items-center gap-3 cursor-pointer">
-                    <Checkbox
-                      checked={consentSources.includes(source.id)}
-                      onCheckedChange={() => handleConsentToggle(source.id)}
-                    />
-                    <span className="text-sm">{source.label}</span>
-                  </label>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </StaggerItem>
-
         {/* Connected Sources */}
         <StaggerItem>
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 font-sans">
                 <Database className="h-5 w-5 text-primary" />
-                Connected Data Sources
+                Data Sources & Consent
               </CardTitle>
               <CardDescription>
-                These are the sources you&apos;ve connected to Lumina.
+                Manage account connections, source consent, and data revocation in one place.
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium">Google Account</p>
-                    <p className="text-xs text-muted-foreground">{profile?.email}</p>
-                  </div>
-                  <Badge>Connected</Badge>
-                </div>
-                {profile?.notionAccessToken && (
-                  <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Connected Accounts</p>
+                  <div className="flex items-center justify-between rounded-md border px-3 py-2">
                     <div>
-                      <p className="text-sm font-medium">Notion</p>
-                      <p className="text-xs text-muted-foreground">Workspace connected</p>
+                      <p className="text-sm font-medium">Google Account</p>
+                      <p className="text-xs text-muted-foreground">{profile?.email}</p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge>Connected</Badge>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-destructive hover:text-destructive"
-                        onClick={handleDisconnectNotion}
-                      >
-                        <Link2Off className="h-3 w-3 mr-1" />
-                        Disconnect
-                      </Button>
-                    </div>
+                    <Badge>Connected</Badge>
                   </div>
-                )}
-                <div className="pt-2">
+                  {profile?.notionAccessToken && (
+                    <div className="flex items-center justify-between rounded-md border px-3 py-2">
+                      <div>
+                        <p className="text-sm font-medium">Notion</p>
+                        <p className="text-xs text-muted-foreground">Workspace connected</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge>Connected</Badge>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive hover:text-destructive"
+                          onClick={handleDisconnectNotion}
+                        >
+                          <Link2Off className="h-3 w-3 mr-1" />
+                          Disconnect
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-1">
                   <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-2">
-                    Consent Revocation
+                    Source Permissions
+                  </p>
+                  <p className="mb-3 text-xs text-muted-foreground">
+                    Toggle consent to allow new analysis. Use revoke to remove consent and delete related stored data.
                   </p>
                   <div className="space-y-2">
                     {CONSENT_SOURCE_OPTIONS.map((source) => {
                       const isConsented = consentSources.includes(source.id);
                       return (
-                        <div key={source.id} className="flex items-center justify-between rounded-md border px-3 py-2">
-                          <div>
-                            <p className="text-sm">{source.label}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {isConsented ? 'Consented' : 'Not consented'}
-                            </p>
+                        <div key={source.id} className="flex items-center justify-between gap-3 rounded-md border px-3 py-2">
+                          <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-3">
+                            <Checkbox
+                              checked={isConsented}
+                              onCheckedChange={() => handleConsentToggle(source.id)}
+                              disabled={updateProfileMutation.isPending || deleteDataMutation.isPending}
+                            />
+                            <div>
+                              <p className="text-sm">{source.label}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {isConsented ? 'Consented' : 'Not consented'}
+                              </p>
+                            </div>
+                          </label>
+                          <div className="flex items-center gap-2">
+                            <Badge variant={isConsented ? 'secondary' : 'outline'}>
+                              {isConsented ? 'Allowed' : 'Blocked'}
+                            </Badge>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-destructive hover:text-destructive"
+                              onClick={() => handleRevokeSource(source.id)}
+                              disabled={!isConsented || deleteDataMutation.isPending || updateProfileMutation.isPending}
+                            >
+                              <Link2Off className="h-3 w-3 mr-1" />
+                              Revoke
+                            </Button>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-destructive hover:text-destructive"
-                            onClick={() => handleRevokeSource(source.id)}
-                            disabled={!isConsented || deleteDataMutation.isPending}
-                          >
-                            <Link2Off className="h-3 w-3 mr-1" />
-                            Revoke
-                          </Button>
                         </div>
                       );
                     })}

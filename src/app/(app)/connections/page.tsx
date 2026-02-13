@@ -28,7 +28,12 @@ import { LuminaIcon } from '@/components/icons/lumina-icon';
 import { GmailIcon, ChatGPTIcon, GoogleDriveIcon, NotionIcon, GeminiIcon, ClaudeIcon, FileUploadIcon } from '@/components/icons/brand-icons';
 import { StaggerList, StaggerItem } from '@/components/motion/stagger-list';
 import { fadeInUp, reducedMotionVariants } from '@/lib/motion';
-import { isNotionOAuthPopupMessage, NOTION_OAUTH_STATE_KEY } from '@/lib/notion/oauth';
+import {
+  decodeNotionOAuthState,
+  isNotionOAuthPopupMessage,
+  NOTION_OAUTH_REDIRECT_ORIGIN_KEY,
+  NOTION_OAUTH_STATE_KEY,
+} from '@/lib/notion/oauth';
 
 interface DataSource {
   source: 'gmail' | 'drive' | 'notion' | 'chatgpt' | 'file_upload' | 'gemini_app' | 'claude_app';
@@ -244,26 +249,39 @@ export default function ConnectionsPage() {
 
   useEffect(() => {
     const onNotionMessage = (event: MessageEvent<unknown>) => {
-      if (event.origin !== window.location.origin) return;
       if (!isNotionOAuthPopupMessage(event.data)) return;
+
+      const expectedMessageOrigin = window.sessionStorage.getItem(NOTION_OAUTH_REDIRECT_ORIGIN_KEY)
+        ?? window.location.origin;
+      if (event.origin !== expectedMessageOrigin) return;
 
       const message = event.data;
       if (message.status === 'error') {
         window.sessionStorage.removeItem(NOTION_OAUTH_STATE_KEY);
+        window.sessionStorage.removeItem(NOTION_OAUTH_REDIRECT_ORIGIN_KEY);
         const detail = message.errorDescription ?? message.error;
         setError(`Notion authentication failed: ${detail}`);
         toast.error(`Notion authentication failed: ${detail}`);
         return;
       }
 
-      const expectedState = window.sessionStorage.getItem(NOTION_OAUTH_STATE_KEY);
-      if (!expectedState || !message.state || message.state !== expectedState) {
+      const expectedNonce = window.sessionStorage.getItem(NOTION_OAUTH_STATE_KEY);
+      const decodedState = decodeNotionOAuthState(message.state);
+      if (
+        !expectedNonce ||
+        !decodedState ||
+        decodedState.nonce !== expectedNonce ||
+        decodedState.openerOrigin !== window.location.origin ||
+        decodedState.redirectUri !== message.redirectUri
+      ) {
         window.sessionStorage.removeItem(NOTION_OAUTH_STATE_KEY);
+        window.sessionStorage.removeItem(NOTION_OAUTH_REDIRECT_ORIGIN_KEY);
         setError('Notion authentication could not be verified. Please try again.');
         toast.error('Notion authentication could not be verified. Please try again.');
         return;
       }
       window.sessionStorage.removeItem(NOTION_OAUTH_STATE_KEY);
+      window.sessionStorage.removeItem(NOTION_OAUTH_REDIRECT_ORIGIN_KEY);
 
       notionAuthMutation.mutate(
         { code: message.code, redirectUri: message.redirectUri },
@@ -314,7 +332,7 @@ export default function ConnectionsPage() {
   }, [connectedCount, dataSources, user, setDataInsights, advanceStage, analyzeMutation]);
 
   return (
-    <div className="mx-auto max-w-3xl px-4 sm:px-6 py-8 sm:py-12">
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8 sm:py-12">
       <PageHeader
         icon={Plug}
         title="Data Connections"
@@ -323,8 +341,8 @@ export default function ConnectionsPage() {
 
       {error && <ErrorAlert message={error} onRetry={() => setError(null)} className="mb-6" />}
 
-      <StaggerList className="space-y-4">
-        <StaggerItem>
+      <StaggerList className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <StaggerItem className="h-full">
           <ConnectorCard
             title="Gmail"
             description="Analyze your sent emails to understand communication style and interests"
@@ -337,7 +355,7 @@ export default function ConnectionsPage() {
           />
         </StaggerItem>
 
-        <StaggerItem>
+        <StaggerItem className="h-full">
           <ConnectorCard
             title="ChatGPT"
             description="Upload your ChatGPT conversations.json export to analyze your thinking patterns"
@@ -345,12 +363,13 @@ export default function ConnectionsPage() {
             isConnected={!!dataSources.chatgpt?.data}
             isLoading={chatgptMutation.isPending}
             onConnect={handleChatGPTUpload}
+            actionVerb="upload"
             tokenCount={dataSources.chatgpt?.tokenCount}
             metadata={dataSources.chatgpt?.metadata}
           />
         </StaggerItem>
 
-        <StaggerItem>
+        <StaggerItem className="h-full">
           <ConnectorCard
             title="Gemini"
             description="Upload your Gemini conversations export to analyze your curiosity patterns"
@@ -358,12 +377,13 @@ export default function ConnectionsPage() {
             isConnected={!!dataSources.gemini_app?.data}
             isLoading={geminiAppMutation.isPending}
             onConnect={() => geminiAppInputRef.current?.click()}
+            actionVerb="upload"
             tokenCount={dataSources.gemini_app?.tokenCount}
             metadata={dataSources.gemini_app?.metadata}
           />
         </StaggerItem>
 
-        <StaggerItem>
+        <StaggerItem className="h-full">
           <ConnectorCard
             title="Claude"
             description="Upload your Claude conversations export to analyze your reasoning patterns"
@@ -371,12 +391,13 @@ export default function ConnectionsPage() {
             isConnected={!!dataSources.claude_app?.data}
             isLoading={claudeAppMutation.isPending}
             onConnect={() => claudeAppInputRef.current?.click()}
+            actionVerb="upload"
             tokenCount={dataSources.claude_app?.tokenCount}
             metadata={dataSources.claude_app?.metadata}
           />
         </StaggerItem>
 
-        <StaggerItem>
+        <StaggerItem className="h-full">
           <ConnectorCard
             title="File Upload"
             description="Upload a resume, portfolio, or writing samples (PDF, TXT, Markdown, HTML)"
@@ -384,12 +405,13 @@ export default function ConnectionsPage() {
             isConnected={!!dataSources.file_upload?.data}
             isLoading={fileUploadMutation.isPending}
             onConnect={handleFileUpload}
+            actionVerb="upload"
             tokenCount={dataSources.file_upload?.tokenCount}
             metadata={dataSources.file_upload?.metadata}
           />
         </StaggerItem>
 
-        <StaggerItem>
+        <StaggerItem className="h-full">
           <ConnectorCard
             title="Google Drive"
             description="Analyze your Google Docs to uncover writing and work patterns"
@@ -402,7 +424,7 @@ export default function ConnectionsPage() {
           />
         </StaggerItem>
 
-        <StaggerItem>
+        <StaggerItem className="h-full">
           <ConnectorCard
             title="Notion"
             description="Connect your Notion workspace to analyze notes, journals, and documentation"

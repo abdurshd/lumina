@@ -5,6 +5,8 @@ const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_NOTION_CLIENT_ID:
       process.env.NEXT_PUBLIC_NOTION_CLIENT_ID ?? process.env.NOTION_CLIENT_ID ?? '',
+    NEXT_PUBLIC_NOTION_REDIRECT_URI:
+      process.env.NEXT_PUBLIC_NOTION_REDIRECT_URI ?? process.env.NOTION_REDIRECT_URI ?? '',
   },
   async headers() {
     return [
@@ -35,12 +37,13 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://apis.google.com",
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline' blob: https://apis.google.com",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https:",
               "font-src 'self'",
-              "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com https://firestore.googleapis.com https://generativelanguage.googleapis.com https://api.notion.com wss://*.firebaseio.com",
-              "frame-src 'self' https://accounts.google.com",
+              "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com https://firestore.googleapis.com https://generativelanguage.googleapis.com wss://generativelanguage.googleapis.com https://api.notion.com wss://*.firebaseio.com",
+              // Firebase popup auth relies on an embedded auth iframe from the authDomain.
+              "frame-src 'self' https://accounts.google.com https://*.firebaseapp.com https://*.web.app",
               "media-src 'self' blob:",
               "worker-src 'self' blob:",
             ].join("; "),

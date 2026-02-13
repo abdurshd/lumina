@@ -41,7 +41,6 @@ export function useMicrophone(onAudioData: (base64: string) => void) {
       };
 
       source.connect(workletNode);
-      workletNode.connect(ctx.destination);
 
       setIsActive(true);
       setError(null);

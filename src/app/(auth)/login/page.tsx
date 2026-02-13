@@ -31,17 +31,24 @@ export default function LoginPage() {
       await signInWithGoogle();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Sign-in failed';
+      const code = (err as { code?: string })?.code ?? '';
+
       // Firebase auth errors
-      if (message.includes('popup-closed-by-user')) {
+      if (code === 'auth/popup-closed-by-user' || message.includes('popup-closed-by-user')) {
         setError(null); // User intentionally closed
-      } else if (message.includes('popup-blocked')) {
+      } else if (code === 'auth/popup-blocked' || message.includes('popup-blocked')) {
         setError('Pop-up was blocked. Please allow pop-ups for this site and try again.');
-      } else if (message.includes('network-request-failed')) {
+      } else if (code === 'auth/network-request-failed' || message.includes('network-request-failed')) {
         setError('Network error. Please check your connection and try again.');
+      } else if (code === 'auth/unauthorized-domain' || message.includes('unauthorized-domain')) {
+        setError('This localhost domain is not authorized in Firebase Auth. Add localhost (and 127.0.0.1 if used) in Firebase Console -> Authentication -> Settings -> Authorized domains.');
+      } else if (code === 'auth/operation-not-allowed' || message.includes('operation-not-allowed')) {
+        setError('Google sign-in is disabled for this Firebase project. Enable Google provider in Firebase Console -> Authentication -> Sign-in method.');
       } else {
-        setError(`Sign-in failed: ${message}`);
+        setError(`Sign-in failed: ${code || message}`);
       }
-      if (message.includes('popup-closed-by-user')) {
+
+      if (code === 'auth/popup-closed-by-user' || message.includes('popup-closed-by-user')) {
         // Silent — user just closed the popup
       } else {
         toast.error('Sign-in failed. Please try again.');

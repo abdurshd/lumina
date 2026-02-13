@@ -33,6 +33,7 @@ interface ConnectorCardProps {
   };
   disabled?: boolean;
   disabledReason?: string;
+  actionVerb?: 'connect' | 'upload';
 }
 
 export const ConnectorCard = memo(function ConnectorCard({
@@ -46,44 +47,52 @@ export const ConnectorCard = memo(function ConnectorCard({
   metadata,
   disabled,
   disabledReason,
+  actionVerb = 'connect',
 }: ConnectorCardProps) {
   const shouldReduceMotion = useReducedMotion();
+  const actionLabel = actionVerb === 'upload' ? 'Upload' : `Connect ${title}`;
+  const loadingLabel = actionVerb === 'upload' ? 'Uploading...' : `Connecting ${title}...`;
 
   return (
     <motion.div
+      className="h-full"
       layout={!shouldReduceMotion}
       whileHover={shouldReduceMotion ? undefined : { y: -3 }}
       transition={smoothTransition}
     >
       <Card
-        className={`transition-colors duration-300 ${isConnected ? "border-primary/30 bg-primary/[0.03]" : "hover:border-overlay-strong"}`}
+        className={`h-full min-h-[320px] transition-colors duration-300 ${isConnected ? "border-primary/30 bg-primary/[0.03]" : "hover:border-overlay-strong"}`}
       >
-        <CardHeader className="flex flex-row items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-background border-2 border-overlay-medium">
-            {icon}
+        <CardHeader className="px-5 pb-2 gap-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-background border-2 border-overlay-medium">
+              {icon}
+            </div>
+            {isConnected && (
+              <motion.span
+                initial={
+                  shouldReduceMotion ? false : { scale: 0, opacity: 0 }
+                }
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 500, damping: 25 }}
+              >
+                <Badge>
+                  <CheckCircle2 className="mr-1 h-3 w-3" />
+                  Connected
+                </Badge>
+              </motion.span>
+            )}
           </div>
-          <div className="flex-1 min-w-0">
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
               <CardTitle className="text-lg font-sans">{title}</CardTitle>
-              {isConnected && (
-                <motion.span
-                  initial={
-                    shouldReduceMotion ? false : { scale: 0, opacity: 0 }
-                  }
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ type: "spring", stiffness: 500, damping: 25 }}
-                >
-                  <Badge>
-                    <CheckCircle2 className="mr-1 h-3 w-3" />
-                    Connected
-                  </Badge>
-                </motion.span>
-              )}
             </div>
-            <CardDescription>{description}</CardDescription>
+            <CardDescription className="line-clamp-3 min-h-[3.75rem]">
+              {description}
+            </CardDescription>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="mt-auto px-5 pt-0">
           {isConnected ? (
             <>
               <motion.p
@@ -111,11 +120,11 @@ export const ConnectorCard = memo(function ConnectorCard({
             <LoadingButton
               onClick={onConnect}
               loading={isLoading}
-              loadingText={`Connecting ${title}...`}
+              loadingText={loadingLabel}
               variant="outline"
               className="w-full"
             >
-              Connect {title}
+              {actionLabel}
             </LoadingButton>
           )}
         </CardContent>

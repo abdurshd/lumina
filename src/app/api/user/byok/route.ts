@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { verifyAuth, errorResponse, ErrorCode } from '@/lib/api-helpers';
-import { updateUserProfile, getUserProfile } from '@/lib/firebase/firestore';
+import { getAdminDb } from '@/lib/firebase/admin';
+import type { UserProfile } from '@/types';
 import {
   clearUserByokSecret,
   getUsageSnapshot,
@@ -12,6 +13,7 @@ import {
 const DEFAULT_BUDGET_USD = 25;
 const GEMINI_API_KEY_MIN_LENGTH = 20;
 const PLATFORM_OVERRIDE_CODE = process.env.BYOK_PLATFORM_OVERRIDE_CODE?.trim() ?? '';
+const USERS_COLLECTION = 'users';
 
 const UpdateSchema = z.object({
   enabled: z.boolean().optional(),
@@ -20,6 +22,19 @@ const UpdateSchema = z.object({
   monthlyBudgetUsd: z.number().min(1).max(2000).optional(),
   hardStop: z.boolean().optional(),
 });
+
+type ByokProfileUpdates = Partial<
+  Pick<UserProfile, 'byokEnabled' | 'byokKeyLast4' | 'byokMonthlyBudgetUsd' | 'byokHardStop' | 'byokPlatformAccess'>
+>;
+
+async function getUserProfile(uid: string): Promise<UserProfile | null> {
+  const snap = await getAdminDb().collection(USERS_COLLECTION).doc(uid).get();
+  return snap.exists ? (snap.data() as UserProfile) : null;
+}
+
+async function updateUserProfile(uid: string, updates: ByokProfileUpdates): Promise<void> {
+  await getAdminDb().collection(USERS_COLLECTION).doc(uid).set(updates, { merge: true });
+}
 
 async function getByokResponse(uid: string) {
   const [profile, usage] = await Promise.all([getUserProfile(uid), getUsageSnapshot(uid)]);
@@ -78,7 +93,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const updates: Parameters<typeof updateUserProfile>[1] = {};
+    const updates: ByokProfileUpdates = {};
     const { enabled, apiKey, clearKey, monthlyBudgetUsd, hardStop } = parsed.data;
     const normalizedApiKey = apiKey?.trim();
     const currentProfile = await getUserProfile(authResult.uid);
