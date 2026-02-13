@@ -1,9 +1,11 @@
 "use client";
 
+import { useEffect } from "react";
 import { useAuthStore } from "@/stores/auth-store";
 import { useTalentReportQuery } from "@/hooks/use-api-queries";
 import { PreCompletionDashboard } from "@/components/dashboard/pre-completion-dashboard";
 import { PostCompletionDashboard } from "@/components/dashboard/post-completion-dashboard";
+import { triggerAgentEvaluation } from "@/lib/agent/evaluate-client";
 
 export default function DashboardPage() {
   const { profile, loading } = useAuthStore();
@@ -18,6 +20,17 @@ export default function DashboardPage() {
     : false;
 
   const showPostCompletion = allCompleted && !!report && !reportLoading;
+
+  // Re-evaluate agent state on mount (Zustand is in-memory, so store is empty after reload)
+  useEffect(() => {
+    if (!uid || loading) return;
+    const hasProgress = profile
+      ? Object.values(profile.stages).some((s) => s === "completed")
+      : false;
+    if (hasProgress) {
+      void triggerAgentEvaluation(uid);
+    }
+  }, [uid, loading, profile]);
 
   if (showPostCompletion) {
     return <PostCompletionDashboard report={report} />;

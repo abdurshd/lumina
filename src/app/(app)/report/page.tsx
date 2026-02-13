@@ -14,6 +14,7 @@ import {
   getQuizScores,
   getConstraints,
 } from '@/lib/firebase/firestore';
+import { triggerAgentEvaluation } from '@/lib/agent/evaluate-client';
 import { buildComputedProfile } from '@/lib/career/profile-builder';
 import { FetchError } from '@/lib/fetch-client';
 import { useFeedbackMutation, useRegenerateReportMutation, useStartReportJobMutation } from '@/hooks/use-api-mutations';
@@ -79,6 +80,7 @@ export default function ReportPage() {
         if (refreshed.data) {
           setReport(refreshed.data);
           await advanceStage('report');
+          if (user) void triggerAgentEvaluation(user.uid);
         }
       }
     } catch {

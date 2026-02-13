@@ -7,6 +7,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { useAuthStore } from '@/stores/auth-store';
 import { useAssessmentStore } from '@/stores/assessment-store';
 import { saveDataInsights } from '@/lib/firebase/firestore';
+import { triggerAgentEvaluation } from '@/lib/agent/evaluate-client';
 import { FetchError } from '@/lib/fetch-client';
 import {
   useGmailMutation,
@@ -321,6 +322,7 @@ export default function ConnectionsPage() {
         setDataInsights(insights);
         await advanceStage('connections');
         setAnalysisComplete(true);
+        void triggerAgentEvaluation(user.uid);
         toast.success('Analysis complete! Your data has been analyzed.');
       },
       onError: (err) => {

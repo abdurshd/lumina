@@ -79,7 +79,7 @@ const DecisionCard = memo(function DecisionCard({ decision }: { decision: AgentD
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <Card className="glass p-3 border-neutral-800">
+      <Card className="glass p-3 border-border">
         <div className="flex items-start gap-3">
           <div className={`mt-0.5 ${colorClass}`}>
             <Icon className="w-4 h-4" />
@@ -95,25 +95,25 @@ const DecisionCard = memo(function DecisionCard({ decision }: { decision: AgentD
                   {delta > 0 ? '+' : ''}{delta}%
                 </span>
               )}
-              <span className="text-[10px] text-neutral-500 ml-auto">
+              <span className="text-[10px] text-muted-foreground ml-auto">
                 {formatTimestamp(decision.timestamp)}
               </span>
             </div>
-            <p className="text-xs text-neutral-300 line-clamp-2">
+            <p className="text-xs text-foreground line-clamp-2">
               {decision.reason}
             </p>
             {expanded && decision.metadata && (
-              <div className="mt-2 text-[10px] text-neutral-500 space-y-0.5">
+              <div className="mt-2 text-[10px] text-muted-foreground space-y-0.5">
                 {Object.entries(decision.metadata).map(([key, value]) => (
                   <div key={key}>
-                    <span className="text-neutral-600">{key}:</span> {String(value)}
+                    <span className="text-muted-foreground/70">{key}:</span> {String(value)}
                   </div>
                 ))}
               </div>
             )}
             <button
               onClick={() => setExpanded(!expanded)}
-              className="text-[10px] text-neutral-500 hover:text-neutral-300 mt-1 flex items-center gap-0.5"
+              className="text-[10px] text-muted-foreground hover:text-foreground mt-1 flex items-center gap-0.5"
             >
               {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
               {expanded ? 'Less' : 'Details'}
@@ -126,18 +126,20 @@ const DecisionCard = memo(function DecisionCard({ decision }: { decision: AgentD
 });
 
 function DecisionLogInner({ filtered, visible }: { filtered: AgentDecision[]; visible: AgentDecision[] }) {
+  const confidenceProfile = useAgentStore((s) => s.confidenceProfile);
+
   return (
     <>
       {/* Confidence Dashboard */}
-      <div className="px-2 py-2 border-b border-neutral-800">
-        <ConfidenceDashboard profile={null} compact />
+      <div className="px-2 py-2 border-b border-border">
+        <ConfidenceDashboard profile={confidenceProfile} compact />
       </div>
 
       <ScrollArea className="flex-1 px-2 py-2">
         <div className="space-y-2">
           <AnimatePresence mode="popLayout">
             {filtered.length === 0 ? (
-              <p className="text-xs text-neutral-500 text-center py-8">
+              <p className="text-xs text-muted-foreground text-center py-8">
                 No agent decisions yet.
               </p>
             ) : (
@@ -174,7 +176,7 @@ export function DecisionLog({ filter }: DecisionLogProps) {
           variant="outline"
           size="sm"
           onClick={() => setCollapsed(false)}
-          className="rounded-l-lg rounded-r-none border-r-0 px-2 py-6 bg-neutral-900/90 border-neutral-700"
+          className="rounded-l-lg rounded-r-none border-r-0 px-2 py-6 bg-card/90 border-border"
         >
           <PanelRightOpen className="w-4 h-4" />
         </Button>
@@ -183,11 +185,11 @@ export function DecisionLog({ filter }: DecisionLogProps) {
   }
 
   return (
-    <div className="w-72 border-l border-neutral-800 bg-neutral-950/50 flex flex-col h-full">
-      <div className="flex items-center justify-between px-3 py-2 border-b border-neutral-800">
+    <div className="w-72 border-l border-border bg-card/50 flex flex-col h-full">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-border">
         <div className="flex items-center gap-2">
           <Brain className="w-4 h-4 text-green-400" />
-          <span className="text-xs font-medium text-neutral-200">Agent Log</span>
+          <span className="text-xs font-medium text-foreground">Agent Log</span>
           <Badge variant="secondary" className="text-[10px] px-1 py-0">
             {filtered.length}
           </Badge>
@@ -238,11 +240,11 @@ export function MobileDecisionLog({ filter }: DecisionLogProps) {
       </button>
 
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="right" className="w-80 sm:w-96 p-0 bg-neutral-950/95 border-neutral-800">
-          <SheetHeader className="px-3 py-2 border-b border-neutral-800">
+        <SheetContent side="right" className="w-80 sm:w-96 p-0 bg-card/95 border-border">
+          <SheetHeader className="px-3 py-2 border-b border-border">
             <div className="flex items-center gap-2">
               <Brain className="w-4 h-4 text-green-400" />
-              <SheetTitle className="text-xs font-medium text-neutral-200">Agent Log</SheetTitle>
+              <SheetTitle className="text-xs font-medium text-foreground">Agent Log</SheetTitle>
               <Badge variant="secondary" className="text-[10px] px-1 py-0">
                 {filtered.length}
               </Badge>

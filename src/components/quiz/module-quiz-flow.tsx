@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/auth-store';
 import { useAssessmentStore } from '@/stores/assessment-store';
 import { saveQuizAnswers, saveQuizScores, saveModuleProgress, saveConstraints } from '@/lib/firebase/firestore';
+import { triggerAgentEvaluation } from '@/lib/agent/evaluate-client';
 import { FetchError } from '@/lib/fetch-client';
 import { useQuizMutation, useQuizScoreMutation } from '@/hooks/use-api-mutations';
 import { getModuleConfig } from '@/lib/quiz/module-config';
@@ -166,6 +167,7 @@ export function ModuleQuizFlow({ moduleId, onBack, onComplete }: ModuleQuizFlowP
             try {
               await saveQuizScores(user.uid, result.scores, result.dimensionSummary, result.dimensionConfidence);
               setIsComplete(true);
+              void triggerAgentEvaluation(user.uid);
               toast.success(`${moduleConfig.label} module complete!`);
             } catch {
               toast.error('Failed to save scores.');
@@ -175,6 +177,7 @@ export function ModuleQuizFlow({ moduleId, onBack, onComplete }: ModuleQuizFlowP
           },
           onError: () => {
             setIsComplete(true);
+            void triggerAgentEvaluation(user.uid);
             setIsScoring(false);
             toast.success(`${moduleConfig.label} module complete!`);
           },

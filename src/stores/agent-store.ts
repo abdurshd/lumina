@@ -1,10 +1,11 @@
 import { create } from 'zustand';
-import type { AgentAction, AgentDecision } from '@/types';
+import type { AgentAction, AgentDecision, ConfidenceProfile } from '@/types';
 
 interface AgentStoreState {
   decisions: AgentDecision[];
   currentPlan: AgentAction[];
   isEvaluating: boolean;
+  confidenceProfile: ConfidenceProfile | null;
 
   addDecision: (decision: AgentDecision) => void;
   setPlan: (plan: AgentAction[]) => void;
@@ -12,12 +13,14 @@ interface AgentStoreState {
   clearLog: () => void;
   setEvaluating: (evaluating: boolean) => void;
   loadDecisions: (decisions: AgentDecision[]) => void;
+  setConfidenceProfile: (profile: ConfidenceProfile) => void;
 }
 
 export const useAgentStore = create<AgentStoreState>((set) => ({
   decisions: [],
   currentPlan: [],
   isEvaluating: false,
+  confidenceProfile: null,
 
   addDecision: (decision) =>
     set((state) => ({
@@ -41,4 +44,6 @@ export const useAgentStore = create<AgentStoreState>((set) => ({
   setEvaluating: (evaluating) => set({ isEvaluating: evaluating }),
 
   loadDecisions: (decisions) => set({ decisions }),
+
+  setConfidenceProfile: (profile) => set({ confidenceProfile: profile }),
 }));

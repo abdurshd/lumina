@@ -1,5 +1,6 @@
 import { apiFetch } from '@/lib/fetch-client';
-import type { DataInsight, QuizQuestion, QuizAnswer, TalentReport, QuizScore, QuizDimensionSummary, QuizModuleId, ComputedProfile, UserConstraints, MicroChallenge, Reflection, ActionPlanProgress } from '@/types';
+import type { DataInsight, QuizQuestion, QuizAnswer, TalentReport, QuizScore, QuizDimensionSummary, QuizModuleId, ComputedProfile, UserConstraints, MicroChallenge, Reflection, ActionPlanProgress, AgentState } from '@/types';
+import type { EvaluateResponse } from '@/lib/agent/types';
 // Note: MicroChallenge, Reflection, and ActionPlanProgress are used in the iteration/corpus/user API methods
 
 // Request types
@@ -323,6 +324,14 @@ export const apiClient = {
     deleteDocument: (docId: string) =>
       apiFetch<{ success: boolean }>(`/api/corpus/documents/${docId}`, {
         method: 'DELETE',
+      }),
+  },
+
+  agent: {
+    evaluate: (state: AgentState) =>
+      apiFetch<EvaluateResponse>('/api/agent/evaluate', {
+        method: 'POST',
+        body: JSON.stringify(state),
       }),
   },
 };

@@ -8,6 +8,7 @@ import { useLiveSession } from '@/hooks/use-live-session';
 import { useAuthStore } from '@/stores/auth-store';
 import { useAssessmentStore } from '@/stores/assessment-store';
 import { saveSessionInsights, saveUserSignals } from '@/lib/firebase/firestore';
+import { triggerAgentEvaluation } from '@/lib/agent/evaluate-client';
 import { summarizeLiveSessionArtifacts } from '@/lib/session/post-session-summary';
 import { FetchError } from '@/lib/fetch-client';
 import { useEphemeralTokenMutation } from '@/hooks/use-api-mutations';
@@ -121,6 +122,7 @@ export default function SessionPage() {
         await saveUserSignals(user.uid, summarized.signals);
         setSessionInsights(summarized.insights);
         await advanceStage('session');
+        void triggerAgentEvaluation(user.uid);
         toast.success(`Session complete! ${summarized.insights.length} insights captured.`);
       }
     } catch {
