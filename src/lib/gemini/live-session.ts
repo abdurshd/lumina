@@ -4,8 +4,12 @@
  */
 
 import {
+  ActivityHandling,
+  EndSensitivity,
   GoogleGenAI,
   Modality,
+  StartSensitivity,
+  TurnCoverage,
   type Session,
   type LiveServerMessage,
 } from "@google/genai";
@@ -119,6 +123,16 @@ export class LiveSessionManager {
     try {
       const config: Parameters<typeof client.live.connect>[0]["config"] = {
         responseModalities: [Modality.AUDIO],
+        realtimeInputConfig: {
+          automaticActivityDetection: {
+            startOfSpeechSensitivity: StartSensitivity.START_SENSITIVITY_HIGH,
+            endOfSpeechSensitivity: EndSensitivity.END_SENSITIVITY_HIGH,
+            prefixPaddingMs: 120,
+            silenceDurationMs: 450,
+          },
+          activityHandling: ActivityHandling.START_OF_ACTIVITY_INTERRUPTS,
+          turnCoverage: TurnCoverage.TURN_INCLUDES_ONLY_ACTIVITY,
+        },
         speechConfig: {
           voiceConfig: {
             prebuiltVoiceConfig: {
