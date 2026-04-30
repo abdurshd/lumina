@@ -5,11 +5,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 const SECTIONS = [
-    { id: 'hero', label: 'GENESIS', roman: '01' },
-    { id: 'quiz', label: 'SYNTHESIS', roman: '02' },
-    { id: 'session', label: 'RESONANCE', roman: '03' },
-    { id: 'report', label: 'MANIFESTO', roman: '04' },
-    { id: 'how-it-works', label: 'PROTOCOL', roman: '05' },
+    { id: 'hero', label: 'Start', roman: '01' },
+    { id: 'quiz', label: 'Assessment', roman: '02' },
+    { id: 'session', label: 'Session', roman: '03' },
+    { id: 'report', label: 'Report', roman: '04' },
+    { id: 'how-it-works', label: 'Method', roman: '05' },
 ];
 
 export function SidebarNav() {
@@ -70,7 +70,7 @@ export function SidebarNav() {
                                     )}
                                 >
                                     <span className={cn(
-                                        "text-[10px] font-black tracking-widest transition-all duration-500",
+                                        "text-[10px] font-semibold tracking-widest transition-all duration-300",
                                         activeSection === section.id ? "scale-125" : "scale-100"
                                     )}>
                                         {section.roman}
@@ -80,13 +80,13 @@ export function SidebarNav() {
                                         {activeSection === section.id && (
                                             <motion.div
                                                 layoutId="active-line"
-                                                className="absolute inset-0 bg-primary shadow-[0_0_10px_oklch(75%_0.18_200)]"
+                                                className="absolute inset-0 bg-primary"
                                             />
                                         )}
                                     </div>
 
                                     <span className={cn(
-                                        "text-[10px] font-black tracking-[0.2em] transition-all duration-500 whitespace-nowrap uppercase",
+                                        "text-xs font-medium transition-all duration-300 whitespace-nowrap",
                                         activeSection === section.id
                                             ? "opacity-100 translate-x-0"
                                             : "opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0"

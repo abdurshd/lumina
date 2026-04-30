@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/auth-store';
 import { doc, updateDoc } from 'firebase/firestore';
@@ -11,18 +12,16 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { LuminaIcon } from '@/components/icons/lumina-icon';
-import { ArrowRight, ArrowLeft, Shield, Sparkles } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Shield, Sparkles, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { smoothTransition, staggerContainer, staggerItem, popIn, reducedMotionVariants, heavySpring, snappySpring } from '@/lib/motion';
 
 const DATA_SOURCE_OPTIONS = [
-  { id: 'gmail', label: 'Gmail', description: 'Analyze sent emails for communication patterns' },
-  { id: 'chatgpt', label: 'ChatGPT Export', description: 'Analyze conversation patterns and interests' },
-  { id: 'gemini_app', label: 'Gemini Conversations', description: 'Analyze Gemini conversations for curiosity patterns' },
-  { id: 'claude_app', label: 'Claude Conversations', description: 'Analyze Claude conversations for reasoning patterns' },
-  { id: 'file_upload', label: 'File Uploads', description: 'Upload resumes, portfolios, writing samples' },
-  { id: 'drive', label: 'Google Drive', description: 'Analyze Google Docs for work patterns' },
-  { id: 'notion', label: 'Notion', description: 'Analyze notes and documentation' },
+  { id: 'gmail', label: 'Gmail', description: 'Communication patterns from your sent mail' },
+  { id: 'drive', label: 'Google Drive', description: 'Work patterns from your documents' },
+  { id: 'notion', label: 'Notion', description: 'Notes, plans, and recurring themes' },
+  { id: 'chatgpt', label: 'ChatGPT export', description: 'Curiosity and reasoning patterns' },
+  { id: 'file_upload', label: 'File uploads', description: 'Resumes, portfolios, writing samples' },
 ];
 
 export default function OnboardingPage() {
@@ -63,8 +62,19 @@ export default function OnboardingPage() {
         dataRetentionMode: 'session_only',
       });
       await refreshProfile();
+
+      // Best-effort referral attribution: cookie is set by /r/[code]; this
+      // call is a no-op if there's no cookie, the code is invalid, or it's a
+      // self-referral. Failures here never block onboarding.
+      void fetch('/api/referrals/claim', {
+        method: 'POST',
+        headers: {
+          authorization: `Bearer ${await user.getIdToken()}`,
+        },
+      }).catch(() => undefined);
+
       toast.success('Welcome to Lumina!');
-      router.push('/dashboard');
+      router.push('/connections');
     } catch {
       toast.error('Failed to save consent. Please try again.');
     } finally {
@@ -169,7 +179,7 @@ export default function OnboardingPage() {
                       <Badge variant="outline" className="mt-0.5 shrink-0">02</Badge>
                       <div>
                         <p className="font-medium">Take the talent quiz</p>
-                        <p className="text-sm text-muted-foreground">15 adaptive questions covering interests, values, and style</p>
+                        <p className="text-sm text-muted-foreground">5 adaptive modules covering 31 dimensions — questions adapt to what your data already shows</p>
                       </div>
                     </motion.div>
                     <motion.div variants={effectiveVariants || staggerItem} className="flex items-start gap-3">
@@ -233,9 +243,29 @@ export default function OnboardingPage() {
               <Shield className="h-5 w-5 text-primary" />
               <h2 className="text-2xl font-bold">Data & Privacy</h2>
             </div>
-            <p className="text-muted-foreground mb-6">
+            <p className="text-muted-foreground mb-4">
               Choose which data sources you&apos;re comfortable connecting. You can change this later in Settings.
             </p>
+            <div className="mb-6 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+              <Link
+                href="/security"
+                target="_blank"
+                rel="noopener"
+                className="inline-flex items-center gap-1 underline-offset-4 hover:text-foreground hover:underline"
+              >
+                Security & data lifecycle
+                <ExternalLink className="h-3 w-3" />
+              </Link>
+              <Link
+                href="/methodology"
+                target="_blank"
+                rel="noopener"
+                className="inline-flex items-center gap-1 underline-offset-4 hover:text-foreground hover:underline"
+              >
+                How Lumina actually works
+                <ExternalLink className="h-3 w-3" />
+              </Link>
+            </div>
 
             <motion.div
               variants={effectiveVariants || staggerContainer}
@@ -436,7 +466,7 @@ export default function OnboardingPage() {
                     onCheckedChange={(checked) => setAgeGateConfirmed(Boolean(checked))}
                   />
                   <span className="text-sm text-muted-foreground">
-                    I confirm that I am at least 16 years old.
+                    I confirm that I am at least 18 years old.
                   </span>
                 </label>
                 <label className="flex items-start gap-3 cursor-pointer">

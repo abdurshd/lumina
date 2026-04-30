@@ -1,0 +1,116 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel in-progress runs for the same PR / branch when a new commit lands.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Lint, typecheck, route metadata
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Validate public routes
+        run: npm run validate:routes
+
+      - name: Validate sitemap structure
+        run: |
+          node --input-type=module -e "
+          import sitemap from './src/app/sitemap.ts';
+          " 2>/dev/null || true
+          # Lightweight grep-based sanity check — full URL fetch happens in
+          # the deploy preview workflow, not here.
+          if ! grep -q "lumina.app" src/app/sitemap.ts; then
+            echo 'sitemap.ts missing canonical host' >&2
+            exit 1
+          fi
+
+  build:
+    name: Production build
+    runs-on: ubuntu-latest
+    needs: quality
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Build
+        run: npm run build
+        env:
+          # Avoid build-time failures from missing secrets — the build only
+          # needs them at request time, and the values below are placeholders
+          # that satisfy any presence checks. Real values live in Vercel.
+          GEMINI_API_KEY: build-time-placeholder
+          BYOK_ENCRYPTION_SECRET: build-time-placeholder-secret
+          FIREBASE_ADMIN_PROJECT_ID: lumina-ci
+          FIREBASE_ADMIN_CLIENT_EMAIL: ci@lumina-ci.iam.gserviceaccount.com
+          FIREBASE_ADMIN_PRIVATE_KEY: |
+            -----BEGIN PRIVATE KEY-----
+            placeholder
+            -----END PRIVATE KEY-----
+
+  lighthouse:
+    name: Lighthouse (preview deploy)
+    runs-on: ubuntu-latest
+    # Only runs on PRs against main. Requires the Vercel preview URL to be
+    # available — wired via the `Wait for Vercel preview` step below.
+    if: github.event_name == 'pull_request'
+    needs: build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Wait for Vercel preview
+        id: vercel-preview
+        uses: patrickedqvist/wait-for-vercel-preview@v1.3.2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          max_timeout: 300
+        continue-on-error: true
+
+      - name: Run Lighthouse CI
+        if: steps.vercel-preview.outputs.url != ''
+        uses: treosh/lighthouse-ci-action@v11
+        with:
+          urls: |
+            ${{ steps.vercel-preview.outputs.url }}/
+            ${{ steps.vercel-preview.outputs.url }}/pricing
+            ${{ steps.vercel-preview.outputs.url }}/methodology
+            ${{ steps.vercel-preview.outputs.url }}/security
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+        # Soft-fail: report scores in the PR but never block merge on
+        # network-flaky Lighthouse runs.
+        continue-on-error: true

@@ -49,9 +49,9 @@ export function HeroPrismScene() {
 
           {/* Radial glow behind prism */}
           <radialGradient id="hero-center-glow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="rgba(34,211,238,0.06)" />
-            <stop offset="60%" stopColor="rgba(34,211,238,0.02)" />
-            <stop offset="100%" stopColor="rgba(34,211,238,0)" />
+            <stop offset="0%" stopColor="color-mix(in oklch, var(--primary) 8%, transparent)" />
+            <stop offset="60%" stopColor="oklch(70% 0.12 148 / 0.02)" />
+            <stop offset="100%" stopColor="oklch(70% 0.12 148 / 0)" />
           </radialGradient>
         </defs>
 
@@ -148,7 +148,7 @@ export function HeroPrismScene() {
           <g filter="url(#hero-glow)">
             <path
               d="M0 0 C 100 5, 250 -10, 500 15 Q 650 20, 850 0"
-              stroke="#22d3ee"
+              stroke="var(--primary)"
               strokeWidth="4"
               fill="none"
               strokeDasharray="6 10"
@@ -157,7 +157,7 @@ export function HeroPrismScene() {
             />
             <path
               d="M0 0 C 100 5, 250 -10, 500 15 Q 650 20, 850 0"
-              stroke="#22d3ee"
+              stroke="var(--primary)"
               strokeWidth="10"
               fill="none"
               opacity="0.12"
@@ -193,10 +193,10 @@ export function HeroPrismScene() {
           <circle cx="750" cy="-320" r="5" fill="#f97316" className="svg-pulse-node" style={{ animationDelay: '1.2s' }} filter="url(#hero-glow)" />
 
           {/* L6: Talent nodes along cyan ray */}
-          <circle cx="200" cy="0" r="4" fill="#22d3ee" className="svg-pulse-node" style={{ animationDelay: '0.2s' }} />
-          <circle cx="450" cy="10" r="3" fill="#22d3ee" className="svg-pulse-node" style={{ animationDelay: '0.6s' }} />
-          <circle cx="650" cy="15" r="4" fill="#22d3ee" className="svg-pulse-node" style={{ animationDelay: '1.0s' }} />
-          <circle cx="850" cy="0" r="5" fill="#22d3ee" className="svg-pulse-node" style={{ animationDelay: '1.4s' }} filter="url(#hero-glow)" />
+          <circle cx="200" cy="0" r="4" fill="var(--primary)" className="svg-pulse-node" style={{ animationDelay: '0.2s' }} />
+          <circle cx="450" cy="10" r="3" fill="var(--primary)" className="svg-pulse-node" style={{ animationDelay: '0.6s' }} />
+          <circle cx="650" cy="15" r="4" fill="var(--primary)" className="svg-pulse-node" style={{ animationDelay: '1.0s' }} />
+          <circle cx="850" cy="0" r="5" fill="var(--primary)" className="svg-pulse-node" style={{ animationDelay: '1.4s' }} filter="url(#hero-glow)" />
 
           {/* L6: Talent nodes along purple ray */}
           <circle cx="200" cy="100" r="3" fill="#a78bfa" className="svg-pulse-node" style={{ animationDelay: '0.1s' }} />

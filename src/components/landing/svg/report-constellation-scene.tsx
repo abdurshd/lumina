@@ -18,9 +18,9 @@ export function ReportConstellationScene() {
             </feMerge>
           </filter>
           <radialGradient id="report-center-glow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="rgba(34,211,238,0.08)" />
-            <stop offset="60%" stopColor="rgba(34,211,238,0.02)" />
-            <stop offset="100%" stopColor="rgba(34,211,238,0)" />
+            <stop offset="0%" stopColor="oklch(70% 0.12 148 / 0.08)" />
+            <stop offset="60%" stopColor="oklch(70% 0.12 148 / 0.02)" />
+            <stop offset="100%" stopColor="oklch(70% 0.12 148 / 0)" />
           </radialGradient>
         </defs>
 
@@ -39,7 +39,7 @@ export function ReportConstellationScene() {
             fill="none" stroke="var(--svg-stroke-faint)" strokeWidth="0.5" />
 
           {/* 6 Axis lines radiating from center with glow */}
-          <g stroke="rgba(34,211,238,0.15)" strokeWidth="0.5">
+          <g stroke="oklch(70% 0.12 148 / 0.15)" strokeWidth="0.5">
             <line x1="0" y1="0" x2="0" y2="-105" />
             <line x1="0" y1="0" x2="91" y2="-52" />
             <line x1="0" y1="0" x2="91" y2="52" />
@@ -49,18 +49,18 @@ export function ReportConstellationScene() {
           </g>
 
           {/* Dimension labels at each vertex */}
-          <text x="0" y="-108" textAnchor="middle" fill="rgba(34,211,238,0.6)" fontSize="6" fontFamily="monospace">Creative</text>
-          <text x="96" y="-50" textAnchor="start" fill="rgba(34,211,238,0.6)" fontSize="6" fontFamily="monospace">Analytical</text>
-          <text x="96" y="55" textAnchor="start" fill="rgba(34,211,238,0.6)" fontSize="6" fontFamily="monospace">Social</text>
-          <text x="0" y="115" textAnchor="middle" fill="rgba(34,211,238,0.6)" fontSize="6" fontFamily="monospace">Enterprising</text>
-          <text x="-96" y="55" textAnchor="end" fill="rgba(34,211,238,0.6)" fontSize="6" fontFamily="monospace">Conventional</text>
-          <text x="-96" y="-50" textAnchor="end" fill="rgba(34,211,238,0.6)" fontSize="6" fontFamily="monospace">Realistic</text>
+          <text x="0" y="-108" textAnchor="middle" fill="oklch(70% 0.12 148 / 0.6)" fontSize="6" fontFamily="monospace">Creative</text>
+          <text x="96" y="-50" textAnchor="start" fill="oklch(70% 0.12 148 / 0.6)" fontSize="6" fontFamily="monospace">Analytical</text>
+          <text x="96" y="55" textAnchor="start" fill="oklch(70% 0.12 148 / 0.6)" fontSize="6" fontFamily="monospace">Social</text>
+          <text x="0" y="115" textAnchor="middle" fill="oklch(70% 0.12 148 / 0.6)" fontSize="6" fontFamily="monospace">Enterprising</text>
+          <text x="-96" y="55" textAnchor="end" fill="oklch(70% 0.12 148 / 0.6)" fontSize="6" fontFamily="monospace">Conventional</text>
+          <text x="-96" y="-50" textAnchor="end" fill="oklch(70% 0.12 148 / 0.6)" fontSize="6" fontFamily="monospace">Realistic</text>
 
           {/* Data shape polygon — draws in via animation */}
           <polygon
             points="0,-80 70,-25 55,45 0,85 -45,35 -65,-30"
-            fill="rgba(34,211,238,0.08)"
-            stroke="#22d3ee"
+            fill="oklch(70% 0.12 148 / 0.08)"
+            stroke="var(--primary)"
             strokeWidth="1.5"
             filter="url(#report-glow)"
             className="svg-draw-shape"

@@ -6,9 +6,9 @@ import { ReportConstellationScene } from '@/components/landing/svg/report-conste
 import { ReportMockup } from '@/components/landing/mockups/report-mockup';
 
 const HIGHLIGHTS = [
-    { icon: FileCheck, title: "Traceable Origins", text: "Every insight is bound to a specific semantic trace from your digital footprint." },
-    { icon: BarChart3, title: "Precision Metrics", text: "Quantum-grade confidence scoring for every professional prediction." },
-    { icon: ListTodo, title: "Evolutionary Roadmap", text: "A concrete, 30-day kinetic plan to catalyze your professional transition." },
+    { icon: FileCheck, title: "Traceable evidence", text: "Every major claim points back to the inputs that informed it." },
+    { icon: BarChart3, title: "Confidence scoring", text: "The report separates strong signals from areas that need more evidence." },
+    { icon: ListTodo, title: "Practical next steps", text: "A focused plan turns career direction into near-term action." },
 ];
 
 export function ReportSection() {
@@ -22,13 +22,12 @@ export function ReportSection() {
                         viewport={{ once: true }}
                         transition={{ duration: 1, ease: "easeOut" }}
                     >
-                        <span className="text-primary font-bold uppercase tracking-[0.3em] text-[10px] mb-4 block">Final Synthesis</span>
-                        <h2 className="text-5xl sm:text-8xl font-black tracking-tighter text-foreground mb-8 leading-[0.9]">
-                            Talent <br /> <span className="text-primary">Manifesto</span>
+                        <span className="text-primary font-semibold tracking-wide text-sm mb-4 block">Talent report</span>
+                        <h2 className="text-4xl sm:text-6xl font-semibold tracking-tight text-foreground mb-6 leading-tight">
+                            A career profile you can audit
                         </h2>
-                        <p className="text-xl text-muted-foreground font-light leading-relaxed">
-                            The culmination of your journey. A dense, high-fidelity report detailing
-                            your cognitive architecture and the career trajectories where you will dominate.
+                        <p className="text-lg text-muted-foreground leading-relaxed">
+                            The final report shows what Lumina believes, how confident it is, and what evidence shaped each recommendation.
                         </p>
                     </motion.div>
                 </div>
@@ -38,15 +37,14 @@ export function ReportSection() {
                     whileInView={{ opacity: 1, y: 0, scale: 1 }}
                     viewport={{ once: true, margin: "-100px" }}
                     transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
-                    className="mb-32 relative perspective-3000"
+                    className="mb-24 relative perspective-3000"
                 >
-                    <div className="absolute -inset-20 bg-primary/5 rounded-full blur-[150px] -z-10 animate-pulse-glow" />
-                    <div className="glass-premium rounded-[48px] overflow-hidden border-primary/20 p-4 shadow-[0_0_50px_oklch(75%_0.18_200/0.15)] bg-background/80">
+                    <div className="glass-premium rounded-2xl overflow-hidden p-3 shadow-sm shadow-shadow-subtle bg-background/80">
                         <ReportMockup />
                     </div>
 
                     {/* Floating Constellation Decorative Element */}
-                    <div className="absolute -top-24 -left-24 w-80 h-80 opacity-30 pointer-events-none">
+                    <div className="absolute -top-20 -left-20 w-72 h-72 opacity-16 pointer-events-none">
                         <ReportConstellationScene />
                     </div>
                 </motion.div>
@@ -60,21 +58,17 @@ export function ReportSection() {
                             viewport={{ once: true }}
                             transition={{ duration: 0.8, delay: i * 0.15 }}
                         >
-                            <div className="glass-premium p-10 text-center h-full group hover:border-primary/40 transition-all duration-500">
-                                <div className="h-20 w-20 mx-auto rounded-3xl bg-primary/5 flex items-center justify-center mb-8 border border-primary/20 text-primary group-hover:bg-primary/20 group-hover:scale-110 group-hover:shadow-[0_0_30px_oklch(75%_0.18_200/0.3)] transition-all duration-500">
-                                    <item.icon className="h-10 w-10" />
+                            <div className="glass-premium p-8 text-center h-full group hover:border-primary/30 transition-colors duration-200">
+                                <div className="h-14 w-14 mx-auto rounded-lg bg-primary/8 flex items-center justify-center mb-6 border border-primary/15 text-primary">
+                                    <item.icon className="h-7 w-7" />
                                 </div>
-                                <h3 className="text-2xl font-black mb-4 tracking-tight text-foreground uppercase group-hover:text-primary transition-colors">{item.title}</h3>
-                                <p className="text-muted-foreground font-light leading-relaxed">{item.text}</p>
+                                <h3 className="text-xl font-semibold mb-3 tracking-tight text-foreground group-hover:text-primary transition-colors">{item.title}</h3>
+                                <p className="text-muted-foreground leading-relaxed">{item.text}</p>
                             </div>
                         </motion.div>
                     ))}
                 </div>
             </div>
-
-            {/* Background Accents */}
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[180px]" />
-            <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-primary/5 rounded-full blur-[150px]" />
         </section>
     );
 }

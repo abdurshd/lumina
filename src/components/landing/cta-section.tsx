@@ -5,70 +5,54 @@ import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LuminaIcon } from '@/components/icons/lumina-icon';
 import { motion } from 'framer-motion';
-import { FloatingParticles } from './floating-particles';
+import { WaitlistForm } from '@/components/landing/waitlist-form';
 
 export function CTASection() {
     return (
-        <section className="relative w-full py-32 sm:py-48 overflow-hidden flex items-center justify-center bg-background">
-            {/* Background elements */}
-            <div className="absolute inset-0 z-0">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/10 blur-[150px] rounded-full opacity-50" />
-                <FloatingParticles count={6} className="z-0 opacity-30" />
-
-                {/* Futuristic Grid Overlay */}
-                <div className="absolute inset-0 bg-[linear-gradient(to_right,oklch(75%_0.18_200/0.05)_1px,transparent_1px),linear-gradient(to_bottom,oklch(75%_0.18_200/0.05)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)]" />
-            </div>
-
+        <section className="relative w-full py-28 sm:py-40 overflow-hidden flex items-center justify-center bg-background">
             <div className="container mx-auto px-6 relative z-10">
                 <motion.div
-                    initial={{ opacity: 0, scale: 0.9, y: 30 }}
-                    whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                    initial={{ opacity: 0, y: 24 }}
+                    whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                     className="max-w-5xl mx-auto"
                 >
-                    <div className="glass-premium p-12 sm:p-24 text-center relative overflow-hidden group border-primary/20">
-                        {/* Shimmering background effect */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5" />
-
-                        {/* Animated Icon */}
+                    <div className="glass-premium p-10 sm:p-20 text-center relative overflow-hidden group">
                         <motion.div
-                            whileHover={{ scale: 1.1, rotate: 5 }}
-                            className="mx-auto mb-10 flex h-24 w-24 items-center justify-center rounded-3xl bg-primary/10 border border-primary/20 shadow-[0_0_30px_oklch(75%_0.18_200/0.2)]"
+                            whileHover={{ scale: 1.03 }}
+                            className="mx-auto mb-8 flex h-16 w-16 items-center justify-center rounded-xl bg-primary/10 border border-primary/15"
                         >
-                            <LuminaIcon className="h-12 w-12 text-primary" />
+                            <LuminaIcon className="h-8 w-8 text-primary" />
                         </motion.div>
 
-                        <h2 className="text-5xl sm:text-7xl md:text-8xl font-black mb-8 tracking-tighter text-foreground leading-[0.85] uppercase">
-                            Illuminate Your <br />
-                            <span className="text-primary group-hover:text-foreground transition-colors duration-700">Potential</span>
+                        <h2 className="text-4xl sm:text-6xl md:text-7xl font-semibold mb-6 tracking-tight text-foreground leading-tight">
+                            Ready for a more grounded career signal?
                         </h2>
 
-                        <p className="text-xl sm:text-2xl text-muted-foreground mb-12 max-w-2xl mx-auto font-light leading-relaxed">
-                            The era of generic career paths is over. Step into the high-fidelity future of talent discovery.
+                        <p className="text-lg sm:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
+                            Start with the assessment, then let Lumina decide what evidence it still needs before generating your report.
                         </p>
 
-                        <div className="flex flex-col sm:flex-row items-center justify-center gap-6 relative z-20">
-                            <Link href="/login" className="w-full sm:w-auto">
+                        <div className="mx-auto max-w-xl">
+                            <WaitlistForm source="cta_section" />
+                        </div>
+
+                        <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-6 relative z-20">
+                            <Link href="/pricing" className="w-full sm:w-auto">
                                 <Button size="lg" className="w-full">
-                                    Initialize Extraction <ArrowRight className="h-6 w-6" />
+                                    See pricing <ArrowRight className="h-5 w-5" />
                                 </Button>
                             </Link>
-                            <Link href="/about" className="w-full sm:w-auto">
+                            <Link href="#how-it-works" className="w-full sm:w-auto">
                                 <Button variant="outline" size="lg" className="w-full">
-                                    Visualizer Specs
+                                    Learn more
                                 </Button>
                             </Link>
                         </div>
-
-                        {/* Scanline Effect */}
-                        <div className="absolute inset-x-0 top-0 h-[1px] bg-primary/30 animate-scanline pointer-events-none" />
                     </div>
                 </motion.div>
             </div>
-
-            {/* Scroll-to-top accent or final visual anchor */}
-            <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
         </section>
     );
 }

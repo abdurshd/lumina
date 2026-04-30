@@ -1,21 +1,89 @@
 'use client';
 
-import { Video, Sparkles, Eye, MessageCircle } from 'lucide-react';
+import { Video, Sparkles, Eye, MessageCircle, ShieldCheck, EyeOff } from 'lucide-react';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { SessionScene } from '@/components/landing/svg/session-scene';
 import { SessionMockup } from '@/components/landing/mockups/session-mockup';
 
 const FEATURES = [
-    { icon: Video, title: "Linguistic Calibration", text: "Analyzing vocal harmonics and semantic cadence to decode underlying cognitive states." },
-    { icon: Sparkles, title: "Neural Synchronization", text: "The AI agent optimizes its interaction topology based on real-time neural engagement metrics." },
-    { icon: Eye, title: "Expression Synthesis", text: "Capturing micro-kinetic facial data to identify hidden passion vectors standard assessments miss." },
-    { icon: MessageCircle, title: "Fluid Dialogues", text: "Advanced conversational architecture that feels less like a protocol and more like an intellectual resonance." },
+    { icon: Video, title: "Live context", text: "A guided conversation adds nuance that static forms usually miss." },
+    { icon: Sparkles, title: "Adaptive prompts", text: "The session follows up where your earlier evidence is thin or uncertain." },
+    { icon: Eye, title: "Behavioral signals", text: "Patterns over time help separate steady interests from passing preferences." },
+    { icon: MessageCircle, title: "Natural dialogue", text: "The counselor keeps the interview structured without making it feel rigid." },
+];
+
+const OBSERVE_LIST = [
+    "Engagement — turn-taking and follow-up depth",
+    "Hesitation — pauses on specific question categories",
+    "Confidence patterns — voice steadiness and certainty markers",
+    "Communication style — concision, narrative, abstraction",
+];
+
+const NEVER_CLAIM_LIST = [
+    "Identity recognition or face matching from your video",
+    "Medical, mood, or mental-health diagnosis",
+    "Immutable personality labels — only tendencies with evidence",
+    "Hiring or admissions decisions from a session alone",
 ];
 
 export function SessionSection() {
     return (
         <section id="session" className="bg-background py-32 relative overflow-hidden">
             <div className="container mx-auto px-6 relative z-10">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.8, ease: 'easeOut' }}
+                    className="mx-auto mb-16 max-w-5xl"
+                >
+                    <div className="mb-6 flex flex-wrap items-center justify-center gap-2 text-center">
+                        <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-medium text-primary">
+                            <ShieldCheck className="h-3 w-3" />
+                            Consent-only behavioral observation
+                        </span>
+                        <Link
+                            href="/security"
+                            className="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+                        >
+                            Read the full security posture &rarr;
+                        </Link>
+                    </div>
+
+                    <div className="grid gap-4 md:grid-cols-2">
+                        <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-5">
+                            <h3 className="flex items-center gap-2 text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+                                <Eye className="h-4 w-4" />
+                                What we observe (with consent)
+                            </h3>
+                            <ul className="mt-3 space-y-2 text-sm text-foreground">
+                                {OBSERVE_LIST.map((item) => (
+                                    <li key={item} className="flex gap-2">
+                                        <span className="mt-1 h-1 w-1 shrink-0 rounded-full bg-emerald-500" />
+                                        <span className="leading-relaxed">{item}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+
+                        <div className="rounded-xl border border-rose-500/20 bg-rose-500/5 p-5">
+                            <h3 className="flex items-center gap-2 text-sm font-semibold text-rose-600 dark:text-rose-400">
+                                <EyeOff className="h-4 w-4" />
+                                What we never claim
+                            </h3>
+                            <ul className="mt-3 space-y-2 text-sm text-foreground">
+                                {NEVER_CLAIM_LIST.map((item) => (
+                                    <li key={item} className="flex gap-2">
+                                        <span className="mt-1 h-1 w-1 shrink-0 rounded-full bg-rose-500" />
+                                        <span className="leading-relaxed">{item}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    </div>
+                </motion.div>
+
                 <div className="flex flex-col lg:flex-row items-center gap-24">
 
                     {/* Left: Interactive Mockup */}
@@ -27,13 +95,12 @@ export function SessionSection() {
                             transition={{ duration: 1.2, ease: "easeOut" }}
                             className="relative"
                         >
-                            <div className="absolute -inset-10 bg-primary/10 rounded-full blur-[100px] opacity-50 -z-10 animate-pulse-glow" />
-                            <div className="glass-premium rounded-[40px] overflow-hidden border-primary/20 p-2 shadow-2xl shadow-primary/20">
+                            <div className="glass-premium rounded-2xl overflow-hidden p-2 shadow-sm shadow-shadow-subtle">
                                 <SessionMockup />
                             </div>
 
                             {/* Decorative Floating Icon */}
-                            <div className="absolute -bottom-10 -right-10 w-48 h-48 opacity-40">
+                            <div className="absolute -bottom-8 -right-8 w-40 h-40 opacity-20">
                                 <SessionScene />
                             </div>
                         </motion.div>
@@ -48,13 +115,12 @@ export function SessionSection() {
                             transition={{ duration: 1, ease: "easeOut" }}
                             className="mb-12"
                         >
-                            <span className="text-primary font-bold uppercase tracking-[0.3em] text-[10px] mb-4 block">Biometric Synthesis</span>
-                            <h2 className="text-5xl sm:text-7xl font-black tracking-tighter text-foreground mb-8 leading-[0.9]">
-                                Live AI <br /> <span className="text-primary">Synergy</span>
+                            <span className="text-primary font-semibold tracking-wide text-sm mb-4 block">Guided AI session</span>
+                            <h2 className="text-4xl sm:text-6xl font-semibold tracking-tight text-foreground mb-6 leading-tight">
+                                A conversation with a clear purpose
                             </h2>
-                            <p className="text-xl text-muted-foreground font-light leading-relaxed max-w-xl">
-                                Engage in a high-fidelity vocal exchange with our neural counselor.
-                                It doesn&apos;t just hear your words; it perceives the architecture of your ambition.
+                            <p className="text-lg text-muted-foreground leading-relaxed max-w-xl">
+                                Lumina uses the session to test uncertain signals, ask better follow-ups, and build a more grounded profile.
                             </p>
                         </motion.div>
 
@@ -67,14 +133,14 @@ export function SessionSection() {
                                     viewport={{ once: true }}
                                     transition={{ duration: 0.6, delay: i * 0.1 }}
                                 >
-                                    <div className="glass-premium p-6 group hover:border-primary/40 transition-all duration-500">
-                                        <div className="flex gap-6 items-start">
-                                            <div className="h-14 w-14 shrink-0 rounded-2xl bg-primary/5 flex items-center justify-center border border-primary/20 text-primary group-hover:bg-primary/20 group-hover:scale-110 transition-all duration-500">
-                                                <feature.icon className="h-7 w-7" />
+                                    <div className="glass-premium p-5 group hover:border-primary/30 transition-colors duration-200">
+                                        <div className="flex gap-5 items-start">
+                                            <div className="h-11 w-11 shrink-0 rounded-lg bg-primary/8 flex items-center justify-center border border-primary/15 text-primary">
+                                                <feature.icon className="h-5 w-5" />
                                             </div>
                                             <div>
-                                                <h3 className="text-foreground font-black text-lg tracking-tight uppercase mb-2 group-hover:text-primary transition-colors">{feature.title}</h3>
-                                                <p className="text-sm text-muted-foreground font-light leading-relaxed">{feature.text}</p>
+                                                <h3 className="text-foreground font-semibold text-lg tracking-tight mb-2 group-hover:text-primary transition-colors">{feature.title}</h3>
+                                                <p className="text-sm text-muted-foreground leading-relaxed">{feature.text}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -85,8 +151,6 @@ export function SessionSection() {
                 </div>
             </div>
 
-            {/* Background Gradient Accents */}
-            <div className="absolute bottom-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-[150px]" />
         </section>
     );
 }

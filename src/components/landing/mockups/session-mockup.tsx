@@ -23,14 +23,13 @@ export function SessionMockup() {
                             <p className="text-[10px] text-muted-foreground">04:12 • Recording...</p>
                         </div>
                     </div>
-                    <Badge variant="outline" className="text-[10px] bg-red-500/10 text-red-500 border-red-500/20 animate-pulse">LIVE</Badge>
+                    <Badge variant="outline" className="text-[10px] bg-destructive/10 text-destructive border-destructive/20">Live</Badge>
                 </div>
 
                 {/* Video Area (Main) */}
-                <div className="flex-1 relative bg-black/40 flex items-center justify-center p-4">
+                <div className="flex-1 relative bg-secondary/60 flex items-center justify-center p-4">
                     {/* Placeholder for AI Visualization */}
                     <div className="w-32 h-32 rounded-full bg-primary/5 border border-primary/20 flex items-center justify-center relative">
-                        <div className="absolute inset-0 rounded-full border border-primary/10 animate-ping-slow" />
                         <div className="h-20 w-20 rounded-full bg-primary/10 backdrop-blur-md flex items-center justify-center">
                             <div className="flex gap-1">
                                 <div className="w-1 h-3 bg-primary rounded-full animate-audio-bar" style={{ animationDelay: '0s' }} />
@@ -56,7 +55,7 @@ export function SessionMockup() {
                     <button className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/20 transition-colors">
                         <Video className="h-5 w-5" />
                     </button>
-                    <button className="h-10 w-10 rounded-full bg-destructive text-white flex items-center justify-center hover:bg-destructive/90 transition-colors shadow-lg shadow-destructive/20">
+                    <button className="h-10 w-10 rounded-full bg-destructive text-[oklch(98%_0.01_25)] flex items-center justify-center hover:bg-destructive/90 transition-colors">
                         <PhoneOff className="h-5 w-5" />
                     </button>
                 </div>

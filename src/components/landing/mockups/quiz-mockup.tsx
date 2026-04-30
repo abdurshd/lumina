@@ -11,7 +11,7 @@ export function QuizMockup() {
                 {/* Progress Header */}
                 <div className="flex items-center gap-4 mb-8">
                     <div className="flex-1">
-                        <div className="flex justify-between text-xs uppercase tracking-wider text-muted-foreground mb-2">
+                        <div className="flex justify-between text-xs font-medium text-muted-foreground mb-2">
                             <span>Module 1: Interests</span>
                             <span>Question 3/8</span>
                         </div>
@@ -45,9 +45,9 @@ export function QuizMockup() {
                         >
                             <div className={cn(
                                 "h-6 w-6 rounded-full border-2 flex items-center justify-center shrink-0",
-                                i === 1 ? "border-primary bg-primary text-white" : "border-muted-foreground/30"
+                                i === 1 ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground/30"
                             )}>
-                                {i === 1 && <div className="h-2.5 w-2.5 rounded-full bg-white" />}
+                                {i === 1 && <div className="h-2.5 w-2.5 rounded-full bg-primary-foreground" />}
                             </div>
                             <span className="text-sm sm:text-base font-medium">{option}</span>
                         </motion.div>
@@ -62,7 +62,6 @@ export function QuizMockup() {
                 </div>
 
                 {/* Decorative Overlay for "Mockup" feel */}
-                <div className="absolute inset-0 bg-gradient-to-t from-background/10 to-transparent pointer-events-none" />
             </div>
         </div>
     );

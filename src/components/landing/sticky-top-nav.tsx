@@ -11,10 +11,10 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { ThemeToggle } from '@/components/layout/theme-toggle';
 
 const NAV_LINKS = [
-    { name: 'ANALYSIS', href: '#quiz' },
-    { name: 'SYNERGY', href: '#session' },
-    { name: 'MANIFESTO', href: '#report' },
-    { name: 'PROTOCOL', href: '#how-it-works' },
+    { name: 'Assessment', href: '#quiz' },
+    { name: 'Session', href: '#session' },
+    { name: 'Report', href: '#report' },
+    { name: 'Method', href: '#how-it-works' },
 ];
 
 export function StickyTopNav() {
@@ -28,17 +28,16 @@ export function StickyTopNav() {
     return (
         <motion.header
             className={cn(
-                "fixed top-0 left-0 right-0 z-50 transition-all duration-500",
-                isScrolled ? "glass-premium py-3 border-b border-primary/20 shadow-[0_0_30px_rgba(0,0,0,0.5)]" : "bg-transparent py-6"
+                "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
+                isScrolled ? "bg-background/85 py-3 border-b border-border backdrop-blur-md" : "bg-transparent py-6"
             )}
         >
             <div className="container mx-auto px-6 flex items-center justify-between">
                 <Link href="/" className="flex items-center gap-3 group">
                     <div className="relative">
-                        <LuminaIcon className="h-9 w-9 text-primary transition-transform duration-500 group-hover:rotate-[360deg]" />
-                        <div className="absolute inset-0 bg-primary/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-full" />
+                        <LuminaIcon className="h-8 w-8 text-primary transition-colors duration-200 group-hover:text-foreground" />
                     </div>
-                    <span className="font-black text-2xl tracking-tighter text-foreground uppercase">Lumina</span>
+                    <span className="font-semibold text-2xl tracking-tight text-foreground">Lumina</span>
                 </Link>
 
                 {/* Desktop Nav */}
@@ -47,17 +46,17 @@ export function StickyTopNav() {
                         <Link
                             key={link.name}
                             href={link.href}
-                            className="text-[11px] font-black tracking-[0.2em] text-muted-foreground hover:text-primary transition-all duration-300 relative group"
+                            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200 relative group"
                         >
                             {link.name}
-                            <span className="absolute -bottom-1 left-0 w-0 h-px bg-primary transition-all duration-300 group-hover:w-full" />
+                            <span className="absolute -bottom-1 left-0 w-0 h-px bg-primary transition-all duration-200 group-hover:w-full" />
                         </Link>
                     ))}
-                    <div className="flex items-center gap-6 pl-4 border-l border-white/10">
+                    <div className="flex items-center gap-4 pl-4 border-l border-border">
                         <ThemeToggle />
                         <Link href="/login">
                             <Button size="sm">
-                                START EXTRACTION
+                                Start
                             </Button>
                         </Link>
                     </div>
@@ -73,7 +72,7 @@ export function StickyTopNav() {
                                 <span className="sr-only">Toggle menu</span>
                             </Button>
                         </SheetTrigger>
-                        <SheetContent side="right" className="w-full sm:w-[400px] border-l border-primary/20 bg-background p-0">
+                        <SheetContent side="right" className="w-full sm:w-[400px] border-l border-border bg-background p-0">
                             <SheetHeader className="sr-only">
                                 <SheetTitle>Navigation menu</SheetTitle>
                                 <SheetDescription>
@@ -83,21 +82,21 @@ export function StickyTopNav() {
                             <div className="flex flex-col h-full bg-background p-10">
                                 <Link href="/" className="flex items-center gap-3 mb-16">
                                     <LuminaIcon className="h-10 w-10 text-primary" />
-                                    <span className="font-black text-3xl tracking-tighter text-foreground uppercase">Lumina</span>
+                                    <span className="font-semibold text-3xl tracking-tight text-foreground">Lumina</span>
                                 </Link>
                                 <nav className="flex flex-col gap-8">
                                     {NAV_LINKS.map((link) => (
                                         <Link
                                             key={link.name}
                                             href={link.href}
-                                            className="text-4xl font-black tracking-tighter text-muted-foreground hover:text-primary transition-all duration-300 hover:pl-4"
+                                            className="text-3xl font-semibold tracking-tight text-muted-foreground hover:text-foreground transition-all duration-200 hover:pl-2"
                                         >
                                             {link.name}
                                         </Link>
                                     ))}
-                                    <div className="mt-12 pt-12 border-t border-white/10">
+                                    <div className="mt-12 pt-12 border-t border-border">
                                         <Link href="/login">
-                                            <Button size="lg" className="w-full">START EXTRACTION</Button>
+                                            <Button size="lg" className="w-full">Start assessment</Button>
                                         </Link>
                                     </div>
                                 </nav>

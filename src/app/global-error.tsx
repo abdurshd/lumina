@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect } from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
+import * as Sentry from '@sentry/nextjs';
 import './globals.css';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,6 +15,7 @@ interface GlobalErrorPageProps {
 
 export default function GlobalErrorPage({ error, reset }: GlobalErrorPageProps) {
   useEffect(() => {
+    Sentry.captureException(error);
     console.error('Global error boundary triggered:', error);
   }, [error]);
 

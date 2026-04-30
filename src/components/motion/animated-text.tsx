@@ -12,6 +12,10 @@ interface AnimatedTextProps {
 
 export function AnimatedText({ text, className, staggerDelay = 0.02, animateKey }: AnimatedTextProps) {
   const shouldReduceMotion = useReducedMotion();
+  const parts = text.split(/(\s+)/).map((part, index, allParts) => ({
+    part,
+    offset: allParts.slice(0, index).join('').length,
+  }));
 
   if (shouldReduceMotion) {
     return <span className={className}>{text}</span>;
@@ -27,24 +31,41 @@ export function AnimatedText({ text, className, staggerDelay = 0.02, animateKey 
         exit="hidden"
         aria-label={text}
       >
-        {text.split('').map((char, i) => (
-          <motion.span
-            key={`${char}-${i}`}
-            className="inline-block"
-            style={char === ' ' ? { width: '0.25em' } : undefined}
-            variants={{
-              hidden: { opacity: 0, scale: 0.8, y: 4 },
-              visible: {
-                opacity: 1,
-                scale: 1,
-                y: 0,
-                transition: { ...snappySpring, delay: i * staggerDelay },
-              },
-            }}
-          >
-            {char === ' ' ? '\u00A0' : char}
-          </motion.span>
-        ))}
+        {parts.map(({ part, offset }, partIndex) => {
+          if (/^\s+$/.test(part)) {
+            return (
+              <span key={`space-${partIndex}`} className="inline-block w-[0.25em]">
+                {'\u00A0'}
+              </span>
+            );
+          }
+
+          return (
+            <span key={`${part}-${partIndex}`} className="inline-block whitespace-nowrap">
+              {part.split('').map((char, charIndex) => {
+                const delayIndex = offset + charIndex;
+
+                return (
+                  <motion.span
+                    key={`${char}-${charIndex}`}
+                    className="inline-block"
+                    variants={{
+                      hidden: { opacity: 0, scale: 0.8, y: 4 },
+                      visible: {
+                        opacity: 1,
+                        scale: 1,
+                        y: 0,
+                        transition: { ...snappySpring, delay: delayIndex * staggerDelay },
+                      },
+                    }}
+                  >
+                    {char}
+                  </motion.span>
+                );
+              })}
+            </span>
+          );
+        })}
       </motion.span>
     </AnimatePresence>
   );

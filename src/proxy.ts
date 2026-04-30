@@ -49,18 +49,97 @@ function getRateLimitConfig(pathname: string, method: string) {
   return RATE_LIMITS.general;
 }
 
+// --- CSP nonce ---
+
+/**
+ * Per-request CSP with nonces for HTML routes. In production, only scripts
+ * carrying the freshly-minted nonce — plus anything the nonced framework
+ * loader trusts via `'strict-dynamic'` — execute. In dev, we keep
+ * `'unsafe-inline' 'unsafe-eval'` so Turbopack HMR keeps working.
+ *
+ * Style nonces are deliberately *not* enforced (`'unsafe-inline'` stays in
+ * `style-src`). Framer Motion, Tailwind dynamic atomics, and Radix UI write
+ * inline styles at runtime; nonce-gating them is high breakage risk for low
+ * XSS-coverage gain. Revisit when we move to a CSS-only animation primitive.
+ */
+
+function generateNonce(): string {
+  const buf = new Uint8Array(16);
+  crypto.getRandomValues(buf);
+  let binary = '';
+  for (const byte of buf) binary += String.fromCharCode(byte);
+  return btoa(binary);
+}
+
+function buildCsp(nonce: string, isDev: boolean): string {
+  const scriptSrc = isDev
+    ? [
+        "'self'",
+        "'unsafe-inline'",
+        "'unsafe-eval'",
+        'blob:',
+        'https://apis.google.com',
+      ].join(' ')
+    : [
+        "'self'",
+        `'nonce-${nonce}'`,
+        "'strict-dynamic'",
+        "'unsafe-eval'",
+        'blob:',
+        'https://apis.google.com',
+      ].join(' ');
+
+  return [
+    "default-src 'self'",
+    `script-src ${scriptSrc}`,
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob: https:",
+    "font-src 'self'",
+    "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com https://firestore.googleapis.com https://generativelanguage.googleapis.com wss://generativelanguage.googleapis.com https://api.notion.com wss://*.firebaseio.com",
+    "frame-src 'self' https://accounts.google.com https://*.firebaseapp.com https://*.web.app",
+    "media-src 'self' blob:",
+    "worker-src 'self' blob:",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "object-src 'none'",
+  ].join('; ');
+}
+
+function applyCsp(req: NextRequest): NextResponse {
+  const nonce = generateNonce();
+  const isDev = process.env.NODE_ENV !== 'production';
+  const csp = buildCsp(nonce, isDev);
+
+  // Forward the nonce on the request so server components can read it via
+  // `headers().get('x-nonce')` and Next.js auto-applies the nonce attribute
+  // to its framework script tags.
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set('x-nonce', nonce);
+  requestHeaders.set('content-security-policy', csp);
+
+  const response = NextResponse.next({
+    request: { headers: requestHeaders },
+  });
+
+  response.headers.set('content-security-policy', csp);
+  return response;
+}
+
+// --- Proxy entry ---
+
 export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Only rate-limit API routes
+  // Non-API HTML routes: apply CSP nonce.
   if (!pathname.startsWith('/api/')) {
-    return NextResponse.next();
+    return applyCsp(req);
   }
 
+  // API routes: rate-limit.
   const ip = getClientIp(req);
-  const config = getRateLimitConfig(pathname, req.method);
+  const limitConfig = getRateLimitConfig(pathname, req.method);
   const key = `${ip}:${pathname}`;
-  const result = checkRateLimit(key, config);
+  const result = checkRateLimit(key, limitConfig);
 
   if (!result.allowed) {
     return NextResponse.json(
@@ -85,5 +164,10 @@ export function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: '/api/:path*',
+  // Match API (rate-limited) and HTML routes (CSP-nonced); skip Next internals
+  // and static assets.
+  matcher: [
+    '/api/:path*',
+    '/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|opengraph-image|.*\\.).*)',
+  ],
 };

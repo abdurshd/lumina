@@ -5,8 +5,6 @@ import { ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { AnimatedText } from "@/components/motion/animated-text";
-import { FloatingParticles } from "@/components/landing/floating-particles";
 import { LuminaIcon } from "@/components/icons/lumina-icon";
 
 export function HeroSection() {
@@ -38,32 +36,23 @@ export function HeroSection() {
     <section
       id="discovery"
       ref={containerRef}
-      className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-background"
+      className="relative min-h-[92svh] w-full flex items-center justify-center overflow-hidden bg-background pt-24 pb-16"
     >
       {/* Immersive Background */}
       <motion.div
         style={{ y: backgroundY, scale }}
         className="absolute inset-0 z-0"
       >
-        <div className="absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent opacity-70 dark:opacity-100" />
-
-        {/* Futuristic Grid/Neural Map Placeholder */}
-        <div className="absolute inset-0 opacity-10 dark:opacity-20" style={{
+        <div className="absolute inset-0 opacity-[0.04] dark:opacity-[0.06]" style={{
           backgroundImage: `radial-gradient(var(--primary) 1px, transparent 1px)`,
-          backgroundSize: '40px 40px'
+          backgroundSize: '44px 44px'
         }} />
-
-        <FloatingParticles count={6} className="opacity-30 dark:opacity-40" />
-
-        {/* Subtle Glow Orbs */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-[120px] animate-pulse dark:bg-primary/10 bg-primary/20" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-primary/5 rounded-full blur-[120px] animate-pulse-glow dark:bg-primary/5 bg-primary/10" />
       </motion.div>
 
       {/* Content Overlay */}
       <motion.div
         style={{ y: textY, opacity }}
-        className="relative z-10 container mx-auto px-6 text-center"
+        className="relative z-10 container mx-auto px-6"
       >
         {/* Powered by Gemini AI badge */}
         <motion.div
@@ -72,19 +61,22 @@ export function HeroSection() {
           transition={{ duration: 0.8 }}
           className="mb-8"
         >
-          <div className="inline-flex items-center gap-2 rounded-full glass-premium px-6 py-2 text-xs font-bold text-primary uppercase tracking-[0.2em]">
-            <LuminaIcon className="h-4 w-4" /> Powered by Gemini AI
+          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-muted-foreground">
+            <LuminaIcon className="h-4 w-4 text-primary" /> Gemini-powered career discovery
           </div>
         </motion.div>
 
         {/* Title */}
-        <div className="mb-6 max-w-5xl mx-auto">
-          <h1 className="text-6xl sm:text-8xl lg:text-9xl font-bold tracking-tighter text-foreground leading-[0.9] perspective-1000">
+        <div className="mb-6 max-w-5xl">
+          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-semibold tracking-tight text-foreground leading-[0.98] perspective-1000">
             <span className="block mb-2">
-              <AnimatedText text="Illuminate your " />
+              Find the work
             </span>
-            <span className="text-primary text-glow block">
-              <AnimatedText text="hidden talent" />
+            <span className="text-primary block">
+              that fits how you
+            </span>
+            <span className="text-primary block">
+              think.
             </span>
           </h1>
         </div>
@@ -94,11 +86,10 @@ export function HeroSection() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5, duration: 1 }}
-          className="max-w-2xl mx-auto mb-12"
+          className="max-w-2xl mb-12"
         >
-          <p className="text-xl sm:text-2xl text-muted-foreground font-light leading-relaxed tracking-wide">
-            Next-generation AI discovery platform that bridges the gap between who you are and
-            who you <span className="text-white font-medium">could become</span>.
+          <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed">
+            Lumina combines your data, an adaptive assessment, and a guided AI session into one clear career profile.
           </p>
         </motion.div>
 
@@ -107,20 +98,20 @@ export function HeroSection() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8, duration: 0.8 }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-6"
+          className="flex flex-col sm:flex-row items-start gap-4"
         >
           <Link href="/login" className="w-full sm:w-auto">
-            <Button size="lg" className="w-full sm:w-auto min-w-[240px]">
-              Start Discovery Journey
+            <Button size="lg" className="w-full sm:w-auto min-w-[208px]">
+              Start assessment
             </Button>
           </Link>
           <Button
             variant="outline"
             size="lg"
-            className="w-full sm:w-auto min-w-[240px]"
+            className="w-full sm:w-auto min-w-[208px]"
             onClick={scrollToHowItWorks}
           >
-            Explore Methodology
+            See the method
           </Button>
         </motion.div>
       </motion.div>
@@ -132,18 +123,14 @@ export function HeroSection() {
         animate={{ opacity: 1 }}
         transition={{ delay: 2, duration: 1 }}
       >
-        <span className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground/60 font-medium">Discover More</span>
+        <span className="text-xs text-muted-foreground/70 font-medium">How it works</span>
         <motion.div
           animate={{ y: [0, 8, 0] }}
           transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
         >
-          <ChevronDown className="h-6 w-6 text-primary/60" />
+          <ChevronDown className="h-5 w-5 text-primary/60" />
         </motion.div>
       </motion.div>
-
-      {/* Decorative side accents */}
-      <div className="absolute left-0 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-primary/20 to-transparent" />
-      <div className="absolute right-0 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-primary/20 to-transparent" />
     </section>
   );
 }

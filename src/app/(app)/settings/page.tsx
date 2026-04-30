@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
+import Link from 'next/link';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { toast } from 'sonner';
 import { useTheme } from 'next-themes';
@@ -12,6 +13,9 @@ import { disconnectNotion } from '@/lib/firebase/firestore';
 import { FetchError, apiFetch } from '@/lib/fetch-client';
 import { apiClient } from '@/lib/api/client';
 import { clearLocalByokApiKey, hasLocalByokApiKey, setLocalByokApiKey } from '@/lib/byok/local-storage';
+import { useConsent } from '@/lib/consent';
+import { trackEvent } from '@/lib/analytics/track-event';
+import { ReferralCard } from '@/components/settings/referral-card';
 import { PageHeader, LoadingButton } from '@/components/shared';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,28 +32,26 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Settings, Trash2, Database, Shield, ChevronRight, Link2Off, Download, FileSearch, Bell, Sun, Moon, AlertTriangle } from 'lucide-react';
+import { Settings, Trash2, Database, Shield, ChevronRight, Link2Off, Download, FileSearch, Bell, Sun, Moon, AlertTriangle, Cookie } from 'lucide-react';
 import { StaggerList, StaggerItem } from '@/components/motion/stagger-list';
 import { staggerContainer, staggerItem, reducedMotionVariants, collapseExpand, snappySpring } from '@/lib/motion';
 
 const DATA_SOURCES = [
-  { key: 'dataInsights', label: 'Data Analysis', description: 'Gmail, ChatGPT, Drive, Notion analysis results' },
+  { key: 'dataInsights', label: 'Data Analysis', description: 'Themes, skills, and signals extracted from your connected sources' },
   { key: 'quizAnswers', label: 'Quiz Answers', description: 'Your quiz responses' },
-  { key: 'quizScores', label: 'Quiz Scores', description: 'Dimension scores from quiz' },
-  { key: 'sessionInsights', label: 'Session Insights', description: 'AI observations from live session' },
-  { key: 'signals', label: 'Talent Signals', description: 'Atomic talent signals detected' },
+  { key: 'quizScores', label: 'Quiz Scores', description: 'Dimension scores from the adaptive quiz' },
+  { key: 'sessionInsights', label: 'Session Insights', description: 'Behavioral observations from your live sessions' },
+  { key: 'signals', label: 'Talent Signals', description: 'Atomic talent signals detected across sources' },
   { key: 'talentReport', label: 'Talent Report', description: 'Your generated talent report' },
   { key: 'feedback', label: 'Feedback', description: 'Your agree/disagree feedback on recommendations' },
 ];
 
 const CONSENT_SOURCE_OPTIONS = [
   { id: 'gmail', label: 'Gmail' },
-  { id: 'chatgpt', label: 'ChatGPT Export' },
-  { id: 'gemini_app', label: 'Gemini Conversations' },
-  { id: 'claude_app', label: 'Claude Conversations' },
-  { id: 'file_upload', label: 'File Uploads' },
   { id: 'drive', label: 'Google Drive' },
   { id: 'notion', label: 'Notion' },
+  { id: 'chatgpt', label: 'ChatGPT export' },
+  { id: 'file_upload', label: 'File uploads' },
 ];
 
 const NOTIFICATION_OPTIONS = [
@@ -66,14 +68,17 @@ export default function SettingsPage() {
   const deleteCorpusDocMutation = useDeleteCorpusDocMutation();
   const shouldReduceMotion = useReducedMotion();
   const { theme, setTheme } = useTheme();
+  const { consent: cookieConsent, accept: acceptCookies, reject: rejectCookies, reset: resetCookies } = useConsent();
 
   const corpusDocsQuery = useCorpusDocumentsQuery(user?.uid);
 
   const [showDataSection, setShowDataSection] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [confirmText, setConfirmText] = useState('');
+  const [deleteUnderstood, setDeleteUnderstood] = useState(false);
   const [consentSources, setConsentSources] = useState<string[]>(profile?.consentSources ?? []);
   const [isExporting, setIsExporting] = useState(false);
+  const [lastExport, setLastExport] = useState<{ at: number; sizeBytes: number } | null>(null);
   const [isDeletingCorpus, setIsDeletingCorpus] = useState(false);
   const [, setByokEnabled] = useState(profile?.byokEnabled ?? false);
   const [byokKeyInput, setByokKeyInput] = useState('');
@@ -116,14 +121,16 @@ export default function SettingsPage() {
   }, [deleteDataMutation]);
 
   const handleDeleteAll = useCallback(() => {
-    if (confirmText !== 'DELETE') return;
+    if (confirmText !== 'DELETE' || !deleteUnderstood) return;
 
+    trackEvent({ name: 'data_delete_request', payload: { confirmed: true } });
     deleteDataMutation.mutate({}, {
       onSuccess: async () => {
         resetAssessment();
         await refreshProfile();
         setDeleteDialogOpen(false);
         setConfirmText('');
+        setDeleteUnderstood(false);
         toast.success('All assessment data has been deleted. Stages have been reset.');
       },
       onError: (err) => {
@@ -131,7 +138,7 @@ export default function SettingsPage() {
         toast.error(message);
       },
     });
-  }, [confirmText, deleteDataMutation, resetAssessment, refreshProfile]);
+  }, [confirmText, deleteUnderstood, deleteDataMutation, resetAssessment, refreshProfile]);
 
   const handleConsentToggle = useCallback((sourceId: string) => {
     setConsentSources((prev) => {
@@ -159,16 +166,20 @@ export default function SettingsPage() {
 
   const handleExportData = useCallback(async () => {
     setIsExporting(true);
+    trackEvent({ name: 'data_export_request', payload: { format: 'json' } });
     try {
       const data = await apiFetch<Record<string, unknown>>('/api/user/export-data');
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const json = JSON.stringify(data, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'lumina-data-export.json';
+      const datestamp = new Date().toISOString().slice(0, 10);
+      a.download = `lumina-export-${datestamp}.json`;
       a.click();
       URL.revokeObjectURL(url);
-      toast.success('Data exported successfully.');
+      setLastExport({ at: Date.now(), sizeBytes: blob.size });
+      toast.success('Export downloaded.');
     } catch (err) {
       const message = err instanceof FetchError ? err.message : 'Failed to export data';
       toast.error(message);
@@ -543,21 +554,55 @@ export default function SettingsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 font-sans">
                 <Download className="h-5 w-5 text-primary" />
-                Data Export
+                Export your data
               </CardTitle>
               <CardDescription>
-                Download a copy of all your data stored in Lumina.
+                Download a structured JSON snapshot of every signal, score,
+                observation, and report Lumina holds about you.
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <LoadingButton
-                onClick={handleExportData}
-                loading={isExporting}
-                variant="outline"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Export as JSON
-              </LoadingButton>
+            <CardContent className="space-y-4">
+              <div className="rounded-lg border border-border bg-overlay-subtle px-3 py-2.5">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  What&apos;s included
+                </p>
+                <ul className="grid gap-x-4 gap-y-1 text-xs text-foreground sm:grid-cols-2">
+                  {DATA_SOURCES.map((source) => (
+                    <li key={source.key} className="flex items-center gap-1.5">
+                      <span className="h-1 w-1 shrink-0 rounded-full bg-primary" />
+                      {source.label}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3">
+                <LoadingButton
+                  onClick={handleExportData}
+                  loading={isExporting}
+                  variant="outline"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Download JSON
+                </LoadingButton>
+                {lastExport && (
+                  <p className="text-xs text-muted-foreground">
+                    Last export: {formatRelativeTime(lastExport.at)} (
+                    {formatBytes(lastExport.sizeBytes)})
+                  </p>
+                )}
+              </div>
+
+              <p className="text-xs text-muted-foreground">
+                Raw imported content is never stored — only the derived signals
+                appear in the export.{" "}
+                <Link
+                  href="/security"
+                  className="text-foreground underline-offset-4 hover:underline"
+                >
+                  Read the data lifecycle &rarr;
+                </Link>
+              </p>
             </CardContent>
           </Card>
         </StaggerItem>
@@ -712,6 +757,95 @@ export default function SettingsPage() {
           </Card>
         </StaggerItem>
 
+        {/* Referral program */}
+        <StaggerItem>
+          <ReferralCard />
+        </StaggerItem>
+
+        {/* Cookie & analytics preferences */}
+        <StaggerItem>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 font-sans">
+                <Cookie className="h-5 w-5 text-primary" />
+                Cookie &amp; analytics preferences
+              </CardTitle>
+              <CardDescription>
+                Strictly necessary cookies (sign-in, BYOK encryption) are
+                always active. Vercel Analytics and Speed Insights load only
+                with your consent.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between rounded-lg border border-border bg-overlay-subtle px-3 py-2.5">
+                <div>
+                  <p className="text-sm font-medium text-foreground">Current setting</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {cookieConsent.status === "accepted"
+                      ? `Analytics enabled · decided ${cookieConsent.decidedAt ? new Date(cookieConsent.decidedAt).toLocaleDateString() : ""}`
+                      : cookieConsent.status === "rejected"
+                        ? "Strictly necessary only — no analytics loaded"
+                        : "Not yet decided — banner will appear on next visit"}
+                  </p>
+                </div>
+                <Badge
+                  variant={cookieConsent.status === "accepted" ? "default" : "outline"}
+                  className="font-mono text-[10px]"
+                >
+                  {cookieConsent.status}
+                </Badge>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {cookieConsent.status !== "accepted" && (
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      acceptCookies();
+                      toast.success("Analytics enabled.");
+                    }}
+                  >
+                    Enable analytics
+                  </Button>
+                )}
+                {cookieConsent.status !== "rejected" && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      rejectCookies();
+                      toast.success("Analytics disabled.");
+                    }}
+                  >
+                    Disable analytics
+                  </Button>
+                )}
+                {cookieConsent.status !== "pending" && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      resetCookies();
+                      toast.success("Preference reset — banner will reappear.");
+                    }}
+                  >
+                    Reset preference
+                  </Button>
+                )}
+              </div>
+
+              <p className="text-xs text-muted-foreground">
+                <Link
+                  href="/security"
+                  className="text-foreground underline-offset-4 hover:underline"
+                >
+                  Read what we collect &rarr;
+                </Link>
+              </p>
+            </CardContent>
+          </Card>
+        </StaggerItem>
+
         {/* Notifications */}
         <StaggerItem>
           <Card>
@@ -744,53 +878,136 @@ export default function SettingsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 font-sans text-destructive">
                 <Trash2 className="h-5 w-5" />
-                Delete All My Data
+                Delete all my data
               </CardTitle>
               <CardDescription>
-                Permanently delete all assessment data and reset your progress. This cannot be undone.
+                Permanently remove all assessment data. Your account stays, but
+                every stage resets to zero. This cannot be undone.
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+            <CardContent className="space-y-4">
+              <div className="rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-2.5">
+                <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-destructive">
+                  <AlertTriangle className="h-3 w-3" />
+                  What gets deleted
+                </p>
+                <ul className="grid gap-x-4 gap-y-1 text-xs text-foreground sm:grid-cols-2">
+                  {DATA_SOURCES.map((source) => (
+                    <li key={source.key} className="flex items-center gap-1.5">
+                      <span className="h-1 w-1 shrink-0 rounded-full bg-destructive" />
+                      {source.label}
+                    </li>
+                  ))}
+                  <li className="flex items-center gap-1.5">
+                    <span className="h-1 w-1 shrink-0 rounded-full bg-destructive" />
+                    Agent decision log
+                  </li>
+                  <li className="flex items-center gap-1.5">
+                    <span className="h-1 w-1 shrink-0 rounded-full bg-destructive" />
+                    Confidence profile
+                  </li>
+                </ul>
+              </div>
+
+              <p className="text-xs text-muted-foreground">
+                Want a copy first? Export your data above. To delete the
+                account itself, email{" "}
+                <a
+                  className="text-foreground underline-offset-4 hover:underline"
+                  href="mailto:hello@lumina.app"
+                >
+                  hello@lumina.app
+                </a>
+                .{" "}
+                <Link
+                  href="/security"
+                  className="text-foreground underline-offset-4 hover:underline"
+                >
+                  Retention details &rarr;
+                </Link>
+              </p>
+
+              <Dialog
+                open={deleteDialogOpen}
+                onOpenChange={(open) => {
+                  setDeleteDialogOpen(open);
+                  if (!open) {
+                    setConfirmText('');
+                    setDeleteUnderstood(false);
+                  }
+                }}
+              >
                 <DialogTrigger asChild>
                   <motion.div
+                    className="inline-block"
                     whileHover={shouldReduceMotion ? {} : { scale: 1.02 }}
                     whileTap={shouldReduceMotion ? {} : { scale: 0.98 }}
                     transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                   >
-                    <Button variant="destructive">Delete All Data</Button>
+                    <Button variant="destructive">
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete everything
+                    </Button>
                   </motion.div>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Are you absolutely sure?</DialogTitle>
+                    <DialogTitle>Delete all assessment data?</DialogTitle>
                     <DialogDescription>
-                      This will permanently delete all your assessment data including quiz answers, session insights, and your talent report. Your account will remain but all stages will be reset.
+                      This permanently removes every signal, score, observation,
+                      report, and decision-log entry from your account. Your
+                      sign-in remains, but you start from zero. There is no undo.
                     </DialogDescription>
                   </DialogHeader>
-                  <div className="py-4">
-                    <label className="text-sm font-medium">
-                      Type <span className="font-mono font-bold">DELETE</span> to confirm:
+
+                  <div className="space-y-4 py-2">
+                    <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border bg-overlay-subtle p-3">
+                      <Checkbox
+                        checked={deleteUnderstood}
+                        onCheckedChange={(checked) =>
+                          setDeleteUnderstood(Boolean(checked))
+                        }
+                      />
+                      <span className="text-sm leading-relaxed text-foreground">
+                        I understand this cannot be undone and I have already
+                        exported anything I want to keep.
+                      </span>
                     </label>
-                    <input
-                      type="text"
-                      value={confirmText}
-                      onChange={(e) => setConfirmText(e.target.value)}
-                      className="mt-2 w-full rounded-md border bg-transparent px-3 py-2 text-sm"
-                      placeholder="DELETE"
-                    />
+
+                    <div>
+                      <label className="text-sm font-medium" htmlFor="confirm-delete">
+                        Type <span className="font-mono font-bold">DELETE</span> to confirm:
+                      </label>
+                      <input
+                        id="confirm-delete"
+                        type="text"
+                        value={confirmText}
+                        onChange={(e) => setConfirmText(e.target.value)}
+                        autoComplete="off"
+                        className="mt-2 w-full rounded-md border border-border bg-background px-3 py-2 text-sm font-mono focus:border-destructive focus:outline-none focus:ring-2 focus:ring-destructive/30"
+                        placeholder="DELETE"
+                      />
+                    </div>
                   </div>
+
                   <DialogFooter>
-                    <Button variant="outline" onClick={() => { setDeleteDialogOpen(false); setConfirmText(''); }}>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setDeleteDialogOpen(false);
+                        setConfirmText('');
+                        setDeleteUnderstood(false);
+                      }}
+                    >
                       Cancel
                     </Button>
                     <LoadingButton
                       variant="destructive"
                       onClick={handleDeleteAll}
                       loading={deleteDataMutation.isPending}
-                      disabled={confirmText !== 'DELETE'}
+                      disabled={confirmText !== 'DELETE' || !deleteUnderstood}
                     >
-                      Delete Everything
+                      Delete everything
                     </LoadingButton>
                   </DialogFooter>
                 </DialogContent>
@@ -801,4 +1018,14 @@ export default function SettingsPage() {
       </StaggerList>
     </div>
   );
+}
+
+function formatRelativeTime(timestamp: number): string {
+  const seconds = Math.floor((Date.now() - timestamp) / 1000);
+  if (seconds < 60) return 'just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} min ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
 }

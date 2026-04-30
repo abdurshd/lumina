@@ -111,11 +111,10 @@ npm run lint
 npm run build
 ```
 
-## Agentic Transformation (Active — Gemini 3 Hackathon)
+## Agentic Architecture
 
-Lumina is undergoing an agentic transformation for the Gemini 3 Hackathon submission.
-All implementation details, task statuses, and locks are tracked in **`plan.md`** at the project root.
-Agent coordination rules are in **`agents.md`** at the project root.
+Lumina's defining engineering choice is an agentic core: a real orchestrator with confidence scoring, a self-correcting report loop, and a visible decision log — not a single-prompt wrapper around an LLM. This is a product-quality differentiator, not a demo trick.
+Implementation tasks and coordination state are tracked in **`plan.md`** and **`agents.md`** at the project root.
 
 ### Key Architecture Additions
 - **Agent orchestrator** at `src/lib/agent/orchestrator.ts` — evaluates state, recommends actions, drives autonomous decisions
@@ -137,7 +136,7 @@ Agent coordination rules are in **`agents.md`** at the project root.
 - Do NOT make it look like a generic chatbot or personality quiz
 - Do NOT generate reports in a single prompt call
 - Do NOT skip the self-correction loop
-- Do NOT remove the agent decision log — it's the primary differentiator for judges
+- Do NOT remove the agent decision log — it is the primary differentiator users (and reviewers, recruiters, partners) see when comparing Lumina to single-prompt career-discovery tools
 
 ## Known Launch Constraint
 The public Gemini API terms currently require careful legal validation for `16+` deployment.

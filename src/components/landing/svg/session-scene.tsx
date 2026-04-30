@@ -11,9 +11,9 @@ export function SessionScene() {
       >
         <defs>
           <linearGradient id="sess-wave-grad" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#22d3ee" stopOpacity="0" />
-            <stop offset="50%" stopColor="#22d3ee" stopOpacity="0.7" />
-            <stop offset="100%" stopColor="#22d3ee" stopOpacity="0" />
+            <stop offset="0%" stopColor="var(--primary)" stopOpacity="0" />
+            <stop offset="50%" stopColor="var(--primary)" stopOpacity="0.7" />
+            <stop offset="100%" stopColor="var(--primary)" stopOpacity="0" />
           </linearGradient>
           <linearGradient id="sess-wave-grad-2" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0%" stopColor="#a78bfa" stopOpacity="0" />
@@ -37,8 +37,8 @@ export function SessionScene() {
 
           {/* Nebula radial gradients */}
           <radialGradient id="sess-nebula-teal" cx="30%" cy="60%" r="40%">
-            <stop offset="0%" stopColor="rgba(34,211,238,0.06)" />
-            <stop offset="100%" stopColor="rgba(34,211,238,0)" />
+            <stop offset="0%" stopColor="color-mix(in oklch, var(--primary) 8%, transparent)" />
+            <stop offset="100%" stopColor="oklch(70% 0.12 148 / 0)" />
           </radialGradient>
           <radialGradient id="sess-nebula-purple" cx="70%" cy="40%" r="35%">
             <stop offset="0%" stopColor="rgba(167,139,250,0.05)" />
@@ -94,15 +94,15 @@ export function SessionScene() {
         {/* --- Right Side: AI Crystal (multi-faceted diamond with inner glow) --- */}
         <g transform="translate(1440, 500)" filter="url(#sess-glow)">
           {/* Outer diamond */}
-          <path d="M0 -90 L70 0 L0 90 L-70 0 Z" fill="rgba(34,211,238,0.06)" stroke="#22d3ee" strokeWidth="2" />
+          <path d="M0 -90 L70 0 L0 90 L-70 0 Z" fill="color-mix(in oklch, var(--primary) 8%, transparent)" stroke="var(--primary)" strokeWidth="2" />
           {/* Inner facets */}
-          <path d="M0 -90 L25 -20 L0 0 L-25 -20 Z" fill="rgba(34,211,238,0.08)" stroke="rgba(34,211,238,0.3)" strokeWidth="0.5" />
-          <path d="M70 0 L25 -20 L0 0 L25 25 Z" fill="rgba(34,211,238,0.05)" stroke="rgba(34,211,238,0.2)" strokeWidth="0.5" />
-          <path d="M0 90 L25 25 L0 0 L-25 25 Z" fill="rgba(34,211,238,0.08)" stroke="rgba(34,211,238,0.3)" strokeWidth="0.5" />
-          <path d="M-70 0 L-25 -20 L0 0 L-25 25 Z" fill="rgba(34,211,238,0.05)" stroke="rgba(34,211,238,0.2)" strokeWidth="0.5" />
+          <path d="M0 -90 L25 -20 L0 0 L-25 -20 Z" fill="oklch(70% 0.12 148 / 0.08)" stroke="oklch(70% 0.12 148 / 0.3)" strokeWidth="0.5" />
+          <path d="M70 0 L25 -20 L0 0 L25 25 Z" fill="oklch(70% 0.12 148 / 0.05)" stroke="oklch(70% 0.12 148 / 0.2)" strokeWidth="0.5" />
+          <path d="M0 90 L25 25 L0 0 L-25 25 Z" fill="oklch(70% 0.12 148 / 0.08)" stroke="oklch(70% 0.12 148 / 0.3)" strokeWidth="0.5" />
+          <path d="M-70 0 L-25 -20 L0 0 L-25 25 Z" fill="oklch(70% 0.12 148 / 0.05)" stroke="oklch(70% 0.12 148 / 0.2)" strokeWidth="0.5" />
           {/* Inner glow core */}
-          <circle r="20" fill="rgba(34,211,238,0.15)" className="svg-glow-pulse" />
-          <circle r="8" fill="rgba(34,211,238,0.3)" />
+          <circle r="20" fill="oklch(70% 0.12 148 / 0.15)" className="svg-glow-pulse" />
+          <circle r="8" fill="oklch(70% 0.12 148 / 0.3)" />
         </g>
 
         {/* --- Center: Audio Waves (3+ sinusoidal waveforms) --- */}
@@ -128,7 +128,7 @@ export function SessionScene() {
               width="6"
               height="30"
               rx="3"
-              fill="rgba(34,211,238,0.3)"
+              fill="oklch(70% 0.12 148 / 0.3)"
               style={{
                 transformOrigin: `${920 + i * 12 + 3}px 620px`,
                 animation: `audioBar 1s ease-in-out infinite`,
@@ -141,7 +141,7 @@ export function SessionScene() {
         {/* --- Floating Insight Bubbles (5+) --- */}
         <g className="svg-float" style={{ animationDuration: '7s' }}>
           <rect x="750" y="280" width="160" height="36" rx="18" fill="var(--svg-fill-dim)" stroke="var(--svg-stroke-subtle)" strokeWidth="1" />
-          <text x="830" y="303" textAnchor="middle" fill="#22d3ee" fontSize="12" fontFamily="sans-serif">Interest Detected</text>
+          <text x="830" y="303" textAnchor="middle" fill="var(--primary)" fontSize="12" fontFamily="sans-serif">Interest Detected</text>
         </g>
 
         <g className="svg-float" style={{ animationDuration: '8s', animationDelay: '1.5s' }}>
@@ -156,7 +156,7 @@ export function SessionScene() {
 
         <g className="svg-float" style={{ animationDuration: '7.5s', animationDelay: '5s' }}>
           <rect x="1050" y="330" width="140" height="36" rx="18" fill="var(--svg-fill-dim)" stroke="var(--svg-stroke-subtle)" strokeWidth="1" />
-          <text x="1120" y="353" textAnchor="middle" fill="#22d3ee" fontSize="12" fontFamily="sans-serif">Active Listening</text>
+          <text x="1120" y="353" textAnchor="middle" fill="var(--primary)" fontSize="12" fontFamily="sans-serif">Active Listening</text>
         </g>
 
         <g className="svg-float" style={{ animationDuration: '8.5s', animationDelay: '7s' }}>

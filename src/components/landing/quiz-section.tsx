@@ -6,11 +6,11 @@ import { NeuralBrainScene } from '@/components/landing/svg/neural-brain-scene';
 import { QuizMockup } from '@/components/landing/mockups/quiz-mockup';
 
 const MODULES = [
-    { icon: Compass, title: "Interest Vectors", desc: "Mapping your curiosity landscape.", color: "text-blue-400" },
-    { icon: Heart, title: "Value Axioms", desc: "Defining your core operational drivers.", color: "text-red-400" },
-    { icon: Zap, title: "Kinetic Strengths", desc: "Identifying high-velocity skillsets.", color: "text-yellow-400" },
-    { icon: BookOpen, title: "Neural Plasticity", desc: "Measuring learning rate and adaptation.", color: "text-green-400" },
-    { icon: Target, title: "Boundary Analysis", desc: "Optimizing within constraints.", color: "text-purple-400" },
+    { icon: Compass, title: "Interests", desc: "What naturally earns your attention." },
+    { icon: Heart, title: "Values", desc: "The tradeoffs you want work to honor." },
+    { icon: Zap, title: "Strengths", desc: "Where effort turns into useful momentum." },
+    { icon: BookOpen, title: "Learning style", desc: "How you take in and apply new context." },
+    { icon: Target, title: "Constraints", desc: "The conditions that shape viable paths." },
 ];
 
 export function QuizSection() {
@@ -28,13 +28,12 @@ export function QuizSection() {
                             transition={{ duration: 1, ease: "easeOut" }}
                             className="mb-12"
                         >
-                            <span className="text-primary font-bold uppercase tracking-[0.3em] text-[10px] mb-4 block">Adaptive Intelligence</span>
-                            <h2 className="text-5xl sm:text-7xl font-black tracking-tighter text-foreground mb-8 leading-[0.9]">
-                                Neural <br /> <span className="text-primary">Profiling</span>
+                            <span className="text-primary font-semibold tracking-wide text-sm mb-4 block">Adaptive assessment</span>
+                            <h2 className="text-4xl sm:text-6xl font-semibold tracking-tight text-foreground mb-6 leading-tight">
+                                A profile that adapts as you answer
                             </h2>
-                            <p className="text-xl text-muted-foreground font-light leading-relaxed max-w-xl">
-                                Our dynamic assessment engine adapts its trajectory in micro-seconds,
-                                probing the depths of your cognitive architecture to reveal your true potential.
+                            <p className="text-lg text-muted-foreground leading-relaxed max-w-xl">
+                                Each module narrows in on evidence that matters, so the assessment feels focused instead of repetitive.
                             </p>
                         </motion.div>
 
@@ -47,15 +46,15 @@ export function QuizSection() {
                                     viewport={{ once: true }}
                                     transition={{ duration: 0.5, delay: i * 0.1 }}
                                 >
-                                    <div className="glass-premium flex items-center gap-6 p-6 group cursor-pointer hover:border-primary/40 transition-all duration-500">
-                                        <div className={`h-12 w-12 rounded-xl bg-primary/5 flex items-center justify-center border border-primary/20 ${mod.color} group-hover:bg-primary/20 group-hover:scale-110 transition-all duration-500`}>
+                                    <div className="glass-premium flex items-center gap-5 p-5 group cursor-pointer hover:border-primary/30 transition-colors duration-200">
+                                        <div className="h-11 w-11 rounded-lg bg-primary/8 flex items-center justify-center border border-primary/15 text-primary transition-colors duration-200">
                                             <mod.icon className="h-6 w-6" />
                                         </div>
                                         <div className="flex-1">
-                                            <h4 className="text-foreground font-black text-lg tracking-tight uppercase group-hover:text-primary transition-colors">{mod.title}</h4>
-                                            <p className="text-sm text-muted-foreground font-light">{mod.desc}</p>
+                                            <h4 className="text-foreground font-semibold text-lg tracking-tight group-hover:text-primary transition-colors">{mod.title}</h4>
+                                            <p className="text-sm text-muted-foreground">{mod.desc}</p>
                                         </div>
-                                        <ArrowRight className="h-5 w-5 text-muted-foreground/30 group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                                        <ArrowRight className="h-5 w-5 text-muted-foreground/35 group-hover:text-primary group-hover:translate-x-1 transition-all" />
                                     </div>
                                 </motion.div>
                             ))}
@@ -72,20 +71,19 @@ export function QuizSection() {
                             className="relative z-10 perspective-2000"
                         >
                             <div className="relative group">
-                                <div className="absolute -inset-4 bg-primary/10 rounded-[40px] blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-                                <div className="glass-premium rounded-[32px] overflow-hidden border-primary/20 p-2 shadow-2xl shadow-primary/20">
+                                <div className="glass-premium rounded-2xl overflow-hidden p-2 shadow-sm shadow-shadow-subtle">
                                     <QuizMockup />
                                 </div>
                             </div>
 
                             {/* Floating Brain Icon Component - Abstract representation */}
-                            <div className="absolute -top-20 -right-20 w-64 h-64 opacity-50 pointer-events-none">
+                            <div className="absolute -top-16 -right-16 w-56 h-56 opacity-20 pointer-events-none">
                                 <NeuralBrainScene />
                             </div>
                         </motion.div>
 
                         {/* Background Accents for Depth */}
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-primary/5 rounded-full blur-[150px] -z-10" />
+                        <div className="absolute inset-8 rounded-3xl border border-border -z-10" />
                     </div>
                 </div>
             </div>

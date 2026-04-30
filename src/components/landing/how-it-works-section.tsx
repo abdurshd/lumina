@@ -4,10 +4,10 @@ import { useRef } from 'react';
 import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
 
 const STEPS = [
-    { id: '01', title: 'Data Synthesis', desc: 'Securely link your professional footprint across Gmail, Drive, and social vectors.' },
-    { id: '02', title: 'Neural Assessment', desc: 'Complete our AI-adaptive modules that map your cognitive and psychological architecture.' },
-    { id: '03', title: 'Ethereal Interview', desc: 'Engage in a live, high-fidelity video session with our advanced Talent Oracle.' },
-    { id: '04', title: 'Quantum Profile', desc: 'Unlock your multi-dimensional talent report with precise growth trajectories.' },
+    { id: '01', title: 'Connect sources', desc: 'Link the work data you want Lumina to consider, with consent and clear boundaries.' },
+    { id: '02', title: 'Answer modules', desc: 'Complete adaptive prompts that focus on interests, values, strengths, and constraints.' },
+    { id: '03', title: 'Talk it through', desc: 'Use the live session to clarify uncertain signals and add personal context.' },
+    { id: '04', title: 'Review the report', desc: 'See matches, confidence, evidence, and concrete next steps in one place.' },
 ];
 
 export function HowItWorksSection() {
@@ -30,8 +30,8 @@ export function HowItWorksSection() {
                         viewport={{ once: true }}
                         transition={{ duration: 0.8 }}
                     >
-                        <span className="text-primary font-bold uppercase tracking-[0.3em] text-[10px] mb-4 block">Methodology</span>
-                        <h2 className="text-4xl sm:text-6xl font-black tracking-tighter text-foreground">How Lumina Works</h2>
+                        <span className="text-primary font-semibold tracking-wide text-sm mb-4 block">Method</span>
+                        <h2 className="text-4xl sm:text-5xl font-semibold tracking-tight text-foreground">How Lumina works</h2>
                     </motion.div>
                 </div>
 
@@ -43,21 +43,21 @@ export function HowItWorksSection() {
                     {STEPS.map((step, i) => (
                         <div
                             key={i}
-                            className="relative group w-[400px] md:w-[600px] h-[400px] md:h-[500px]"
+                            className="relative group w-[360px] md:w-[560px] h-[380px] md:h-[460px]"
                         >
-                            <div className="absolute inset-0 glass-premium rounded-3xl p-10 flex flex-col justify-end transition-all duration-500 group-hover:border-primary/50 group-hover:bg-primary/[0.02]">
-                                <div className="absolute top-0 right-0 p-10">
-                                    <span className="text-8xl font-black text-foreground/5 tracking-tighter transition-all duration-500 group-hover:text-primary/10">
+                            <div className="absolute inset-0 glass-premium rounded-2xl p-8 md:p-10 flex flex-col justify-end transition-colors duration-200 group-hover:border-primary/30 group-hover:bg-primary/[0.02]">
+                                <div className="absolute top-0 right-0 p-8 md:p-10">
+                                    <span className="text-7xl font-semibold text-foreground/5 tracking-tight transition-colors duration-200 group-hover:text-primary/10">
                                         {step.id}
                                     </span>
                                 </div>
 
                                 <div className="relative z-10">
-                                    <div className="w-12 h-1 bg-primary/30 mb-6 transition-all duration-500 group-hover:w-24 group-hover:bg-primary" />
-                                    <h3 className="text-3xl md:text-5xl font-black text-foreground mb-6 tracking-tighter leading-none uppercase">
+                                    <div className="w-10 h-px bg-primary/50 mb-6 transition-all duration-200 group-hover:w-16" />
+                                    <h3 className="text-3xl md:text-4xl font-semibold text-foreground mb-5 tracking-tight leading-tight">
                                         {step.title}
                                     </h3>
-                                    <p className="text-lg text-muted-foreground leading-relaxed max-w-sm font-light">
+                                    <p className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-sm">
                                         {step.desc}
                                     </p>
                                 </div>
@@ -77,17 +77,12 @@ export function HowItWorksSection() {
                 {/* Progress Bar (Bottom) */}
                 <div className="absolute bottom-20 left-10 right-10 md:left-20 md:right-20 h-px bg-foreground/5">
                     <motion.div
-                        className="h-full bg-primary shadow-[0_0_15px_oklch(75%_0.18_200)]"
+                        className="h-full bg-primary"
                         style={{ scaleX: scrollYProgress, transformOrigin: "left" }}
                     />
                 </div>
             </div>
 
-            {/* Background Accents */}
-            <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                <div className="absolute top-1/4 -right-20 w-96 h-96 bg-primary/5 rounded-full blur-[150px]" />
-                <div className="absolute bottom-1/4 -left-20 w-96 h-96 bg-primary/5 rounded-full blur-[150px]" />
-            </div>
         </section>
     );
 }

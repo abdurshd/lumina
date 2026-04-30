@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect } from 'react';
 import { AlertTriangle, RotateCcw } from 'lucide-react';
+import * as Sentry from '@sentry/nextjs';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -13,6 +14,7 @@ interface RootErrorPageProps {
 
 export default function RootErrorPage({ error, reset }: RootErrorPageProps) {
   useEffect(() => {
+    Sentry.captureException(error);
     console.error('Root error boundary triggered:', error);
   }, [error]);
 

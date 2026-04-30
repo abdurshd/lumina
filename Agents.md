@@ -47,8 +47,8 @@ When you start working, add yourself here. When you finish, remove yourself.
 1.3 Decision Log Store ──→ 6.1 Decision Log UI ──→ 6.2 Thought Chain
                                                  └──→ 6.3 Page Integration
 
-All implementation ──→ 8.1 Devpost Update
-                   └──→ 8.2 Architecture Diagram
+All implementation ──→ 8.1 Public-launch readiness
+                   └──→ 8.2 Architecture diagram
 ```
 
 **Parallelizable tasks** (can be worked on simultaneously by different agents):
@@ -70,19 +70,19 @@ A web app that helps people discover their best career direction through:
 4. Receiving a comprehensive talent report with career matches
 
 ### Why are we making changes?
-We're submitting to the **Gemini 3 Hackathon** ($100K prize pool). The hackathon strongly discourages:
+Lumina is being built as a real consumer product. The product-quality bar requires we move past patterns that look like a prompt-wrapper around an LLM:
 - Generic chatbots / personality quizzes
 - Prompt-only wrappers (system prompt + UI)
 - Single-prompt solutions
 - Simple vision analyzers
 
-Currently Lumina falls into these categories because:
+Earlier iterations of Lumina fell into these categories:
 - Report = single Gemini call (prompt wrapper)
 - Quiz = stateless question generation (prompt wrapper)
 - Live session = personality analysis chatbot
 - Workflow = user-driven linear steps (not autonomous)
 
-We're transforming it into a **genuine agentic system** with:
+We're transforming it into a **genuine agentic system** so Lumina is defensible against any "ChatGPT can do this in one prompt" comparison:
 - An orchestrator that evaluates confidence and decides next actions
 - Self-correcting report generation (generate → critique → refine)
 - Confidence-gated stage transitions

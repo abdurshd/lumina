@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
-import { Playpen_Sans, Geist_Mono } from "next/font/google";
+import { Outfit, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AppProviders } from "@/components/providers/app-providers";
 import { Toaster } from "@/components/ui/sonner";
+import { ConsentedAnalytics } from "@/components/consent/consented-analytics";
+import { CookieConsentBanner } from "@/components/consent/cookie-consent-banner";
 
-const playpenSans = Playpen_Sans({
-  variable: "--font-playpen-sans",
+const outfit = Outfit({
+  variable: "--font-outfit",
   subsets: ["latin"],
 });
 
@@ -16,7 +18,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Lumina — Discover Your Hidden Talents",
-  description: "AI-powered talent discovery through multimodal analysis of your digital footprint",
+  description:
+    "AI-powered talent discovery through multimodal analysis of your digital footprint. Adaptive psychometrics + live AI conversation + evidence-grounded reports.",
 };
 
 export default function RootLayout({
@@ -27,12 +30,14 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${playpenSans.variable} ${geistMono.variable} antialiased`}
+        className={`${outfit.variable} ${geistMono.variable} antialiased`}
       >
         <AppProviders>
           {children}
         </AppProviders>
         <Toaster richColors position="bottom-right" />
+        <CookieConsentBanner />
+        <ConsentedAnalytics />
       </body>
     </html>
   );
