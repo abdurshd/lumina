@@ -52,15 +52,22 @@ function getRateLimitConfig(pathname: string, method: string) {
 // --- CSP nonce ---
 
 /**
- * Per-request CSP with nonces for HTML routes. In production, only scripts
- * carrying the freshly-minted nonce — plus anything the nonced framework
- * loader trusts via `'strict-dynamic'` — execute. In dev, we keep
- * `'unsafe-inline' 'unsafe-eval'` so Turbopack HMR keeps working.
+ * Per-request CSP for HTML routes. Uses host-allowlist + `'unsafe-inline'`
+ * for `script-src` rather than nonce + `'strict-dynamic'`.
  *
- * Style nonces are deliberately *not* enforced (`'unsafe-inline'` stays in
- * `style-src`). Framer Motion, Tailwind dynamic atomics, and Radix UI write
- * inline styles at runtime; nonce-gating them is high breakage risk for low
- * XSS-coverage gain. Revisit when we move to a CSS-only animation primitive.
+ * Why not nonce/strict-dynamic: Firebase Auth's `signInWithPopup` loads
+ * `apis.google.com/js/api.js` and gapi then dynamically creates inline
+ * scripts (via `script.text = '...'`) inside helper iframes that inherit
+ * our CSP. Those inline scripts have no nonce. With a nonce present in
+ * `script-src`, modern browsers ignore `'unsafe-inline'` per CSP3 — so any
+ * nonce-based policy blocks Google sign-in. `'strict-dynamic'` makes it
+ * worse by also disabling the `https://apis.google.com` host allowlist.
+ *
+ * The trade-off: weaker XSS protection (any injected inline script runs)
+ * for a working auth flow. Mitigations: strict `default-src 'self'`,
+ * narrow connect/frame allowlists, `object-src 'none'`, `base-uri 'self'`,
+ * `form-action 'self'`. We still forward `x-nonce` for any callers that
+ * want to opt in to nonce-gating their own components.
  */
 
 function generateNonce(): string {
@@ -71,23 +78,22 @@ function generateNonce(): string {
   return btoa(binary);
 }
 
-function buildCsp(nonce: string, isDev: boolean): string {
-  const scriptSrc = isDev
-    ? [
-        "'self'",
-        "'unsafe-inline'",
-        "'unsafe-eval'",
-        'blob:',
-        'https://apis.google.com',
-      ].join(' ')
-    : [
-        "'self'",
-        `'nonce-${nonce}'`,
-        "'strict-dynamic'",
-        "'unsafe-eval'",
-        'blob:',
-        'https://apis.google.com',
-      ].join(' ');
+function buildCsp(): string {
+  const googleAuthHosts = [
+    'https://apis.google.com',
+    'https://*.firebaseapp.com',
+    'https://www.gstatic.com',
+    'https://www.googleapis.com',
+    'https://accounts.google.com',
+  ];
+
+  const scriptSrc = [
+    "'self'",
+    "'unsafe-inline'",
+    "'unsafe-eval'",
+    'blob:',
+    ...googleAuthHosts,
+  ].join(' ');
 
   return [
     "default-src 'self'",
@@ -96,7 +102,7 @@ function buildCsp(nonce: string, isDev: boolean): string {
     "img-src 'self' data: blob: https:",
     "font-src 'self'",
     "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com https://firestore.googleapis.com https://generativelanguage.googleapis.com wss://generativelanguage.googleapis.com https://api.notion.com wss://*.firebaseio.com",
-    "frame-src 'self' https://accounts.google.com https://*.firebaseapp.com https://*.web.app",
+    "frame-src 'self' https://accounts.google.com https://apis.google.com https://*.firebaseapp.com https://*.web.app",
     "media-src 'self' blob:",
     "worker-src 'self' blob:",
     "base-uri 'self'",
@@ -107,12 +113,11 @@ function buildCsp(nonce: string, isDev: boolean): string {
 
 function applyCsp(req: NextRequest): NextResponse {
   const nonce = generateNonce();
-  const isDev = process.env.NODE_ENV !== 'production';
-  const csp = buildCsp(nonce, isDev);
+  const csp = buildCsp();
 
-  // Forward the nonce on the request so server components can read it via
-  // `headers().get('x-nonce')` and Next.js auto-applies the nonce attribute
-  // to its framework script tags.
+  // Forward the nonce on the request so server components can opt in via
+  // `headers().get('x-nonce')`. The nonce is not in script-src today (see
+  // module comment), but is kept available for future opt-in callers.
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set('x-nonce', nonce);
   requestHeaders.set('content-security-policy', csp);
