@@ -1,6 +1,8 @@
 import type { MetadataRoute } from "next";
 import { BLOG_POSTS } from "@/lib/content/blog";
 import { USE_CASES_LIST } from "@/lib/content/use-cases";
+import { PERSONA_SLUGS } from "@/lib/content/personas";
+import { ALL_CLUSTER_SLUGS } from "@/lib/content/careers";
 
 const SITE_URL = "https://lumina.app";
 
@@ -22,6 +24,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     {
       url: `${SITE_URL}/use-cases`,
+      lastModified,
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
+    {
+      url: `${SITE_URL}/careers`,
       lastModified,
       changeFrequency: "monthly",
       priority: 0.8,
@@ -102,5 +110,25 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }));
 
-  return [...staticRoutes, ...blogRoutes, ...useCaseRoutes];
+  const personaRoutes: MetadataRoute.Sitemap = PERSONA_SLUGS.map((slug) => ({
+    url: `${SITE_URL}/for-${slug}`,
+    lastModified,
+    changeFrequency: "monthly",
+    priority: 0.7,
+  }));
+
+  const careerRoutes: MetadataRoute.Sitemap = ALL_CLUSTER_SLUGS.map((slug) => ({
+    url: `${SITE_URL}/careers/${slug}`,
+    lastModified,
+    changeFrequency: "monthly",
+    priority: 0.5,
+  }));
+
+  return [
+    ...staticRoutes,
+    ...personaRoutes,
+    ...blogRoutes,
+    ...useCaseRoutes,
+    ...careerRoutes,
+  ];
 }

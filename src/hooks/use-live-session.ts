@@ -205,6 +205,7 @@ export function useLiveSession() {
     setIsConnecting(false);
     setIsReconnecting(false);
     setReconnectAttempt(0);
+    managerRef.current?.endAudioStream();
     stopFrameCapture();
     microphoneRef.current.stop();
     webcamRef.current.stop();
@@ -236,7 +237,10 @@ export function useLiveSession() {
   }, [maybeStartFrameCapture, stopFrameCapture]);
 
   const toggleMicrophone = useCallback(() => {
-    microphoneRef.current.toggle();
+    const enabled = microphoneRef.current.toggle();
+    if (!enabled) {
+      managerRef.current?.endAudioStream();
+    }
   }, []);
 
   useEffect(() => {

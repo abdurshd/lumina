@@ -50,14 +50,19 @@ export async function POST(req: NextRequest) {
 
     const now = Date.now();
     const expireTime = new Date(now + 30 * 60 * 1000).toISOString();
-    const uses = 20;
+    const newSessionExpireTime = new Date(now + 60 * 1000).toISOString();
+    const uses = 1;
 
     const authToken = await ai.authTokens.create({
       config: {
         expireTime,
+        newSessionExpireTime,
         uses,
         liveConnectConstraints: {
           model: liveModel,
+        },
+        httpOptions: {
+          apiVersion: 'v1alpha',
         },
         lockAdditionalFields: [],
       },
@@ -68,6 +73,7 @@ export async function POST(req: NextRequest) {
       apiVersion: 'v1alpha',
       model: liveModel,
       expireTime,
+      newSessionExpireTime,
       uses,
     });
   } catch (error) {

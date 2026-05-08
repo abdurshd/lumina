@@ -42,7 +42,7 @@ const USAGE_SUBCOLLECTION = 'usage';
 const MODEL_COST_MULTIPLIER: Record<GeminiModelId, number> = {
   'gemini-3-flash-preview': 1,
   'gemini-3-pro-preview': 4,
-  'gemini-2.5-flash-native-audio-preview-12-2025': 2.5,
+  'gemini-3.1-flash-live-preview': 2.5,
 };
 
 // Conservative defaults used only for on-platform estimation and budgeting.

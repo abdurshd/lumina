@@ -7,8 +7,10 @@ import {
   ActivityHandling,
   EndSensitivity,
   GoogleGenAI,
+  MediaResolution,
   Modality,
   StartSensitivity,
+  ThinkingLevel,
   TurnCoverage,
   type Session,
   type LiveServerMessage,
@@ -51,7 +53,8 @@ export interface LiveSessionCallbacks {
 
 const MAX_RECONNECT_RETRIES = 3;
 const RECONNECT_BASE_DELAY_MS = 1000;
-const CONTEXT_TOKEN_THRESHOLD = 65_000;
+const CONTEXT_COMPRESSION_TRIGGER_TOKENS = "96000";
+const CONTEXT_COMPRESSION_TARGET_TOKENS = "64000";
 const CHARS_PER_TOKEN = 4;
 
 export class LiveSessionManager {
@@ -123,6 +126,18 @@ export class LiveSessionManager {
     try {
       const config: Parameters<typeof client.live.connect>[0]["config"] = {
         responseModalities: [Modality.AUDIO],
+        inputAudioTranscription: {},
+        outputAudioTranscription: {},
+        mediaResolution: MediaResolution.MEDIA_RESOLUTION_LOW,
+        thinkingConfig: {
+          thinkingLevel: ThinkingLevel.MINIMAL,
+        },
+        contextWindowCompression: {
+          triggerTokens: CONTEXT_COMPRESSION_TRIGGER_TOKENS,
+          slidingWindow: {
+            targetTokens: CONTEXT_COMPRESSION_TARGET_TOKENS,
+          },
+        },
         realtimeInputConfig: {
           automaticActivityDetection: {
             startOfSpeechSensitivity: StartSensitivity.START_SENSITIVITY_HIGH,
@@ -131,6 +146,7 @@ export class LiveSessionManager {
             silenceDurationMs: 450,
           },
           activityHandling: ActivityHandling.START_OF_ACTIVITY_INTERRUPTS,
+          // Keep video cost bounded by excluding idle camera frames from the user turn.
           turnCoverage: TurnCoverage.TURN_INCLUDES_ONLY_ACTIVITY,
         },
         speechConfig: {
@@ -360,6 +376,20 @@ export class LiveSessionManager {
         }
       }
 
+      const inputTranscript = message.serverContent.inputTranscription;
+      if (inputTranscript?.text && (inputTranscript.finished ?? true)) {
+        this.callbacks.onTranscript(inputTranscript.text, true);
+        this.transcriptCharCount += inputTranscript.text.length;
+        this.maybeCompressContext();
+      }
+
+      const outputTranscript = message.serverContent.outputTranscription;
+      if (outputTranscript?.text && (outputTranscript.finished ?? true)) {
+        this.callbacks.onTranscript(outputTranscript.text, false);
+        this.transcriptCharCount += outputTranscript.text.length;
+        this.maybeCompressContext();
+      }
+
       if (message.serverContent.interrupted) {
         this.callbacks.onInterrupted();
       }
@@ -434,15 +464,8 @@ export class LiveSessionManager {
 
   private maybeCompressContext(): void {
     const approxTokens = this.transcriptCharCount / CHARS_PER_TOKEN;
-    if (approxTokens >= CONTEXT_TOKEN_THRESHOLD && this.session) {
-      try {
-        this.session.sendClientContent({
-          contextWindowCompression: { slidingWindow: {} },
-        } as Parameters<Session['sendClientContent']>[0]);
-        this.transcriptCharCount = 0;
-      } catch (error) {
-        console.error("Context compression failed:", error);
-      }
+    if (approxTokens >= Number(CONTEXT_COMPRESSION_TARGET_TOKENS)) {
+      this.transcriptCharCount = 0;
     }
   }
 
@@ -454,7 +477,7 @@ export class LiveSessionManager {
     if (!this.session || !this._connected) return;
     try {
       this.session.sendRealtimeInput({
-        media: {
+        audio: {
           data: base64Audio,
           mimeType: "audio/pcm;rate=16000",
         },
@@ -468,7 +491,7 @@ export class LiveSessionManager {
     if (!this.session || !this._connected) return;
     try {
       this.session.sendRealtimeInput({
-        media: {
+        video: {
           data: base64Image,
           mimeType: "image/jpeg",
         },
@@ -484,10 +507,7 @@ export class LiveSessionManager {
       return;
     }
     try {
-      this.session.sendClientContent({
-        turns: [{ role: "user", parts: [{ text }] }],
-        turnComplete: true,
-      });
+      this.session.sendRealtimeInput({ text });
       this.callbacks.onTranscript(text, true);
       this.transcriptCharCount += text.length;
     } catch {
@@ -498,6 +518,15 @@ export class LiveSessionManager {
 
   getInsights(): SessionInsight[] {
     return [...this.insights];
+  }
+
+  endAudioStream(): void {
+    if (!this.session || !this._connected) return;
+    try {
+      this.session.sendRealtimeInput({ audioStreamEnd: true });
+    } catch {
+      this.handleTransportFailure();
+    }
   }
 
   disconnect(): void {
@@ -522,10 +551,7 @@ export class LiveSessionManager {
     const queued = [...this.pendingUserTurns];
     this.pendingUserTurns = [];
     for (const text of queued) {
-      this.session.sendClientContent({
-        turns: [{ role: "user", parts: [{ text }] }],
-        turnComplete: true,
-      });
+      this.session.sendRealtimeInput({ text });
       this.callbacks.onTranscript(text, true);
       this.transcriptCharCount += text.length;
     }

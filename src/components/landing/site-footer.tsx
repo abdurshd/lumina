@@ -26,11 +26,11 @@ const FOOTER_COLUMNS: readonly FooterColumn[] = [
   {
     title: "Solutions",
     links: [
-      { label: "Self-discovery", href: null },
-      { label: "Career pivot", href: null },
-      { label: "For coaches", href: null },
-      { label: "For higher ed", href: null },
-      { label: "For HR teams", href: null },
+      { label: "Self-discovery", href: "/for-self-discovery" },
+      { label: "Career pivot", href: "/for-career-pivots" },
+      { label: "For coaches", href: "/for-coaches" },
+      { label: "For higher ed", href: "/for-schools" },
+      { label: "For HR teams", href: "/for-hr-teams" },
     ],
   },
   {

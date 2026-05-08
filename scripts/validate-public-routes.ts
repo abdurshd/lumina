@@ -47,6 +47,16 @@ const PUBLIC_ROUTES: RouteSpec[] = [
   { url: "/blog" },
   { url: "/use-cases" },
   { url: "/showcase" },
+  { url: "/careers" },
+  // Persona pages — five static routes that share `PersonaPageBody`.
+  // Next 16 doesn't recognize `for-[persona]` as a directory-name pattern
+  // (named segments with prefix work for filenames inside a segment, not as
+  // the segment itself), so we keep one route directory per persona slug.
+  { url: "/for-self-discovery" },
+  { url: "/for-career-pivots" },
+  { url: "/for-coaches" },
+  { url: "/for-schools" },
+  { url: "/for-hr-teams" },
 ];
 
 const METADATA_PATTERNS = [

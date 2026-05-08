@@ -100,7 +100,7 @@ We're transforming it into a **genuine agentic system** so Lumina is defensible 
 ### Gemini Models (from `src/lib/gemini/models.ts`)
 - `gemini-3-flash-preview` — fast tasks (quiz, scoring, analysis, critique)
 - `gemini-3-pro-preview` — deep synthesis (report generation, refinement)
-- `gemini-2.5-flash-native-audio-preview-12-2025` — live audio/video sessions
+- `gemini-3.1-flash-live-preview` — live audio/video sessions
 
 ### Key Files
 - `src/lib/gemini/prompts.ts` — ALL system prompts (centralized)
